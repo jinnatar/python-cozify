@@ -3,12 +3,15 @@ import json, requests
 from influxdb import InfluxDBClient
 from influxdb import SeriesHelper
 
-url = "http://cozify-hub-ip:8893/cc/1.3/devices"
+hub='cozify-hub-ip'
+hubkey='insert-hub-key-here'
+
+url = "http://%s:8893/cc/1.3/devices" % hub
 
 headers = {
   'Content-type': "application/json",
   'Accept': "application/json",
-  'Authorization': "%insert-hub-key-here%",
+  'Authorization': hubkey,
   'Cache-control': "no-cache",
 }
 
