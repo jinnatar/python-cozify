@@ -3,8 +3,13 @@ import json, requests
 from influxdb import InfluxDBClient
 from influxdb import SeriesHelper
 
-hub='cozify-hub-ip'
-hubkey='insert-hub-key-here'
+import ConfigParser
+
+config = ConfigParser.ConfigParser()
+config.read('main.cfg')
+
+hub=config.get('Hub', 'host')
+hubkey=config.get('Hub', 'authkey')
 
 url = "http://%s:8893/cc/1.3/devices" % hub
 

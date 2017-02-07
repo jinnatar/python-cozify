@@ -1,0 +1,3 @@
+[Hub]
+host: 192.168.0.100
+authkey: insert-auth-key-here
