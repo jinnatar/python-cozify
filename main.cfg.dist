@@ -1,9 +1,11 @@
 [Cloud]
+email: user@example.com
+remotekey: key-will-be-autoinserted-hopefully
 
 [Hub]
 host: 192.168.0.100
 port: 8893
-authkey: insert-auth-key-here
+authkey: specify-manually-or-let-autoinsert-do-it
 
 [Storage]
 # influxdb
