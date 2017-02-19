@@ -1,6 +1,7 @@
 import json, requests
 
 from . import config as c
+from . import hub
 
 cloudBase='https://cloud2.cozify.fi/ui/0.2/'
 
@@ -15,6 +16,18 @@ def authenticate():
             if remoteToken is not None:
                 c.ephemeral['Cloud']['remoteToken'] = remoteToken
                 c.ephemeralWrite()
+                hubIp = _lan_ip(remoteToken)
+                if hubIp is not None:
+                    hub = hub._hub(remoteToken, hubIp)
+                    if hub is not None:
+                        hubId = hub['hubId']
+                        hubName = hub['name']
+                        hubkeys = _hubkeys(remoteToken)
+                        if hubKeys is not None:
+                            hubToken = hubKeys[hubId]
+                            if hubToken:
+                                c.ephemeral['Hub'][hubName]['hubToken'] = hubToken
+
 
 
             else:
@@ -67,7 +80,7 @@ def _emaillogin(email, otp):
         return None
 
 # 1:1 implementation of hub/lan_ip
-# remoteToken: cozify Cloud remoteToken 
+# remoteToken: cozify Cloud remoteToken
 # returns list of hub ip's or None
 def _lan_ip(remoteToken):
     headers = {
@@ -75,9 +88,23 @@ def _lan_ip(remoteToken):
     }
 
     response = requests.get(cloudBase + 'hub/lan_ip', headers=headers)
-    print(response.url)
     if response.status_code == 200:
         return response.text
+    else:
+        print(response.text)
+        return None
+
+# 1:1 implementation of user/hubkeys
+# remoteToken: cozify Cloud remoteToken
+# returns map of hubs: { hubId: hubToken }
+def _hubkeys(remoteToken):
+    headers = {
+            'Authorization': remoteToken
+    }
+
+    response = requests.get(cloudBase + 'user/hubkeys', headers=headers)
+    if response.status_code == 200:
+        return json.loads(response.json)
     else:
         print(response.text)
         return None
