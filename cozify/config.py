@@ -1,17 +1,16 @@
 import configparser
-
-config = configparser.ConfigParser()
-config.read('main.cfg')
+import os
 
 # prime ephemeral storage
+ephemeralFile = "%s/.config/python-cozify.cfg" % os.path.expanduser('~')
 try:
-    file = open(config['Cloud']['ephemeral'], 'r')
+    file = open(ephemeralFile, 'r')
 except IOError:
-    file = open(config['Cloud']['ephemeral'], 'w')
+    file = open(ephemeralFile, 'w')
 
 ephemeral = configparser.ConfigParser()
-ephemeral.read(config['Cloud']['ephemeral'])
+ephemeral.read(ephemeralFile)
 
 def ephemeralWrite():
-    with open(config['Cloud']['ephemeral'], 'w') as configfile:
+    with open(ephemeralFile, 'w') as configfile:
         ephemeral.write(configfile)
