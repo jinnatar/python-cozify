@@ -8,45 +8,87 @@ cloudBase='https://cloud2.cozify.fi/ui/0.2/'
 # auth flow based on and storing into config
 # email -> OTP -> remoteToken -> hub ip -> hubToken
 def authenticate():
-    email = c.config['Cloud']['email']
-    if _needAuth():
+    if 'email' not in  c.ephemeral['Cloud'] or not  c.ephemeral['Cloud']['email']:
+         c.ephemeral['Cloud']['email'] = _getEmail()
+         c.ephemeralWrite()
+    email = c.ephemeral['Cloud']['email']
+
+    if _needRemoteToken():
         if _requestlogin(email):
             otp = _getotp()
             remoteToken = _emaillogin(email, otp)
             if remoteToken is not None:
                 c.ephemeral['Cloud']['remoteToken'] = remoteToken
                 c.ephemeralWrite()
-                hubIp = _lan_ip(remoteToken)
-                if hubIp is not None:
-                    hub = hub._hub(remoteToken, hubIp)
-                    if hub is not None:
-                        hubId = hub['hubId']
-                        hubName = hub['name']
-                        hubkeys = _hubkeys(remoteToken)
-                        if hubKeys is not None:
-                            hubToken = hubKeys[hubId]
-                            if hubToken:
-                                c.ephemeral['Hub'][hubName]['hubToken'] = hubToken
-
-
-
             else:
-                # either API error or wrong OTP
+                # remoteToken fail
+                print('remoteToken failed')
                 return False
         else:
-            # for this request to fail either there's an API error
-            # or we're pushing the wrong email
+            # requestlogin fail
+            print('requestlogin failed')
             return False
+    else:
+        # remoteToken already fine, let's just use it
+        remoteToken = c.ephemeral['Cloud']['remoteToken']
+
+    if _needHubToken():
+        hubIps = _lan_ip(remoteToken)
+        hubkeys = _hubkeys(remoteToken)
+        if hubIps is not None and hubkeys is not None:
+            for hubIp in hubIps: # hubIps is returned as a list of all hubs
+                hubMap = hub._hub(remoteToken, hubIp)
+                if hubMap is not None:
+                    hubId = hubMap['hubId']
+                    hubName = hubMap['name']
+                    hubToken = hubkeys[hubId]
+                    if hubToken:
+                        if 'Hubs.' + hubName not in c.ephemeral:
+                            c.ephemeral['Hubs.' + hubName] = {}
+                        if 'default' not in c.ephemeral['Hubs']:
+                            c.ephemeral['Hubs']['default'] = hubName 
+
+                        c.ephemeral['Hubs.' + hubName]['hubToken'] = hubToken
+                        c.ephemeral['Hubs.' + hubName]['host'] = hubIp
+                        c.ephemeral['Hubs.' + hubName]['hubId'] = hubId # not really used for anything but doesn't hurt
+                        c.ephemeralWrite()
+                    else:
+                        # hubToken fail
+                        print('hubToken failed')
+                        return False
+                else:
+                    # hubmap fail
+                    print('hubmap failed')
+                    return False
+        else:
+            # lan_ip/hubkeys fail
+            print('lan_ip or hubkeys failed')
+            return False
+    return True
 
 
 
-# determine if current hub-key is valid
-# TODO(artanicus): needs implementation, and logic planning
-def _needAuth():
-    return c.ephemeral['Cloud']['remoteToken'] is not None
+# check if we currently hold a remoteKey.
+# TODO(artanicus): need to do an OPTIONS call to check validity as well
+def _needRemoteToken():
+    # check if we've got a valid remoteToken
+    if 'remoteToken' in c.ephemeral['Cloud']:
+        if c.ephemeral['Cloud']['remoteToken'] is not None:
+            return False
+    return True
+
+def _needHubToken():
+    # this is a complex issue, for now just return a naive if default hub key is there, assume it's good
+    if 'default' not in c.ephemeral['Hubs'] or 'hubtoken' not in c.ephemeral['Hubs.' + c.ephemeral['Hubs']['default']]:
+        return True
+    else:
+        return False
 
 def _getotp():
     return input('OTP from your email: ')
+
+def _getEmail():
+    return input('Enter your Cozify account email address: ')
 
 # 1:1 implementation of user/requestlogin
 # email: cozify account email
@@ -54,7 +96,6 @@ def _getotp():
 def _requestlogin(email):
     payload = { 'email': email }
     response = requests.post(cloudBase + 'user/requestlogin', params=payload)
-    print(response.url)
     if response.status_code == 200:
         return True
     else:
@@ -72,7 +113,6 @@ def _emaillogin(email, otp):
     }
 
     response = requests.post(cloudBase + 'user/emaillogin', params=payload)
-    print(response.url)
     if response.status_code == 200:
         return response.text
     else:
@@ -89,7 +129,7 @@ def _lan_ip(remoteToken):
 
     response = requests.get(cloudBase + 'hub/lan_ip', headers=headers)
     if response.status_code == 200:
-        return response.text
+        return json.loads(response.text)
     else:
         print(response.text)
         return None
@@ -104,7 +144,7 @@ def _hubkeys(remoteToken):
 
     response = requests.get(cloudBase + 'user/hubkeys', headers=headers)
     if response.status_code == 200:
-        return json.loads(response.json)
+        return json.loads(response.text)
     else:
         print(response.text)
         return None
