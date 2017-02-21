@@ -1,5 +1,4 @@
 import requests
-from . import storage
 from . import config as c
 
 apiPath = '/cc/1.3/'
