@@ -1,29 +1,30 @@
 # python-cozify
 Unofficial Python3 API bindings for the (unpublished) Cozify API. Includes 1:1 API calls plus helper functions to string together an authentication flow.
 
-## installation
-~~~~
+## Installation
+```bash
    sudo -H pip3 install cozify
-~~~~
+```
 or clone this repo and:
-~~~~
+```bash
    sudo python3 setup.py install
-~~~~
+```
+
 
 ## Basic usage
 ### read devices, extract multisensor data
-~~~~
+```python
 from cozify import hub, multisensor
 devices = hub.getDevices()
 print(multisensor.getMultisensorData(devices))
-~~~~
+```
 ### only authenticate
-~~~~
+```python
 from cozify import cloud
 cloud.authenticate()
 # authenticate() is interactive and usually triggered automatically
 # authentication data is stored in ~/.config/python-cozify.cfg
-~~~~
+```
 
 
 ## Current limitations
@@ -32,5 +33,5 @@ cloud.authenticate()
 * authentication flow is as automatic as possible but still a bit fragile. Any reported issues are very welcome.
 
 ## Sample projects
-* [github.com/Artanicus/cozify-temp](https://github.com/Artanicus/cozify-temp)
+* [github.com/Artanicus/cozify-temp](https://github.com/Artanicus/cozify-temp) - Store Multisensor data into InfluxDB
 * Report an issue to get your project added here
