@@ -3,9 +3,11 @@ import json, requests
 from . import config as c
 from . import hub
 
+from .Error import APIError
+
 cloudBase='https://cloud2.cozify.fi/ui/0.2/'
 
-# auth flow based on and storing into config
+# auth flow based on and storing into a state config
 # email -> OTP -> remoteToken -> hub ip -> hubToken
 def authenticate():
     if 'email' not in  c.state['Cloud'] or not  c.state['Cloud']['email']:
@@ -14,25 +16,24 @@ def authenticate():
     email = c.state['Cloud']['email']
 
     if _needRemoteToken():
-        if _requestlogin(email):
-            otp = _getotp()
+        try:
+            _requestlogin(email)
+        except APIError:
+            resetState() # a bogus email will shaft all future attempts, better to reset
+            raise
+
+        # get OTP from user, not stored anywhere since they have a very short lifetime
+        otp = _getotp()
+        try:
             remoteToken = _emaillogin(email, otp)
-            if remoteToken is not None:
-                c.state['Cloud']['remoteToken'] = remoteToken
-                c.stateWrite()
-            else:
-                # remoteToken fail
-                print('OTP authentication has failed.')
+        except APIError:
+            print('OTP authentication has failed.')
+            resetState()
+            raise
 
-                # reset Cloud section to allow retry
-                c.state['Cloud'] = {}
-                c.stateWrite()
-
-                return False
-        else:
-            # requestlogin fail
-            print('requestlogin failed')
-            return False
+        # save the successful remoteToken
+        c.state['Cloud']['remoteToken'] = remoteToken
+        c.stateWrite()
     else:
         # remoteToken already fine, let's just use it
         remoteToken = c.state['Cloud']['remoteToken']
@@ -40,49 +41,40 @@ def authenticate():
     if _needHubToken():
         hubIps = _lan_ip()
         hubkeys = _hubkeys(remoteToken)
-        if hubIps is not None and hubkeys is not None:
-            if not hubIps:
-                print('No hub LAN ip returned. Make sure you are on the same public network as the hub')
+        if not hubIps:
+            raise Exception('No LAN ip returned, is your hub registered?')
+
+        for hubIp in hubIps: # hubIps is returned as a list of all hubs
+            hubInfo = hub._hub(hubIp)
+            hubId = hubInfo['hubId']
+            hubName = hubInfo['name']
+            if hubId in hubkeys:
+                hubToken = hubkeys[hubId]
+            else:
+                print('The hub "%s" is not linked to the given account: "%s"' % (hubName, c.state['Cloud']['email']))
+                resetState()
                 return False
 
-            for hubIp in hubIps: # hubIps is returned as a list of all hubs
-                hubMap = hub._hub(hubIp)
-                if hubMap is not None:
-                    hubId = hubMap['hubId']
-                    hubName = hubMap['name']
-                    if hubId in hubkeys:
-                        hubToken = hubkeys[hubId]
-                    else:
-                        print('The hub "%s" is not linked to the given account: "%s"' % (hubName, c.state['Cloud']['email']))
-                        # reset Cloud section to allow retry
-                        c.state['Cloud'] = {}
-                        c.stateWrite()
-                        return False
-                    if hubToken:
-                        if 'Hubs.' + hubName not in c.state:
-                            c.state['Hubs.' + hubName] = {}
-                        if 'default' not in c.state['Hubs']:
-                            c.state['Hubs']['default'] = hubName
+            # if hub name not already known, create named section
+            hubSection = 'Hubs.' + hubName
+            if hubSection not in c.state:
+                c.state[hubSection] = {}
+            # if default hub not set, set this hub as the first as the default
+            if 'default' not in c.state['Hubs']:
+                c.state['Hubs']['default'] = hubName
 
-                        c.state['Hubs.' + hubName]['hubToken'] = hubToken
-                        c.state['Hubs.' + hubName]['host'] = hubIp
-                        c.state['Hubs.' + hubName]['hubId'] = hubId # not really used for anything but doesn't hurt
-                        c.stateWrite()
-                    else:
-                        # hubToken fail
-                        print('hubToken failed')
-                        return False
-                else:
-                    # hubmap fail
-                    print('hubmap failed')
-                    return False
-        else:
-            # lan_ip/hubkeys fail
-            print('lan_ip or hubkeys failed')
-            return False
+            # store Hub data under it's named section
+            c.state[hubSection]['hubToken'] = hubToken
+            c.state[hubSection]['host'] = hubIp
+            c.state[hubSection]['hubId'] = hubId # not really used for anything but doesn't hurt
+            c.stateWrite()
     return True
 
-
+# reset cloudstate to allow full retry of authentication
+# does not reset hub state
+def resetState():
+    c.state['Cloud'] = {}
+    c.stateWrite()
 
 # check if we currently hold a remoteKey.
 # TODO(artanicus): need to do an OPTIONS call to check validity as well
@@ -112,16 +104,13 @@ def _getEmail():
 def _requestlogin(email):
     payload = { 'email': email }
     response = requests.post(cloudBase + 'user/requestlogin', params=payload)
-    if response.status_code == 200:
-        return True
-    else:
-        print(response.text)
-        return False
+    if response.status_code is not 200:
+        raise APIError(response.status_code, response.text)
 
 # 1:1 implementation of user/emaillogin
 # email: cozify account email
 # otp: OTP provided by user, generated by requestlogin
-# returns remote-key or None on failure
+# returns remote-key
 def _emaillogin(email, otp):
     payload = {
             'email': email,
@@ -132,11 +121,10 @@ def _emaillogin(email, otp):
     if response.status_code == 200:
         return response.text
     else:
-        print(response.text)
-        return None
+        raise APIError(response.status_code, response.text)
 
 # 1:1 implementation of hub/lan_ip
-# returns list of hub ip's or None
+# returns list of hub ip's
 # Oddly enough remoteToken isn't needed here and on the flipside doesn't help.
 # By testing it seems hub/lan_ip will use the source ip of the request to determine the validity of the request.
 # Thus, only if you're making the request from the same public ip (or ip block?) will this call succeed with useful results
@@ -145,8 +133,7 @@ def _lan_ip():
     if response.status_code == 200:
         return json.loads(response.text)
     else:
-        print(response.text)
-        return None
+        raise APIError(response.status_code, response.text)
 
 # 1:1 implementation of user/hubkeys
 # remoteToken: cozify Cloud remoteToken
@@ -155,10 +142,8 @@ def _hubkeys(remoteToken):
     headers = {
             'Authorization': remoteToken
     }
-
     response = requests.get(cloudBase + 'user/hubkeys', headers=headers)
     if response.status_code == 200:
         return json.loads(response.text)
     else:
-        print(response.text)
-        return None
+        raise APIError(response.status_code, response.text)

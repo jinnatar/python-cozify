@@ -2,25 +2,20 @@ import requests, json
 from . import config as c
 from . import cloud
 
+from .Error import APIError
+
 apiPath = '/cc/1.3/'
 
 def getDevices(hubName=None):
     if hubName is None:
-        # if hubName not provided, use default hub
-        if 'default' not in c.state['Hubs']:
-            print('no hub name given and no default known, running authentication')
-            if not cloud.authenticate():
-                print('Auth failed')
-                return None # nothing we can do if auth failed
-        hubName = c.state['Hubs']['default']
+        hubName = getDefaultHub()
 
     configName = 'Hubs.' + hubName
     if configName not in c.state or 'hubtoken' not in c.state[configName]:
         print('Hub not known, auth needed first')
-        if not cloud.authenticate():
-            print('Auth failed')
-            return None # nothing we can do if auth failed
+        cloud.authenticate()
 
+    # at this stage we have a valid name and auth
     headers = {
         'Content-type': "application/json",
         'Accept': "application/json",
@@ -33,8 +28,15 @@ def getDevices(hubName=None):
     if response.status_code == 200:
         return response.json()
     else:
-        print(response.text)
-        return None
+        raise APIError(response.status_code, response.text)
+
+# return name of default Hub
+# if default is unknown, run auth to make default known
+def getDefaultHub():
+    if 'default' not in c.state['Hubs']:
+        print('no hub name given and no default known, running authentication')
+        cloud.authenticate()
+    return c.state['Hubs']['default']
 
 def _getBase(host, port=8893, api=apiPath):
     # TODO(artanicus): this may still need some auth hook
@@ -50,5 +52,4 @@ def _hub(host):
     if response.status_code == 200:
         return json.loads(response.text)
     else:
-        print(response.text)
-        return None
+        raise APIError(response.status_code, response.text)
