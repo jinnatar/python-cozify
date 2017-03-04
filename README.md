@@ -26,7 +26,13 @@ cloud.authenticate()
 # authenticate() is interactive and usually triggered automatically
 # authentication data is stored in ~/.config/python-cozify.cfg
 ```
-
+### authenticate with a non-default state storage
+```python
+from cozify import cloud, config
+config.setStatePath('/tmp/testing-state.cfg')
+cloud.authenticate()
+# authentication and other useful data is now stored in the defined location instead of ~/.config/python-cozify.cfg
+```
 
 ## Current limitations
 * Right now tokens are assumed to never expire and their functionality is not questioned.
