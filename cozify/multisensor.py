@@ -1,3 +1,5 @@
+import time
+
 from influxdb import InfluxDBClient
 from influxdb import SeriesHelper
 
@@ -12,7 +14,12 @@ def getMultisensorData(data):
 
         if devtype == 'STATE_MULTI_SENSOR':
             name=data[device]['name']
-
+            if 'lastSeen' in state:
+                timestamp=state['lastSeen']
+            else:
+                # if no time of measurement is known we must make a reasonable assumption
+                # Stored here in milliseconds, influxDB internally stores as nanoseconds
+                timestamp = time.time() * 1000
             if 'temperature' in state:
                 temperature=state['temperature']
             else:
@@ -24,6 +31,7 @@ def getMultisensorData(data):
 
             out.append({
                     'name': name,
+                    'time': timestamp,
                     'temperature': temperature,
                     'humidity': humidity
                     })
