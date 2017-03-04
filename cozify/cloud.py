@@ -33,15 +33,23 @@ def authenticate():
         remoteToken = c.ephemeral['Cloud']['remoteToken']
 
     if _needHubToken():
-        hubIps = _lan_ip(remoteToken)
+        hubIps = _lan_ip()
         hubkeys = _hubkeys(remoteToken)
         if hubIps is not None and hubkeys is not None:
+            if not hubIps:
+                print('No hub LAN ip returned. Make sure you are on the same public network as the hub')
+                return False
+
             for hubIp in hubIps: # hubIps is returned as a list of all hubs
-                hubMap = hub._hub(remoteToken, hubIp)
+                hubMap = hub._hub(hubIp)
                 if hubMap is not None:
                     hubId = hubMap['hubId']
                     hubName = hubMap['name']
-                    hubToken = hubkeys[hubId]
+                    if hubId in hubkeys:
+                        hubToken = hubkeys[hubId]
+                    else:
+                        print('The hub "%s" is not linked to the given account: "%s"' % (hubName, c.ephemeral['Cloud']['email']))
+                        return False
                     if hubToken:
                         if 'Hubs.' + hubName not in c.ephemeral:
                             c.ephemeral['Hubs.' + hubName] = {}
@@ -120,14 +128,12 @@ def _emaillogin(email, otp):
         return None
 
 # 1:1 implementation of hub/lan_ip
-# remoteToken: cozify Cloud remoteToken
 # returns list of hub ip's or None
-def _lan_ip(remoteToken):
-    headers = {
-            'Authorization': remoteToken
-    }
-
-    response = requests.get(cloudBase + 'hub/lan_ip', headers=headers)
+# Oddly enough remoteToken isn't needed here and on the flipside doesn't help.
+# By testing it seems hub/lan_ip will use the source ip of the request to determine the validity of the request.
+# Thus, only if you're making the request from the same public ip (or ip block?) will this call succeed with useful results
+def _lan_ip():
+    response = requests.get(cloudBase + 'hub/lan_ip')
     if response.status_code == 200:
         return json.loads(response.text)
     else:

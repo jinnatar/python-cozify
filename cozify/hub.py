@@ -42,15 +42,11 @@ def _getBase(host, port=8893, api=apiPath):
 
 
 # 1:1 implementation of /hub API call
-# remoteToken: cozify Cloud remoteToken
 # hubHost: valid ip/host to hub, defaults to ephemeral data
 # returns map of hub state
-def _hub(remoteToken, host):
-    headers = {
-            'Authorization': remoteToken
-    }
-
-    response = requests.get(_getBase(host=host, api='/') + 'hub', headers=headers)
+# interestingly enough remoteToken isn't needed here and the hub will answer regardless of auth
+def _hub(host):
+    response = requests.get(_getBase(host=host, api='/') + 'hub')
     if response.status_code == 200:
         return json.loads(response.text)
     else:
