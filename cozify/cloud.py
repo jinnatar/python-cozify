@@ -22,7 +22,12 @@ def authenticate():
                 c.ephemeralWrite()
             else:
                 # remoteToken fail
-                print('remoteToken failed')
+                print('OTP authentication has failed.')
+
+                # reset Cloud section to allow retry
+                c.ephemeral['Cloud'] = {}
+                c.ephemeralWrite()
+
                 return False
         else:
             # requestlogin fail
@@ -49,6 +54,9 @@ def authenticate():
                         hubToken = hubkeys[hubId]
                     else:
                         print('The hub "%s" is not linked to the given account: "%s"' % (hubName, c.ephemeral['Cloud']['email']))
+                        # reset Cloud section to allow retry
+                        c.ephemeral['Cloud'] = {}
+                        c.ephemeralWrite()
                         return False
                     if hubToken:
                         if 'Hubs.' + hubName not in c.ephemeral:
