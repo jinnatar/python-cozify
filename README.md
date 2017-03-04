@@ -2,10 +2,11 @@
 Unofficial Python3 API bindings for the (unpublished) Cozify API. Includes 1:1 API calls plus helper functions to string together an authentication flow.
 
 ## Installation
+The recommended way is to install from PyPi:
 ```bash
    sudo -H pip3 install cozify
 ```
-or clone this repo and:
+or clone this repo (master branch may contain unstable features!) and:
 ```bash
    sudo python3 setup.py install
 ```
