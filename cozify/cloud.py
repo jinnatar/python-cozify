@@ -8,25 +8,25 @@ cloudBase='https://cloud2.cozify.fi/ui/0.2/'
 # auth flow based on and storing into config
 # email -> OTP -> remoteToken -> hub ip -> hubToken
 def authenticate():
-    if 'email' not in  c.ephemeral['Cloud'] or not  c.ephemeral['Cloud']['email']:
-         c.ephemeral['Cloud']['email'] = _getEmail()
-         c.ephemeralWrite()
-    email = c.ephemeral['Cloud']['email']
+    if 'email' not in  c.state['Cloud'] or not  c.state['Cloud']['email']:
+         c.state['Cloud']['email'] = _getEmail()
+         c.stateWrite()
+    email = c.state['Cloud']['email']
 
     if _needRemoteToken():
         if _requestlogin(email):
             otp = _getotp()
             remoteToken = _emaillogin(email, otp)
             if remoteToken is not None:
-                c.ephemeral['Cloud']['remoteToken'] = remoteToken
-                c.ephemeralWrite()
+                c.state['Cloud']['remoteToken'] = remoteToken
+                c.stateWrite()
             else:
                 # remoteToken fail
                 print('OTP authentication has failed.')
 
                 # reset Cloud section to allow retry
-                c.ephemeral['Cloud'] = {}
-                c.ephemeralWrite()
+                c.state['Cloud'] = {}
+                c.stateWrite()
 
                 return False
         else:
@@ -35,7 +35,7 @@ def authenticate():
             return False
     else:
         # remoteToken already fine, let's just use it
-        remoteToken = c.ephemeral['Cloud']['remoteToken']
+        remoteToken = c.state['Cloud']['remoteToken']
 
     if _needHubToken():
         hubIps = _lan_ip()
@@ -53,21 +53,21 @@ def authenticate():
                     if hubId in hubkeys:
                         hubToken = hubkeys[hubId]
                     else:
-                        print('The hub "%s" is not linked to the given account: "%s"' % (hubName, c.ephemeral['Cloud']['email']))
+                        print('The hub "%s" is not linked to the given account: "%s"' % (hubName, c.state['Cloud']['email']))
                         # reset Cloud section to allow retry
-                        c.ephemeral['Cloud'] = {}
-                        c.ephemeralWrite()
+                        c.state['Cloud'] = {}
+                        c.stateWrite()
                         return False
                     if hubToken:
-                        if 'Hubs.' + hubName not in c.ephemeral:
-                            c.ephemeral['Hubs.' + hubName] = {}
-                        if 'default' not in c.ephemeral['Hubs']:
-                            c.ephemeral['Hubs']['default'] = hubName
+                        if 'Hubs.' + hubName not in c.state:
+                            c.state['Hubs.' + hubName] = {}
+                        if 'default' not in c.state['Hubs']:
+                            c.state['Hubs']['default'] = hubName
 
-                        c.ephemeral['Hubs.' + hubName]['hubToken'] = hubToken
-                        c.ephemeral['Hubs.' + hubName]['host'] = hubIp
-                        c.ephemeral['Hubs.' + hubName]['hubId'] = hubId # not really used for anything but doesn't hurt
-                        c.ephemeralWrite()
+                        c.state['Hubs.' + hubName]['hubToken'] = hubToken
+                        c.state['Hubs.' + hubName]['host'] = hubIp
+                        c.state['Hubs.' + hubName]['hubId'] = hubId # not really used for anything but doesn't hurt
+                        c.stateWrite()
                     else:
                         # hubToken fail
                         print('hubToken failed')
@@ -88,14 +88,14 @@ def authenticate():
 # TODO(artanicus): need to do an OPTIONS call to check validity as well
 def _needRemoteToken():
     # check if we've got a valid remoteToken
-    if 'remoteToken' in c.ephemeral['Cloud']:
-        if c.ephemeral['Cloud']['remoteToken'] is not None:
+    if 'remoteToken' in c.state['Cloud']:
+        if c.state['Cloud']['remoteToken'] is not None:
             return False
     return True
 
 def _needHubToken():
     # this is a complex issue, for now just return a naive if default hub key is there, assume it's good
-    if 'default' not in c.ephemeral['Hubs'] or 'hubtoken' not in c.ephemeral['Hubs.' + c.ephemeral['Hubs']['default']]:
+    if 'default' not in c.state['Hubs'] or 'hubtoken' not in c.state['Hubs.' + c.state['Hubs']['default']]:
         return True
     else:
         return False

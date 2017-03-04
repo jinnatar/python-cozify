@@ -1,40 +1,40 @@
 import configparser
 import os
 
-ephemeralFile = "%s/.config/python-cozify.cfg" % os.path.expanduser('~')
-ephemeral = None
+stateFile = "%s/.config/python-cozify.cfg" % os.path.expanduser('~')
+state = None
 
 
-def ephemeralWrite():
-    with open(ephemeralFile, 'w') as configfile:
-        ephemeral.write(configfile)
+def stateWrite():
+    with open(stateFile, 'w') as configfile:
+        state.write(configfile)
 
-# allow setting the ephemeral storage location.
+# allow setting the state storage location.
 # Useful especially for testing without affecting your normal state
 def setStatePath(filepath):
-    global ephemeralFile
-    ephemeralFile = filepath
+    global stateFile
+    stateFile = filepath
     _initState()
 
 
 
 def _initState():
-    global ephemeral
+    global state
 
-    # prime ephemeral storage
+    # prime state storage
     try:
-        file = open(ephemeralFile, 'r')
+        file = open(stateFile, 'r')
     except IOError:
-        file = open(ephemeralFile, 'w+')
-        os.chmod(ephemeralFile, 0o600) # set to user readwrite only to protect tokens
+        file = open(stateFile, 'w+')
+        os.chmod(stateFile, 0o600) # set to user readwrite only to protect tokens
 
-    ephemeral = configparser.ConfigParser()
-    ephemeral.read(ephemeralFile)
+    state = configparser.ConfigParser()
+    state.read(stateFile)
 
     # make sure config is in roughly a valid state
     for key in [ 'Cloud', 'Hubs' ]:
-        if key not in ephemeral:
-            ephemeral[key] = {}
-    ephemeralWrite()
+        if key not in state:
+            state[key] = {}
+    stateWrite()
 
 _initState()
