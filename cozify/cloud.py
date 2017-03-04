@@ -46,7 +46,7 @@ def authenticate():
                         if 'Hubs.' + hubName not in c.ephemeral:
                             c.ephemeral['Hubs.' + hubName] = {}
                         if 'default' not in c.ephemeral['Hubs']:
-                            c.ephemeral['Hubs']['default'] = hubName 
+                            c.ephemeral['Hubs']['default'] = hubName
 
                         c.ephemeral['Hubs.' + hubName]['hubToken'] = hubToken
                         c.ephemeral['Hubs.' + hubName]['host'] = hubIp
