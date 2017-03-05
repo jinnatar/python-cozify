@@ -18,7 +18,7 @@ def getMultisensorData(data):
                 timestamp=state['lastSeen']
             else:
                 # if no time of measurement is known we must make a reasonable assumption
-                # Stored here in milliseconds, influxDB internally stores as nanoseconds
+                # Stored here in milliseconds to match accuracy of what the hub will give you
                 timestamp = time.time() * 1000
             if 'temperature' in state:
                 temperature=state['temperature']
