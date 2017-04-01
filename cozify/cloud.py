@@ -9,13 +9,13 @@ cloudBase='https://cloud2.cozify.fi/ui/0.2/'
 
 # auth flow based on and storing into a state config
 # email -> OTP -> remoteToken -> hub ip -> hubToken
-def authenticate():
+def authenticate(trustCloud=True, trustHub=True):
     if 'email' not in  c.state['Cloud'] or not  c.state['Cloud']['email']:
          c.state['Cloud']['email'] = _getEmail()
          c.stateWrite()
     email = c.state['Cloud']['email']
 
-    if _needRemoteToken():
+    if _needRemoteToken(trustCloud):
         try:
             _requestlogin(email)
         except APIError:
@@ -38,7 +38,7 @@ def authenticate():
         # remoteToken already fine, let's just use it
         remoteToken = c.state['Cloud']['remoteToken']
 
-    if _needHubToken():
+    if _needHubToken(trustHub):
         hubIps = _lan_ip()
         hubkeys = _hubkeys(remoteToken)
         if not hubIps:
@@ -76,21 +76,35 @@ def resetState():
     c.state['Cloud'] = {}
     c.stateWrite()
 
-# check if we currently hold a remoteKey.
-# TODO(artanicus): need to do an OPTIONS call to check validity as well
-def _needRemoteToken():
-    # check if we've got a valid remoteToken
-    if 'remoteToken' in c.state['Cloud']:
-        if c.state['Cloud']['remoteToken'] is not None:
+# test remote token validity, return boolean
+def ping():
+    try:
+        _hubkeys(c.state['Cloud']['remoteToken']) # TODO(artanicus): see if there's a cheaper API call
+    except APIError as e:
+        if e.status_code == 401:
             return False
+        else:
+            raise
+    else:
+        return True
+
+
+# check if we currently hold a remoteKey.
+def _needRemoteToken(trust):
+    # check if we've got a remoteToken before doing expensive checks
+    if trust and 'remoteToken' in c.state['Cloud']:
+        if c.state['Cloud']['remoteToken'] is None:
+            return True
+        else: # perform more expensive check
+            return not ping()
     return True
 
-def _needHubToken():
-    # this is a complex issue, for now just return a naive if default hub key is there, assume it's good
-    if 'default' not in c.state['Hubs'] or 'hubtoken' not in c.state['Hubs.' + c.state['Hubs']['default']]:
+def _needHubToken(trust):
+    # First do quick checks, i.e. do we even have a token already
+    if trust and ('default' not in c.state['Hubs'] or 'hubtoken' not in c.state['Hubs.' + c.state['Hubs']['default']]):
         return True
-    else:
-        return False
+    else: # if we have a token, we need to test if the API is callable
+        return not hub.ping()
 
 def _getotp():
     return input('OTP from your email: ')

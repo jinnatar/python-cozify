@@ -42,6 +42,19 @@ def _getBase(host, port=8893, api=apiPath):
     # TODO(artanicus): this may still need some auth hook
     return 'http://%s:%s%s' % (host, port, api)
 
+# perform a small API call to trigger any potential APIError and return boolean for success/failure
+# TODO(artanicus): make the call actually small
+def ping():
+    try:
+        getDevices()
+    except APIError as e:
+        if e.status_code == 401:
+            return False
+        else:
+            raise
+    else:
+        return True
+
 
 # 1:1 implementation of /hub API call
 # hubHost: valid ip/host to hub, defaults to state data
