@@ -15,7 +15,7 @@ if not os.path.isdir(xdg-config-home):
 # finally create our own config dir
 config-dir = "%s/%s" % (xdg-config-home, 'python-cozify')
 if not os.path.isdir(config-dir):
-    os.mkdir(config-dir, 0700)
+    os.mkdir(config-dir, 0o0700)
 
 stateFile = "%s/python-cozify.cfg" % config-dir
 state = None
