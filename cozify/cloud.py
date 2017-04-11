@@ -88,6 +88,23 @@ def ping():
     else:
         return True
 
+# refresh remote token in state.
+# return True on success, False if token has expired. Other errors raise an APIError
+def refresh():
+    try:
+        newRemoteToken = _refreshsession(c.state['Cloud']['remoteToken'])
+    except APIError as e:
+        if e.status_code == 401:
+            # too late, our token is already dead
+            return False
+        else:
+            raise
+    else:
+        c.state['Cloud']['remoteToken'] = newRemoteToken
+        c.stateWrite()
+        return True
+
+
 
 # check if we currently hold a remoteKey.
 def _needRemoteToken(trust):
@@ -159,5 +176,18 @@ def _hubkeys(remoteToken):
     response = requests.get(cloudBase + 'user/hubkeys', headers=headers)
     if response.status_code == 200:
         return json.loads(response.text)
+    else:
+        raise APIError(response.status_code, response.text)
+
+# 1:1 implementation of 'refreshsession'
+# remoteToken: cozify Cloud remoteToken
+# returns new remoteToken, not automatically stored into state
+def _refreshsession(remoteToken):
+    headers = {
+            'Authorization': remoteToken
+    }
+    response = requests.get(cloudBase + 'user/refreshsession', headers=headers)
+    if response.status_code == 200:
+        return response.text
     else:
         raise APIError(response.status_code, response.text)
