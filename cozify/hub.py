@@ -4,7 +4,7 @@ from . import cloud
 
 from .Error import APIError
 
-apiPath = '/cc/1.3/'
+apiPath = '/cc/1.4/'
 
 def getDevices(hubName=None):
     if hubName is None:
