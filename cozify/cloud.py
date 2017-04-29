@@ -262,3 +262,23 @@ def _refreshsession(remoteToken):
         return response.text
     else:
         raise APIError(response.status_code, response.text)
+
+# 1:1 implementation of 'hub/remote'
+# remoteToken: cozify Cloud remoteToken
+# hubToken: cozify hub token
+# apicall: Hub api call to be remotely executed, for example: '/cc/1.4/hub/colors'
+# returns what ever is appropriate for the call specified in apicall
+def _remote(remoteToken, hubToken, apicall, put=False):
+    headers = {
+            'Authorization': remoteToken
+            'X-Hub-Key': hubToken
+    }
+    if put:
+        response = requests.put(cloudBase + 'hub/remote' + apicall, headers=headers)
+    else:
+        response = requests.get(cloudBase + 'hub/remote' + apicall, headers=headers)
+    
+    if response.status_code == 200:
+        return response.text
+    else:
+        raise APIError(response.status_code, response.text)
