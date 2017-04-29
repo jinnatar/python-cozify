@@ -65,34 +65,49 @@ def authenticate(trustCloud=True, trustHub=True):
         remoteToken = c.state['Cloud']['remoteToken']
 
     if _needHubToken(trustHub):
-        hubIps = _lan_ip()
-        hubkeys = _hubkeys(remoteToken)
-        if not hubIps:
-            raise Exception('No LAN ip returned, is your hub registered?')
+        localHubs = _lan_ip() # will only work if we're local to the Hub, otherwise None
+        # TODO(artanicus): unknown what will happen if there is a local hub but another one remote. Needs testing by someone with multiple hubs.
+        hubkeys = _hubkeys(remoteToken) # get all registered hubs and their keys from the cloud.
+        if not hubkeys:
+            logging.critical('You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.')
 
-        for hubIp in hubIps: # hubIps is returned as a list of all hubs
-            hubInfo = hub._hub(hubIp)
-            hubId = hubInfo['hubId']
+        # evaluate all returned Hubs and store them
+        for hubId, hubToken in hubkeys.items():
+            logging.debug('hub: {0} token: {1}'.format(hubId, hubToken))
+            hubInfo = None
+            hubIp = None
+
+            # if we're remote, we didn't get a valid ip
+            if not localHubs:
+                logging.warning('No local Hubs detected, attempting authentication via Cozify Cloud.') # TODO(artanicus): downgrade loglevel once remote works reliably
+                hubInfo = hub._hub(remoteToken=remoteToken, hubToken=hubToken)
+            else:
+                # localHubs is valid so a hub is in the lan. A mixed environment cannot yet be detected.
+                # TODO(artanicus): Ugly hack that breaks multihub, need to actually find correct ip
+                logging.info(localHubs)
+                hubIp = localHubs[0]
+                hubInfo = hub._hub(host=hubIp)
+
             hubName = hubInfo['name']
             if hubId in hubkeys:
                 hubToken = hubkeys[hubId]
             else:
-                logging.error('The hub "%s" is not linked to the given account: "%s"' % (hubName, c.state['Cloud']['email']))
+                logging.error('The hub "{0}" is not linked to the given account: "{1}"'.format(hubName, c.state['Cloud']['email']))
                 resetState()
                 return False
 
             # if hub name not already known, create named section
-            hubSection = 'Hubs.' + hubName
+            hubSection = 'Hubs.' + hubId
             if hubSection not in c.state:
                 c.state[hubSection] = {}
             # if default hub not set, set this hub as the first as the default
             if 'default' not in c.state['Hubs']:
-                c.state['Hubs']['default'] = hubName
+                c.state['Hubs']['default'] = hubId
 
             # store Hub data under it's named section
             c.state[hubSection]['hubToken'] = hubToken
             c.state[hubSection]['host'] = hubIp
-            c.state[hubSection]['hubId'] = hubId # not really used for anything but doesn't hurt
+            c.state[hubSection]['hubName'] = hubName
             c.stateWrite()
     return True
 
@@ -267,7 +282,7 @@ def _refreshsession(remoteToken):
 # remoteToken: cozify Cloud remoteToken
 # hubToken: cozify hub token
 # apicall: Hub api call to be remotely executed, for example: '/cc/1.4/hub/colors'
-# returns what ever is appropriate for the call specified in apicall
+# returns requests.response object
 def _remote(remoteToken, hubToken, apicall, put=False):
     headers = {
             'Authorization': remoteToken,
@@ -277,8 +292,5 @@ def _remote(remoteToken, hubToken, apicall, put=False):
         response = requests.put(cloudBase + 'hub/remote' + apicall, headers=headers)
     else:
         response = requests.get(cloudBase + 'hub/remote' + apicall, headers=headers)
-    
-    if response.status_code == 200:
-        return response.text
-    else:
-        raise APIError(response.status_code, response.text)
+
+    return response.text

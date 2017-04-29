@@ -87,11 +87,18 @@ def ping(hub_name=None):
 
 
 # 1:1 implementation of /hub API call
-# hubHost: valid ip/host to hub, defaults to state data
+# host: valid ip/host to hub
+# remoteToken: remote cloud token, used in remote variant
+# hubToken: hub token, used in remote variant
 # returns map of hub state
-# interestingly enough remoteToken isn't needed here and the hub will answer regardless of auth
-def _hub(host):
-    response = requests.get(_getBase(host=host, api='/') + 'hub')
+# interestingly enough remoteToken is only needed when calling via the Cozify Cloud.
+def _hub(host=None, remoteToken=None, hubToken=None):
+    response = None
+    if host:
+        response = requests.get(_getBase(host=host, api='/') + 'hub')
+    elif remoteToken and hubToken:
+        response = cloud.remote(remoteToken, hubToken, 'hub')
+
     if response.status_code == 200:
         return json.loads(response.text)
     else:
