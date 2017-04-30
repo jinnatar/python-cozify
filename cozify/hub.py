@@ -1,7 +1,8 @@
 """Module for handling Cozify Hub API operations
 
 Attributes:
-    apiPath(string): API endpoint path including version
+    apiPath(string): Hub API endpoint path including version.
+    Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
 
 """
 
@@ -13,20 +14,24 @@ from .Error import APIError
 
 apiPath = '/cc/1.6/'
 
-def getDevices(hubName=None):
+def getDevices(hubName=None, hubId=None):
     """Get up to date full devices data set as a dict
 
     Args:
         hubName(str): optional name of hub to query. Defaults to result of ``getDefaultHub()``
+        hubId(str): optional id of hub to query. A specified hubId takes presedence over a hubName or default Hub. Providing incorrect hubId's will create cruft in your state but it won't hurt anything beyond failing the current operation.
 
     Returns:
         dict: full live device state as returned by the API
 
     """
-    if hubName is None:
-        hubName = getDefaultHub()
+    # No matter what we got we resolve it down to a hubId
+    if not hubId and hubName:
+        hubId = getHubId(hubName)
+    if not hubName and not hubId:
+        hubId = getDefaultHub()
 
-    configName = 'Hubs.' + hubName
+    configName = 'Hubs.' + hubId
     if configName not in c.state or 'hubtoken' not in c.state[configName]:
         logging.warning('No valid authentication token, requesting authentication')
         cloud.authenticate()
@@ -52,6 +57,10 @@ def getDefaultHub():
     if 'default' not in c.state['Hubs']:
         print('no hub name given and no default known, running authentication')
         cloud.authenticate()
+    return c.state['Hubs']['default']
+
+# TODO(artanicus): actually build this function
+def getHubId(hubName):
     return c.state['Hubs']['default']
 
 def _getBase(host, port=8893, api=apiPath):
