@@ -11,11 +11,11 @@ def getDevices(hubName=None):
         hubName = getDefaultHub()
 
     configName = 'Hubs.' + hubName
-    if configName not in c.state or 'hubtoken' not in c.state[configName] or not ping():
+    if configName not in c.state or 'hubtoken' not in c.state[configName]:
         logging.warning('No valid authentication token, requesting authentication')
         cloud.authenticate()
 
-    # at this stage we have a valid name and auth
+    # at this stage we have a valid name and an auth token. We don't know if the token actually works!
     headers = {
         'Content-type': "application/json",
         'Accept': "application/json",
