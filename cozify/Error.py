@@ -5,3 +5,10 @@ class APIError(Exception):
 
     def __str__(self):
         return 'API error, %s: %s' % (self.status_code, self.message)
+
+class AuthenticationError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return 'Authentication error: %s' % self.message
