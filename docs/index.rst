@@ -10,7 +10,10 @@ python-cozify documentation
    :maxdepth: 2
    :caption: Contents:
 
-
+Raised Errors
+==================
+.. autoclass:: cozify.Error.APIError
+.. autoclass:: cozify.Error.AuthenticationError
 
 Indices and tables
 ==================
