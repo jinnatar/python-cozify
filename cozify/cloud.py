@@ -1,9 +1,9 @@
-import json, requests
+import json, requests, logging
 
 from . import config as c
 from . import hub
 
-from .Error import APIError
+from .Error import APIError, AuthenticationError
 
 cloudBase='https://cloud2.cozify.fi/ui/0.2/'
 
@@ -24,10 +24,15 @@ def authenticate(trustCloud=True, trustHub=True):
 
         # get OTP from user, not stored anywhere since they have a very short lifetime
         otp = _getotp()
+        if not otp:
+            message = "OTP unavailable, authentication cannot succeed. This may happen if running non-interactively (closed stdin)."
+            logging.critical(message)
+            raise AuthenticationError(message)
+
         try:
             remoteToken = _emaillogin(email, otp)
         except APIError:
-            print('OTP authentication has failed.')
+            logging.error('OTP authentication has failed.')
             resetState()
             raise
 
@@ -51,7 +56,7 @@ def authenticate(trustCloud=True, trustHub=True):
             if hubId in hubkeys:
                 hubToken = hubkeys[hubId]
             else:
-                print('The hub "%s" is not linked to the given account: "%s"' % (hubName, c.state['Cloud']['email']))
+                logging.error('The hub "%s" is not linked to the given account: "%s"' % (hubName, c.state['Cloud']['email']))
                 resetState()
                 return False
 
@@ -124,7 +129,10 @@ def _needHubToken(trust):
         return not hub.ping()
 
 def _getotp():
-    return input('OTP from your email: ')
+    try:
+        return input('OTP from your email: ')
+    except EOFError: # if running non-interactive or ^d
+        return None
 
 def _getEmail():
     return input('Enter your Cozify account email address: ')
