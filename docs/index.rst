@@ -4,20 +4,13 @@
    contain the root `toctree` directive.
 
 python-cozify documentation
-=========================================
+===========================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-Raised Errors
-==================
+Raised Exceptions
+-----------------
 .. autoclass:: cozify.Error.APIError
 .. autoclass:: cozify.Error.AuthenticationError
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
