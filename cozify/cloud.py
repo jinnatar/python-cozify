@@ -1,3 +1,10 @@
+"""Module for handling Cozify Cloud API operations
+
+Attributes:
+    cloudBase(string): API endpoint including version
+
+"""
+
 import json, requests, logging
 
 from . import config as c

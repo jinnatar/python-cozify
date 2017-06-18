@@ -1,4 +1,9 @@
-"""Module for handling Cozify Hub API operations"""
+"""Module for handling Cozify Hub API operations
+
+Attributes:
+    apiPath(string): API endpoint path including version
+
+"""
 
 import requests, json, logging
 from . import config as c
