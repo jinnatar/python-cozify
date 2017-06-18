@@ -1,3 +1,5 @@
+"""Module for handling Cozify Hub API operations"""
+
 import requests, json, logging
 from . import config as c
 from . import cloud
@@ -7,6 +9,15 @@ from .Error import APIError
 apiPath = '/cc/1.4/'
 
 def getDevices(hubName=None):
+    """Get up to date full devices data set as a dict
+
+    Args:
+        hubName(str): optional name of hub to query. Defaults to result of ``getDefaultHub()``
+
+    Returns:
+        dict: full live device state as returned by the API
+
+    """
     if hubName is None:
         hubName = getDefaultHub()
 
