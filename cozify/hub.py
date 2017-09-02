@@ -44,7 +44,7 @@ def getDevices(hubName=None):
     if response.status_code == 200:
         return response.json()
     else:
-        raise APIError(response.status_code, response.text)
+        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
 
 # return name of default Hub
 # if default is unknown, run auth to make default known
