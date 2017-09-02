@@ -11,7 +11,7 @@ from . import cloud
 
 from .Error import APIError
 
-apiPath = '/cc/1.5/'
+apiPath = '/cc/1.6/'
 
 def getDevices(hubName=None):
     """Get up to date full devices data set as a dict
