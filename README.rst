@@ -14,14 +14,18 @@ The recommended way is to install from PyPi:
 
        sudo -H pip3 install cozify
 
-or clone this repo (master branch may contain unstable features!) and:
+or clone the master branch of this repo (master stays at current release) and:
 
 .. code:: bash
 
        sudo python3 setup.py install
 
+To develop python-cozify clone the devel branch and submit pull requests against the devel branch.
+New releases are cut from the devel branch as needed.
+
 Basic usage
 -----------
+These are merely some simple examples, for the full documentation see: `http://python-cozify.readthedocs.io/en/latest/`
 
 read devices, extract multisensor data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
