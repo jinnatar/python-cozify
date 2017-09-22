@@ -270,7 +270,7 @@ def _refreshsession(remoteToken):
 # returns what ever is appropriate for the call specified in apicall
 def _remote(remoteToken, hubToken, apicall, put=False):
     headers = {
-            'Authorization': remoteToken
+            'Authorization': remoteToken,
             'X-Hub-Key': hubToken
     }
     if put:
