@@ -14,11 +14,13 @@ from .Error import APIError, AuthenticationError
 
 cloudBase='https://cloud2.cozify.fi/ui/0.2/'
 
-def authenticate(trustCloud=True, trustHub=True):
+def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
     """Authenticate with the Cozify Cloud and Hub.
 
     Interactive only when absolutely needed, mostly on the first run.
     By default authentication is run selectively only for the portions needed.
+    Hub authentication lives in the Cloud module since the authentication is obtained from
+    the cloud.
 
     Authentication is a multistep process:
         - trigger sending OTP to email address
@@ -29,9 +31,14 @@ def authenticate(trustCloud=True, trustHub=True):
     Args:
         trustCloud(bool): Trust current stored state of cloud auth. Default True.
         trustHub(bool): Trust current stored state of hub auth. Default True.
+        remote(bool): Treat a hub as being outside the LAN, i.e. calls will be routed via the Cozify Cloud remote call system. Defaults to False.
+        autoremote(bool): Autodetect hub LAN presence and flip to remote mode if needed. Defaults to True.
+
+    Returns:
+        bool: True on authentication success. Failure will result in an exception.
     """
 
-    if 'email' not in  c.state['Cloud'] or not  c.state['Cloud']['email']:
+    if 'email' not in c.state['Cloud'] or not c.state['Cloud']['email']:
          c.state['Cloud']['email'] = _getEmail()
          c.stateWrite()
     email = c.state['Cloud']['email']
@@ -66,12 +73,13 @@ def authenticate(trustCloud=True, trustHub=True):
 
     if _needHubToken(trustHub):
         localHubs = _lan_ip() # will only work if we're local to the Hub, otherwise None
-        # TODO(artanicus): unknown what will happen if there is a local hub but another one remote. Needs testing by someone with multiple hubs.
+        # TODO(artanicus): unknown what will happen if there is a local hub but another one remote. Needs testing by someone with multiple hubs. Issue #7
         hubkeys = _hubkeys(remoteToken) # get all registered hubs and their keys from the cloud.
         if not hubkeys:
             logging.critical('You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.')
 
         # evaluate all returned Hubs and store them
+        logging.debug('Listing all hubs returned by cloud hubkeys query:')
         for hubId, hubToken in hubkeys.items():
             logging.debug('hub: {0} token: {1}'.format(hubId, hubToken))
             hubInfo = None
@@ -79,14 +87,23 @@ def authenticate(trustCloud=True, trustHub=True):
 
             # if we're remote, we didn't get a valid ip
             if not localHubs:
-                logging.warning('No local Hubs detected, attempting authentication via Cozify Cloud.') # TODO(artanicus): downgrade loglevel once remote works reliably
+                logging.info('No local Hubs detected, attempting authentication via Cozify Cloud.')
                 hubInfo = hub._hub(remoteToken=remoteToken, hubToken=hubToken)
+                # if the hub wants autoremote we flip the state
+                if hub.autoremote and not hub.remote:
+                    logging.info('[autoremote] Flipping hub remote status from local to remote.')
+                    hub.remote = True
             else:
                 # localHubs is valid so a hub is in the lan. A mixed environment cannot yet be detected.
-                # TODO(artanicus): Ugly hack that breaks multihub, need to actually find correct ip
-                logging.info(localHubs)
+                # _lan_ip cannot provide a map as to which ip is which hub. Thus we actually need to determine the right one.
+                # TODO(artanicus): Need to truly test how multihub works before implementing ip to hub resolution. See issue #7
+                logging.debug('data structure: {0}'.format(localHubs))
                 hubIp = localHubs[0]
                 hubInfo = hub._hub(host=hubIp)
+                # if the hub wants autoremote we flip the state
+                if hub.autoremote and hub.remote:
+                    logging.info('[autoremote] Flipping hub remote status from remote to local.')
+                    hub.remote = False
 
             hubName = hubInfo['name']
             if hubId in hubkeys:
@@ -113,7 +130,7 @@ def authenticate(trustCloud=True, trustHub=True):
 
 def resetState():
     """Reset stored cloud state.
-    
+
     Any further authentication flow will start from a clean slate.
     Hub state is left intact.
     """
@@ -193,9 +210,11 @@ def _needHubToken(trust):
 
     # First do quick checks, i.e. do we even have a token already
     if trust and ('default' not in c.state['Hubs'] or 'hubtoken' not in c.state['Hubs.' + c.state['Hubs']['default']]):
+        logging.debug("We don't have a valid hubtoken or it's not trusted.")
         return True
     else: # if we have a token, we need to test if the API is callable
-        return not hub.ping()
+        logging.debug("Testing hub.ping() for token validity.")
+        return not trust or not hub.ping()
 
 def _getotp():
     try:
@@ -240,12 +259,17 @@ def _emaillogin(email, otp):
     else:
         raise APIError(response.status_code, response.text)
 
-# 1:1 implementation of hub/lan_ip
-# returns list of hub ip's
-# Oddly enough remoteToken isn't needed here and on the flipside doesn't help.
 # By testing it seems hub/lan_ip will use the source ip of the request to determine the validity of the request.
 # Thus, only if you're making the request from the same public ip (or ip block?) will this call succeed with useful results
 def _lan_ip():
+    """1:1 implementation of hub/lan_ip
+    
+    This call will fail with an APIError if the requesting source address is not the same as that of the hub, i.e. if they're not in the same NAT network.
+    The above is based on observation and may only be partially true.
+
+    Returns:
+        list: List of Hub ip addresses.
+    """
     response = requests.get(cloudBase + 'hub/lan_ip')
     if response.status_code == 200:
         return json.loads(response.text)
