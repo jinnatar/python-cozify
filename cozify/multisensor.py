@@ -1,8 +1,5 @@
 import time
 
-from influxdb import InfluxDBClient
-from influxdb import SeriesHelper
-
 from . import config
 
 # expects Cozify devices type json data
