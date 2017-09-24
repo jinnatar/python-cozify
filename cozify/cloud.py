@@ -320,7 +320,7 @@ def _remote(cloud_token, hub_token, apicall, put=False):
     """
 
     headers = {
-            'Authorization': cloud_oken,
+            'Authorization': cloud_token,
             'X-Hub-Key': hub_token
     }
     if put:
