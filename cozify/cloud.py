@@ -307,12 +307,12 @@ def _refreshsession(remoteToken):
 # hubToken: cozify hub token
 # apicall: Hub api call to be remotely executed, for example: '/cc/1.4/hub/colors'
 # returns requests.response object
-def _remote(remoteToken, hubToken, apicall, put=False):
+def _remote(cloud_token, hub_token, apicall, put=False):
     """1:1 implementation of 'hub/remote'
 
     Args:
-        remoteToken(str): Cloud remote authentication token.
-        hubToken(str): Hub authentication token.
+        cloud_token(str): Cloud remote authentication token.
+        hub_token(str): Hub authentication token.
         apicall(str): Full API call that would normally go directly to hub, e.g. '/cc/1.6/hub/colors'
 
     Returns:
@@ -320,8 +320,8 @@ def _remote(remoteToken, hubToken, apicall, put=False):
     """
 
     headers = {
-            'Authorization': remoteToken,
-            'X-Hub-Key': hubToken
+            'Authorization': cloud_oken,
+            'X-Hub-Key': hub_token
     }
     if put:
         response = requests.put(cloudBase + 'hub/remote' + apicall, headers=headers)
