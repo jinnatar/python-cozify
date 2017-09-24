@@ -263,7 +263,7 @@ def _emaillogin(email, otp):
 # Thus, only if you're making the request from the same public ip (or ip block?) will this call succeed with useful results
 def _lan_ip():
     """1:1 implementation of hub/lan_ip
-    
+
     This call will fail with an APIError if the requesting source address is not the same as that of the hub, i.e. if they're not in the same NAT network.
     The above is based on observation and may only be partially true.
 
