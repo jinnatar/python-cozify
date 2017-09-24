@@ -14,7 +14,7 @@ from . import cloud
 
 from .Error import APIError
 
-apiPath = '/cc/1.6/'
+apiPath = '/cc/1.6'
 remote = False
 autoremote = True
 
@@ -36,24 +36,14 @@ def getDevices(hubName=None, hubId=None):
         hubId = getDefaultHub()
 
     configName = 'Hubs.' + hubId
-    if configName not in c.state or 'hubtoken' not in c.state[configName]:
+    if cloud._needHubToken():
         logging.warning('No valid authentication token, requesting authentication')
         cloud.authenticate()
-
-    # at this stage we have a valid name and an auth token. We don't know if the token actually works!
-    headers = {
-        'Content-type': "application/json",
-        'Accept': "application/json",
-        'Authorization': c.state[configName]['hubtoken'],
-        'Cache-control': "no-cache",
-    }
-
+    hub_token = c.state[configName]['hubtoken']
+    cloud_token = c.state['Cloud']['remotetoken']
     host = c.state[configName]['host']
-    response = requests.get(_getBase(host=host) + 'devices', headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
+
+    return _devices(host=host, hub_token=hub_token, cloud_token=cloud_token)
 
 def getDefaultHub():
     """Return id of default Hub.
@@ -123,6 +113,12 @@ def ping(hub_id=None, hub_name=None):
         config_name = 'Hubs.' + hub_id
         hub_token = c.state[config_name]['hubtoken']
         hub_host = c.state[config_name]['host']
+
+        # if we don't have a stored host then we assume the hub is remote
+        if not remote and autoremote and not hub_host:
+            global remote
+            remote = True
+
         tz = _tz(hub_host, hub_token)
     except APIError as e:
         if e.status_code == 401:
@@ -160,10 +156,49 @@ def _hub(host=None, remoteToken=None, hubToken=None):
 # hubHost: valid ip/host to hub, defaults to state data
 # hub_token: authentication token
 # returns timezone of hub, e.g. Europe/Helsinki
-def _tz(host, hub_token):
+def _tz(host, hub_token, cloud_token=None):
+    """1:1 implementation of /hub/tz API call
+
+    Args:
+        host(str): ip address or hostname of hub
+        hub_token(str): Hub authentication token.
+        cloud_token(str): Cloud authentication token. Only needed if authenticating remotely, i.e. via the cloud. Defaults to None.
+
+    Returns:
+        str: Timezone of the hub, for example: 'Europe/Helsinki'
+    """
+
     headers = { 'Authorization': hub_token }
-    response = requests.get(_getBase(host=host) + 'hub/tz', headers=headers)
+    call = '/hub/tz'
+    if remote:
+        response = cloud._remote(cloud_token, hub_token, apiPath + call)
+    else:
+        response = requests.get(_getBase(host=host) + call, headers=headers)
     if response.status_code == 200:
         return response.text
     else:
-        raise APIError(response.status_code, response.text)
+        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
+
+
+def _devices(host, hub_token, cloud_token=None):
+    """1:1 implementation of /devices
+
+    Args:
+        host(str): ip address or hostname of hub.
+        hub_token(str): Hub authentication token.
+        cloud_token(str): Cloud authentication token. Only needed if authenticating remotely, i.e. via the cloud. Defaults to None.
+    Returns:
+        json: Full live device state as returned by the API
+
+    """
+
+    headers = { 'Authorization': hub_token }
+    call = '/devices'
+    if remote:
+        response = cloud._remote(cloud_token, hub_token, apiPath + call)
+    else:
+        response = requests.get(_getBase(host=host) + call, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))

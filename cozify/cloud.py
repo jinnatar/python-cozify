@@ -180,11 +180,11 @@ def refresh():
 
 
 
-def _needRemoteToken(trust):
+def _needRemoteToken(trust=True):
     """Validate current remote token and decide if we'll request it during authentication.
 
     Args:
-        trust(bool): Set to False to always decide to renew.
+        trust(bool): Set to False to always decide to renew. Defaults to True.
 
     Returns:
         bool: True to indicate a need to request token.
@@ -198,11 +198,11 @@ def _needRemoteToken(trust):
             return not ping()
     return True
 
-def _needHubToken(trust):
+def _needHubToken(trust=True):
     """Validate current hub token and decide if we'll request it during authentication.
 
     Args:
-        trust(bool): Set to False to always decide to renew.
+        trust(bool): Set to False to always decide to renew. Defaults to True.
 
     Returns:
         bool: True to indicate a need to request token.
