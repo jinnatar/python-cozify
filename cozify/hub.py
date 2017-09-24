@@ -115,8 +115,8 @@ def ping(hub_id=None, hub_name=None):
         hub_host = c.state[config_name]['host']
 
         # if we don't have a stored host then we assume the hub is remote
+        global remote
         if not remote and autoremote and not hub_host:
-            global remote
             remote = True
 
         tz = _tz(hub_host, hub_token)
