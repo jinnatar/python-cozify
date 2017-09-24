@@ -308,6 +308,17 @@ def _refreshsession(remoteToken):
 # apicall: Hub api call to be remotely executed, for example: '/cc/1.4/hub/colors'
 # returns requests.response object
 def _remote(remoteToken, hubToken, apicall, put=False):
+    """1:1 implementation of 'hub/remote'
+
+    Args:
+        remoteToken(str): Cloud remote authentication token.
+        hubToken(str): Hub authentication token.
+        apicall(str): Full API call that would normally go directly to hub, e.g. '/cc/1.6/hub/colors'
+
+    Returns:
+        requests.response: Requests response object.
+    """
+
     headers = {
             'Authorization': remoteToken,
             'X-Hub-Key': hubToken
@@ -317,4 +328,4 @@ def _remote(remoteToken, hubToken, apicall, put=False):
     else:
         response = requests.get(cloudBase + 'hub/remote' + apicall, headers=headers)
 
-    return response.text
+    return response

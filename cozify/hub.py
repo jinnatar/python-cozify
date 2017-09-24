@@ -149,7 +149,7 @@ def _hub(host=None, remoteToken=None, hubToken=None):
     if host:
         response = requests.get(_getBase(host=host, api='/') + 'hub')
     elif remoteToken and hubToken:
-        response = cloud.remote(remoteToken, hubToken, 'hub')
+        response = cloud._remote(remoteToken, hubToken, 'hub')
 
     if response.status_code == 200:
         return json.loads(response.text)
