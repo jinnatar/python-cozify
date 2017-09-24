@@ -24,7 +24,7 @@ def setStatePath(filepath):
 def _initState(state_file):
     # prime state storage
     # if we can read it, read it in, otherwise create empty file
-    state = configparser.ConfigParser()
+    state = configparser.ConfigParser(allow_no_value=True)
     try:
         cf = open(state_file, 'r')
     except IOError:
