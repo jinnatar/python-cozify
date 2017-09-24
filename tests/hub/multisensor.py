@@ -3,7 +3,6 @@
 from cozify import hub, multisensor, config
 import sys, logging
 
-# very naive example pulling a single sample and storing it
 def test_multisensor(conf_file):
     logging.basicConfig(level=logging.DEBUG)
     config.setStatePath(conf_file)

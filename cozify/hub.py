@@ -113,15 +113,19 @@ def ping(hub_id=None, hub_name=None):
         config_name = 'Hubs.' + hub_id
         hub_token = c.state[config_name]['hubtoken']
         hub_host = c.state[config_name]['host']
+        cloud_token = c.state['Cloud']['remotetoken']
 
         # if we don't have a stored host then we assume the hub is remote
         global remote
         if not remote and autoremote and not hub_host:
             remote = True
+            logging.debug('Ping determined hub is remote and flipped state to remote.')
 
-        tz = _tz(hub_host, hub_token)
+        tz = _tz(hub_host, hub_token, cloud_token)
+        logging.debug('Ping performed with tz call, response: {0}'.format(tz))
     except APIError as e:
         if e.status_code == 401:
+            logging.debug(e)
             return False
         else:
             raise
@@ -171,7 +175,7 @@ def _tz(host, hub_token, cloud_token=None):
     headers = { 'Authorization': hub_token }
     call = '/hub/tz'
     if remote:
-        response = cloud._remote(cloud_token, hub_token, apiPath + call)
+        response = cloud._remote(cloud_token=cloud_token, hub_token=hub_token, apicall=apiPath + call)
     else:
         response = requests.get(_getBase(host=host) + call, headers=headers)
     if response.status_code == 200:

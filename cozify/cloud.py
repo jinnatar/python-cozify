@@ -207,14 +207,18 @@ def _needHubToken(trust=True):
     Returns:
         bool: True to indicate a need to request token.
     """
+    if not trust:
+        logging.debug("hub_token not trusted so we'll say it needs to be renewed.")
+        return True
 
     # First do quick checks, i.e. do we even have a token already
-    if trust and ('default' not in c.state['Hubs'] or 'hubtoken' not in c.state['Hubs.' + c.state['Hubs']['default']]):
+    if 'default' not in c.state['Hubs'] or 'hubtoken' not in c.state['Hubs.' + c.state['Hubs']['default']]:
         logging.debug("We don't have a valid hubtoken or it's not trusted.")
         return True
     else: # if we have a token, we need to test if the API is callable
-        logging.debug("Testing hub.ping() for token validity.")
-        return not trust or not hub.ping()
+        ping = hub.ping()
+        logging.debug("Testing hub.ping() for hub_token validity: {0}".format(ping))
+        return not ping
 
 def _getotp():
     try:
