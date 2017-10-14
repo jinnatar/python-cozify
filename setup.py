@@ -5,7 +5,7 @@ with open('README.rst') as file:
         long_description = file.read()
 
 setup(name='cozify',
-        version = '0.2.6',
+        version = '0.2.7',
         author = 'artanicus',
         author_email = 'python-cozify@nocturnal.fi',
         url = 'https://github.com/Artanicus/python-cozify',
