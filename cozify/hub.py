@@ -89,7 +89,6 @@ def getHubName(hub_id):
         return None
 
 def _getBase(host, port=8893, api=apiPath):
-    # TODO(artanicus): this may still need some auth hook
     return 'http://%s:%s%s' % (host, port, api)
 
 def ping(hub_id=None, hub_name=None):
@@ -155,10 +154,6 @@ def _hub(host=None, remoteToken=None, hubToken=None):
     else:
         raise APIError(response.status_code, response.text)
 
-# 1:1 implementation of /hub/tz API call
-# hubHost: valid ip/host to hub, defaults to state data
-# hub_token: authentication token
-# returns timezone of hub, e.g. Europe/Helsinki
 def _tz(host, hub_token, cloud_token=None):
     """1:1 implementation of /hub/tz API call
 

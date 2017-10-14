@@ -1,7 +1,7 @@
 """Module for handling Cozify Cloud API operations
 
 Attributes:
-    cloudBase(string): API endpoint including version
+    cloudBase(str): API endpoint including version
 
 """
 
@@ -263,8 +263,6 @@ def _emaillogin(email, otp):
     else:
         raise APIError(response.status_code, response.text)
 
-# By testing it seems hub/lan_ip will use the source ip of the request to determine the validity of the request.
-# Thus, only if you're making the request from the same public ip (or ip block?) will this call succeed with useful results
 def _lan_ip():
     """1:1 implementation of hub/lan_ip
 
@@ -280,10 +278,15 @@ def _lan_ip():
     else:
         raise APIError(response.status_code, response.text)
 
-# 1:1 implementation of user/hubkeys
-# remoteToken: cozify Cloud remoteToken
-# returns map of hubs: { hubId: hubToken }
 def _hubkeys(remoteToken):
+    """1:1 implementation of user/hubkeys
+
+    Args:
+        remoteToken(str) Cloud remote authentication token.
+
+    Returns:
+        dict: Map of hubId: hubToken pairs.
+    """
     headers = {
             'Authorization': remoteToken
     }
@@ -293,10 +296,15 @@ def _hubkeys(remoteToken):
     else:
         raise APIError(response.status_code, response.text)
 
-# 1:1 implementation of 'refreshsession'
-# remoteToken: cozify Cloud remoteToken
-# returns new remoteToken, not automatically stored into state
 def _refreshsession(remoteToken):
+    """1:1 implementation of user/refreshsession
+
+    Args:
+        remoteToken(str) Cloud remote authentication token.
+
+    Returns:
+        str: New cloud remote authentication token. Not automatically stored into state.
+    """
     headers = {
             'Authorization': remoteToken
     }
@@ -306,11 +314,6 @@ def _refreshsession(remoteToken):
     else:
         raise APIError(response.status_code, response.text)
 
-# 1:1 implementation of 'hub/remote'
-# remoteToken: cozify Cloud remoteToken
-# hubToken: cozify hub token
-# apicall: Hub api call to be remotely executed, for example: '/cc/1.4/hub/colors'
-# returns requests.response object
 def _remote(cloud_token, hub_token, apicall, put=False):
     """1:1 implementation of 'hub/remote'
 

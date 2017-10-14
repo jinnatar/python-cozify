@@ -1,9 +1,22 @@
+"""Module for handling consistent state storage.
+
+Attributes:
+    state_file(str): file path where state storage is kept. By default XDG conventions are used. (Most likely ~/.config/python-cozify/python-cozify.cfg)
+    state(configparser.ConfigParser): State object used for in-memory state. By default initialized with _initState.
+"""
+
 import configparser
 import os
 
-# write current state to file storage
-# if tmpstate is defined, write that specific state object
+state_file = _initXDG()
+state = _initState(state_file)
+
 def stateWrite(tmpstate=None):
+    """Write current state to file storage.
+
+    Args:
+        tmpstate(configparser.ConfigParser): State object to store instead of default state.
+    """
     global state_file
     if tmpstate is None:
         global state
@@ -11,9 +24,12 @@ def stateWrite(tmpstate=None):
     with open(state_file, 'w') as cf:
         tmpstate.write(cf)
 
-# allow setting the state storage location.
-# Useful especially for testing without affecting your normal state
 def setStatePath(filepath):
+    """Set state storage path. Useful for example for testing without affecting your normal state.
+
+    Args:
+        filepath(str): file path to use as new storage location.
+    """
     global state_file
     global state
     state_file = filepath
@@ -22,7 +38,13 @@ def setStatePath(filepath):
 
 
 def _initState(state_file):
-    # prime state storage
+    """Initialize state on cold start. Any stored state is read in or a new basic state is initialized.
+
+    Args:
+        state_file(str): State storage filepath to attempt to read from.
+    Returns:
+        configparser.ConfigParser: State object.
+    """
     # if we can read it, read it in, otherwise create empty file
     state = configparser.ConfigParser(allow_no_value=True)
     try:
@@ -41,6 +63,12 @@ def _initState(state_file):
     return state
 
 def _initXDG():
+    """Initialize config path per XDG basedir-spec and resolve the final location of state file storage.
+
+    Returns:
+        str: file path to state file as per XDG spec and current env.
+    """
+
     # per the XDG basedir-spec we adhere to $XDG_CONFIG_HOME if it's set, otherwise assume $HOME/.config
     xdg_config_home = ''
     if 'XDG_CONFIG_HOME' in os.environ:
@@ -59,6 +87,3 @@ def _initXDG():
 
     state_file = "%s/python-cozify.cfg" % config_dir
     return state_file
-
-state_file = _initXDG()
-state = _initState(state_file)
