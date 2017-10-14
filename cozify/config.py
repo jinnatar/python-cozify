@@ -8,9 +8,6 @@ Attributes:
 import configparser
 import os
 
-state_file = _initXDG()
-state = _initState(state_file)
-
 def stateWrite(tmpstate=None):
     """Write current state to file storage.
 
@@ -87,3 +84,6 @@ def _initXDG():
 
     state_file = "%s/python-cozify.cfg" % config_dir
     return state_file
+
+state_file = _initXDG()
+state = _initState(state_file)
