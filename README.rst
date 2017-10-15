@@ -57,6 +57,22 @@ authenticate with a non-default state storage
     # authentication and other useful data is now stored in the defined location instead of ~/.config/python-cozify/python-cozify.cfg
     # you could also use the environment variable XDG_CONFIG_HOME to override where config files are stored
 
+Tests
+-----
+pytest is used for unit tests. Test coverage is still quite spotty and under active development.
+
+During development you can run the test suite right from the source directory:
+
+.. code:: bash
+
+    pytest -v
+
+To run the test suite on an already installed python-cozify:
+
+.. code:: bash
+
+    pytest -v --pyargs cozify
+
 Current limitations
 -------------------
 
