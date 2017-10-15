@@ -1,7 +1,7 @@
 """Module for handling Cozify Hub API operations
 
 Attributes:
-    apiPath(string): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
+    apiPath(str): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
     remote(bool): Selector to treat a hub as being outside the LAN, i.e. calls will be routed via the Cozify Cloud remote call system. Defaults to False.
     autoremote(bool): Selector to autodetect hub LAN presence and flip to remote mode if needed. Defaults to True.
 
