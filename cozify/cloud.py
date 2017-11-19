@@ -229,6 +229,29 @@ def _getotp():
 def _getEmail():
     return input('Enter your Cozify account email address: ')
 
+def _getAttr(attr):
+    """Get cloud state attributes by attr name
+    
+    Args:
+        attr(str): Name of cloud state attribute to retrieve
+    Returns:
+        str: Value of attribute or exception on failure
+    """
+    section = 'Cloud'
+    if section in c.state and attr in c.state[section]:
+        return c.state[section][attr]
+    else:
+        logging.warning('Cloud attribute {0} not found in state.'.format(attr))
+        raise AttributeError
+
+def token():
+    """Get durrently used cloud_token.
+
+    Returns:
+        str: Cloud remote authentication token.
+    """
+    return _getAttr('remotetoken')
+        
 def _requestlogin(email):
     """Raw Cloud API call, request OTP to be sent to account email address.
 

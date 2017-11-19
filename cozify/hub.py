@@ -72,7 +72,24 @@ def getHubId(hub_name):
                 return section[5:] # cut out "Hubs."
     return None
 
-def getHubName(hub_id):
+def _getAttr(hub_id, attr):
+    """Get hub state attributes by attr name.
+
+    Args:
+        hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
+        attr(str): Name of hub attribute to retrieve       
+    Returns:
+        str: Value of attribute or exception on failure.
+    """
+    section = 'Hubs.' + hub_id
+    if section in c.state and attr in c.state[section]:
+        return c.state[section][attr]
+    else:
+        logging.warning('Hub id "{0}" not found in state or attribute {1} not set for hub.'.format(hub_id, attr))
+        raise AttributeError
+
+
+def name(hub_id):
     """Get hub name by it's id.
 
     Args:
@@ -81,12 +98,29 @@ def getHubName(hub_id):
     Returns:
         str: Hub name or None if the hub wasn't found.
     """
-    section = 'Hubs.' + hub_id
-    if section in c.state and 'hubname' in c.state[section]:
-        return c.state[section]['hubname']
-    else:
-        logging.warning('Hub id "{0}" not found in state.'.format(hub_id))
-        return None
+    return _getAttr(hub_id, 'hubname')
+
+def host(hub_id):
+    """Get hostname of matching hub_id
+
+    Args:
+        hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
+
+    Returns:
+        str: ip address of matching hub. Be aware that this may be empty if the hub is only known remotely and will still give you an ip address even if the hub is currently remote.
+    """
+    return _getAttr(hub_id, 'host')
+
+def token(hub_id):
+    """Get hub_token of matching hub_id
+
+    Args:
+        hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
+
+    Returns:
+        str: Hub authentication token.
+    """
+    return _getAttr(hub_id, 'hubtoken')
 
 def _getBase(host, port=8893, api=apiPath):
     return 'http://%s:%s%s' % (host, port, api)
@@ -154,6 +188,19 @@ def _hub(host=None, remoteToken=None, hubToken=None):
     else:
         raise APIError(response.status_code, response.text)
 
+def tz():
+    """Get timezone of default hub. Eventually this function will support arbitrary hubs.
+
+    Returns:
+        str: Timezone of the default hub, for example: 'Europe/Helsinki'
+    """
+    id = getDefaultHub()
+    ip = host(id)
+    hub_token = token(id)
+    cloud_token = cloud.token()
+
+    return _tz(ip, hub_token, cloud_token)
+
 def _tz(host, hub_token, cloud_token=None):
     """1:1 implementation of /hub/tz API call
 
@@ -173,7 +220,7 @@ def _tz(host, hub_token, cloud_token=None):
     else:
         response = requests.get(_getBase(host=host) + call, headers=headers)
     if response.status_code == 200:
-        return response.text
+        return response.json()
     else:
         raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
 
