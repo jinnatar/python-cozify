@@ -38,7 +38,7 @@ def test_tz():
         ))
 
 def test_hub_id_to_name(tmphub):
-    assert hub.getHubName(tmphub.id) == tmphub.name
+    assert hub.name(tmphub.id) == tmphub.name
 
 def test_hub_name_to_id(tmphub):
     assert hub.getHubId(tmphub.name) == tmphub.id
