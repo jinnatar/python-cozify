@@ -77,7 +77,7 @@ def _getAttr(hub_id, attr):
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
-        attr(str): Name of hub attribute to retrieve       
+        attr(str): Name of hub attribute to retrieve
     Returns:
         str: Value of attribute or exception on failure.
     """
