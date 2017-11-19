@@ -245,7 +245,7 @@ def _getAttr(attr):
         raise AttributeError
 
 def token():
-    """Get durrently used cloud_token.
+    """Get currently used cloud_token.
 
     Returns:
         str: Cloud remote authentication token.
