@@ -7,5 +7,6 @@ from cozify import config
 
 logging.basicConfig(level=logging.DEBUG)
 
-conf_file='/tmp/python-cozify-testing.cfg'
-config.setStatePath(conf_file)
+# Disabled due to not wanting to mock the entire auth, so instead we use whatever is the live state.
+#conf_file='/tmp/python-cozify-testing.cfg'
+#config.setStatePath(conf_file)
