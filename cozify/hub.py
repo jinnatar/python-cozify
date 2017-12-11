@@ -189,7 +189,7 @@ def _hub(host=None, remoteToken=None, hubToken=None):
         raise APIError(response.status_code, response.text)
 
 def tz(hub_id=getDefaultHub()):
-    """Get timezone of default hub. Eventually this function will support arbitrary hubs.
+    """Get timezone of given hub or default hub if no id is specified.
 
     Args:
     hub_id(str): Hub to query, by default the default hub is used.
