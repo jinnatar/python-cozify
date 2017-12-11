@@ -147,7 +147,7 @@ def ping():
     """
 
     try:
-        _hubkeys(c.state['Cloud']['remoteToken']) # TODO(artanicus): see if there's a cheaper API call
+        _hubkeys(token()) # TODO(artanicus): see if there's a cheaper API call
     except APIError as e:
         if e.status_code == 401:
             return False
@@ -166,7 +166,7 @@ def refresh():
         bool: Success of refresh attempt.
     """
     try:
-        newRemoteToken = _refreshsession(c.state['Cloud']['remoteToken'])
+        newRemoteToken = _refreshsession(token())
     except APIError as e:
         if e.status_code == 401:
             # too late, our token is already dead
@@ -174,6 +174,7 @@ def refresh():
         else:
             raise
     else:
+        # TODO(artanicus): feels dirty writing direct to state, needs some middleware
         c.state['Cloud']['remoteToken'] = newRemoteToken
         c.stateWrite()
         return True
@@ -244,13 +245,40 @@ def _getAttr(attr):
         logging.warning('Cloud attribute {0} not found in state.'.format(attr))
         raise AttributeError
 
-def token():
-    """Get currently used cloud_token.
+def _setAttr(attr, value):
+    """Set cloud state attributes by attr name
+    
+    Args:
+        attr(str): Name of cloud state attribute to overwrite
+        value(str): Value to store
+    """
+    section = 'Cloud'
+    if section in c.state and attr in c.state[section]:
+        c.state[section][attr] = value
+        c.stateWrite()
+    else:
+        logging.warning('Cloud attribute {0} not found in state.'.format(attr))
+        raise AttributeError
+
+def token(new_token=None):
+    """Get currently used cloud_token or set a new one.
 
     Returns:
         str: Cloud remote authentication token.
     """
+    if new_token:
+        _setAttr('remotetoken', new_token)
     return _getAttr('remotetoken')
+
+def email(new_email=None):
+    """Get currently used cloud account email or set a new one.
+
+    Returns:
+        str: Cloud user account email address.
+    """
+    if new_email:
+        _setAttr('email', new_email)
+    return _getAttr('email')
         
 def _requestlogin(email):
     """Raw Cloud API call, request OTP to be sent to account email address.

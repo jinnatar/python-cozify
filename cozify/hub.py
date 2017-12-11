@@ -153,8 +153,8 @@ def ping(hub_id=None, hub_name=None):
             remote = True
             logging.debug('Ping determined hub is remote and flipped state to remote.')
 
-        tz = _tz(hub_host, hub_token, cloud_token)
-        logging.debug('Ping performed with tz call, response: {0}'.format(tz))
+        timezone = tz(hub_id)
+        logging.debug('Ping performed with tz call, response: {0}'.format(timezone))
     except APIError as e:
         if e.status_code == 401:
             logging.debug(e)
@@ -188,16 +188,20 @@ def _hub(host=None, remoteToken=None, hubToken=None):
     else:
         raise APIError(response.status_code, response.text)
 
-def tz():
+def tz(hub_id=getDefaultHub()):
     """Get timezone of default hub. Eventually this function will support arbitrary hubs.
 
+    Args:
+    hub_id(str): Hub to query, by default the default hub is used.
+
     Returns:
-        str: Timezone of the default hub, for example: 'Europe/Helsinki'
+        str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
-    id = getDefaultHub()
-    ip = host(id)
-    hub_token = token(id)
-    cloud_token = cloud.token()
+    ip = host(hub_id)
+    hub_token = token(hub_id)
+    cloud_token = None
+    if remote:
+        cloud_token = cloud.token()
 
     return _tz(ip, hub_token, cloud_token)
 
