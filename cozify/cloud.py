@@ -136,8 +136,12 @@ def resetState():
     c.state['Cloud'] = {}
     c.stateWrite()
 
-def ping():
+def ping(autorefresh=True, expiry=None):
     """Test cloud token validity. On success will also trigger a refresh if it's needed by the current key expiry.
+
+    Args:
+        refresh(bool): Wether to perform a autorefresh check after a successful ping. Defaults to True.
+        expiry(datetime.timedelta): timedelta object for duration how often cloud_token will be auto-refreshed when cloud.ping() is called. If not set, cloud.refresh() defaults are used.
 
     Returns:
         bool: validity of stored token.
@@ -152,7 +156,10 @@ def ping():
         else:
             raise
     else:
-        refresh()
+        if expiry:
+            refresh(expiry=expiry)
+        else:
+            refresh()
         return True
 
 def refresh(force=False, expiry=datetime.timedelta(days=1)):
