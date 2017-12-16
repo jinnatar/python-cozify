@@ -67,16 +67,19 @@ In most cases it isn't necessary to directly call cloud.refresh() if you're alre
 cloud.ping() will also perform a refresh check after a successful ping unless explicitly told not to do so.
 
 To refresh a token you can call as often as you want:
+
 .. code:: python
 
     cloud.refresh()
 
 By default keys older than a day will be re-requested and otherwise no refresh is performed. The refresh can be forced:
+
 .. code:: python
 
     cloud.refresh(force=True)
 
 And the expiry duration can be altered (also when calling cloud.ping()):
+
 .. code:: python
 
     cloud.refresh(expiry=datetime.timedelta(days=20))
