@@ -57,6 +57,32 @@ authenticate with a non-default state storage
     # authentication and other useful data is now stored in the defined location instead of ~/.config/python-cozify/python-cozify.cfg
     # you could also use the environment variable XDG_CONFIG_HOME to override where config files are stored
 
+Keeping authentication valid
+----------------------------
+If the cloud token expires, the only option to get a new one is an interactive prompt for an OTP.
+Since most applications will want to avoid that as much as possible there are a few tips to keep a valid token alive.
+At the time of writing tokens are valid for 28 days during which they can be seamlessly refreshed.
+
+In most cases it isn't necessary to directly call cloud.refresh() if you're already using cloud.ping() to test token validity.
+cloud.ping() will also perform a refresh check after a successful ping unless explicitly told not to do so.
+
+To refresh a token you can call as often as you want:
+.. code:: python
+
+    cloud.refresh()
+
+By default keys older than a day will be re-requested and otherwise no refresh is performed. The refresh can be forced:
+.. code:: python
+
+    cloud.refresh(force=True)
+
+And the expiry duration can be altered (also when calling cloud.ping()):
+.. code:: python
+
+    cloud.refresh(expiry=datetime.timedelta(days=20))
+    # or
+    cloud.ping(autorefresh=True, expiry=datetime.timedelta(days=20))
+
 Tests
 -----
 pytest is used for unit tests. Test coverage is still quite spotty and under active development.
