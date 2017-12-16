@@ -32,7 +32,13 @@ def setStatePath(filepath):
     state_file = filepath
     state = _initState(state_file)
 
-
+def dump_state():
+    """Print out current state file to stdout
+    """
+    for section in state.sections():
+        print(section)
+        for option in state.options(section):
+            print('{0:^10} = {1:>10.100}'.format(option, state[section][option]))
 
 def _initState(state_file):
     """Initialize state on cold start. Any stored state is read in or a new basic state is initialized.
