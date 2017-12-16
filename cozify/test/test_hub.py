@@ -31,8 +31,8 @@ def id(scope='module'):
     return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
 
 def test_tz():
-    hub.ping() # make sure we have valid auth
-    hub.tz()
+    assert hub.ping() # make sure we have valid auth
+    assert hub.tz()
     # hand craft data needed for low-level api call _tz
     hubSection = 'Hubs.' + config.state['Hubs']['default']
     print(hub._tz(
