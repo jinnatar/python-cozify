@@ -137,7 +137,7 @@ def resetState():
     c.stateWrite()
 
 def ping():
-    """Test cloud token validity.
+    """Test cloud token validity. On success will also trigger a refresh if it's needed by the current key expiry.
 
     Returns:
         bool: validity of stored token.
@@ -152,6 +152,7 @@ def ping():
         else:
             raise
     else:
+        refresh()
         return True
 
 def refresh(force=False, expiry=datetime.timedelta(days=1)):
@@ -177,12 +178,13 @@ def refresh(force=False, expiry=datetime.timedelta(days=1)):
             else:
                 raise
         else:
-            _setAttr('last_refresh', config._iso_now(), commit=False)
-            _setAttr('remoteToken', cloud_token, commit=True)
+            _setAttr('last_refresh', c._iso_now(), commit=False)
+            token(cloud_token)
+            logging.info('cloud_token has been successfully refreshed.')
 
             return True
     else:
-        logging.debug("Not refreshing token: {0} + {1} > {2})".format(last_refresh, expiry, now))
+        logging.debug("Not refreshing token, it's not old enough yet. Limit is: {0})".format(expiry))
 
 def _need_refresh(force, expiry):
     """Evaluate if refresh timer is already over or if forcing is valid.
