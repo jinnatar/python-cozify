@@ -210,7 +210,7 @@ def _hub(host=None, remoteToken=None, hubToken=None):
     else:
         raise APIError(response.status_code, response.text)
 
-def tz(hub_id=getDefaultHub()):
+def tz(hub_id=None):
     """Get timezone of given hub or default hub if no id is specified.
 
     Args:
@@ -219,6 +219,10 @@ def tz(hub_id=getDefaultHub()):
     Returns:
         str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
+
+    if not hub_id:
+        hub_id = getDefaultHub()
+
     ip = host(hub_id)
     hub_token = token(hub_id)
     cloud_token = None
