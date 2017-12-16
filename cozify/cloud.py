@@ -66,6 +66,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
 
         # save the successful remoteToken
         c.state['Cloud']['remoteToken'] = remoteToken
+        _setAttr('last_refresh', c._iso_now())
         c.stateWrite()
     else:
         # remoteToken already fine, let's just use it
