@@ -35,7 +35,7 @@ def getDevices(hubName=None, hubId=None):
         hubId = getDefaultHub()
 
     configName = 'Hubs.' + hubId
-    if cloud._needHubToken():
+    if cloud._need_hub_token():
         logging.warning('No valid authentication token, requesting authentication')
         cloud.authenticate()
     hub_token = c.state[configName]['hubtoken']
@@ -88,6 +88,26 @@ def _getAttr(hub_id, attr):
         logging.warning('Hub id "{0}" not found in state or attribute {1} not set for hub.'.format(hub_id, attr))
         raise AttributeError
 
+def _setAttr(hub_id, attr, value, commit=True):
+    """Set hub state attributes by hub_id and attr name
+
+    Args:
+        hub_id(str): Id of hub to store for. The id is a string of hexadecimal sections used internally to represent a hub.
+        attr(str): Name of cloud state attribute to overwrite. Attribute will be created if it doesn't exist.
+        value(str): Value to store
+        commit(bool): True to commit state after set. Defaults to True.
+    """
+    section = 'Hubs.' + hub_id
+    if section in c.state:
+        if attr not in c.state[section]:
+            logging.info("Attribute {0} was not already in {1} state, new attribute created.".format(attr, section))
+        c.state[section][attr] = value
+        if commit:
+            c.stateWrite()
+    else:
+        logging.warning('Section {0} not found in state.'.format(section))
+        raise AttributeError
+
 
 def name(hub_id):
     """Get hub name by it's id.
@@ -111,8 +131,8 @@ def host(hub_id):
     """
     return _getAttr(hub_id, 'host')
 
-def token(hub_id):
-    """Get hub_token of matching hub_id
+def token(hub_id, new_token=None):
+    """Get hub_token of matching hub_id or set a new value for it.
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
@@ -120,6 +140,8 @@ def token(hub_id):
     Returns:
         str: Hub authentication token.
     """
+    if new_token:
+        _setAttr(hub_id, 'hubtoken', new_token)
     return _getAttr(hub_id, 'hubtoken')
 
 def _getBase(host, port=8893, api=apiPath):
@@ -143,8 +165,8 @@ def ping(hub_id=None, hub_name=None):
         hub_id = getDefaultHub()
     try:
         config_name = 'Hubs.' + hub_id
-        hub_token = c.state[config_name]['hubtoken']
-        hub_host = c.state[config_name]['host']
+        hub_token = _getAttr(hub_id, 'hubtoken')
+        hub_host = _getAttr(hub_id, 'host')
         cloud_token = c.state['Cloud']['remotetoken']
 
         # if we don't have a stored host then we assume the hub is remote

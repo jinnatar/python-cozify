@@ -38,12 +38,11 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
         bool: True on authentication success. Failure will result in an exception.
     """
 
-    if 'email' not in c.state['Cloud'] or not c.state['Cloud']['email']:
-         c.state['Cloud']['email'] = _getEmail()
-         c.stateWrite()
-    email = c.state['Cloud']['email']
+    if not _isAttr('email'):
+         _setAttr('email', _getEmail())
+    email = _getAttr('email')
 
-    if _needRemoteToken(trustCloud):
+    if _need_cloud_token(trustCloud):
         try:
             _requestlogin(email)
         except APIError:
@@ -58,38 +57,37 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             raise AuthenticationError(message)
 
         try:
-            remoteToken = _emaillogin(email, otp)
+            cloud_token = _emaillogin(email, otp)
         except APIError:
             logging.error('OTP authentication has failed.')
             resetState()
             raise
 
-        # save the successful remoteToken
-        c.state['Cloud']['remoteToken'] = remoteToken
-        _setAttr('last_refresh', c._iso_now())
-        c.stateWrite()
+        # save the successful cloud_token
+        _setAttr('last_refresh', c._iso_now(), commit=False)
+        _setAttr('remoteToken', cloud_token, commit=True)
     else:
-        # remoteToken already fine, let's just use it
-        remoteToken = c.state['Cloud']['remoteToken']
+        # cloud_token already fine, let's just use it
+        cloud_token = _getAttr('remoteToken')
 
-    if _needHubToken(trustHub):
+    if _need_hub_token(trustHub):
         localHubs = _lan_ip() # will only work if we're local to the Hub, otherwise None
         # TODO(artanicus): unknown what will happen if there is a local hub but another one remote. Needs testing by someone with multiple hubs. Issue #7
-        hubkeys = _hubkeys(remoteToken) # get all registered hubs and their keys from the cloud.
+        hubkeys = _hubkeys(cloud_token) # get all registered hubs and their keys from the cloud.
         if not hubkeys:
             logging.critical('You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.')
 
         # evaluate all returned Hubs and store them
         logging.debug('Listing all hubs returned by cloud hubkeys query:')
-        for hubId, hubToken in hubkeys.items():
-            logging.debug('hub: {0} token: {1}'.format(hubId, hubToken))
-            hubInfo = None
-            hubIp = None
+        for hub_id, hub_token in hubkeys.items():
+            logging.debug('hub: {0} token: {1}'.format(hub_id, hub_token))
+            hub_info = None
+            hub_ip = None
 
             # if we're remote, we didn't get a valid ip
             if not localHubs:
                 logging.info('No local Hubs detected, attempting authentication via Cozify Cloud.')
-                hubInfo = hub._hub(remoteToken=remoteToken, hubToken=hubToken)
+                hub_info = hub._hub(cloud_token=cloud_token, hub_token=hub_token)
                 # if the hub wants autoremote we flip the state
                 if hub.autoremote and not hub.remote:
                     logging.info('[autoremote] Flipping hub remote status from local to remote.')
@@ -99,34 +97,33 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 # _lan_ip cannot provide a map as to which ip is which hub. Thus we actually need to determine the right one.
                 # TODO(artanicus): Need to truly test how multihub works before implementing ip to hub resolution. See issue #7
                 logging.debug('data structure: {0}'.format(localHubs))
-                hubIp = localHubs[0]
-                hubInfo = hub._hub(host=hubIp)
+                hub_ip = localHubs[0]
+                hub_info = hub._hub(host=hub_ip)
                 # if the hub wants autoremote we flip the state
                 if hub.autoremote and hub.remote:
                     logging.info('[autoremote] Flipping hub remote status from remote to local.')
                     hub.remote = False
 
-            hubName = hubInfo['name']
-            if hubId in hubkeys:
-                hubToken = hubkeys[hubId]
+            hub_name = hub_info['name']
+            if hub_id in hubkeys:
+                hub_token = hubkeys[hub_id]
             else:
-                logging.error('The hub "{0}" is not linked to the given account: "{1}"'.format(hubName, c.state['Cloud']['email']))
+                logging.error('The hub "{0}" is not linked to the given account: "{1}"'.format(hub_name, _getAttr('email')))
                 resetState()
                 return False
 
             # if hub name not already known, create named section
-            hubSection = 'Hubs.' + hubId
+            hubSection = 'Hubs.' + hub_id
             if hubSection not in c.state:
-                c.state[hubSection] = {}
+                c.state.add_section(hubSection)
             # if default hub not set, set this hub as the first as the default
             if 'default' not in c.state['Hubs']:
-                c.state['Hubs']['default'] = hubId
+                c.state['Hubs']['default'] = hub_id
 
             # store Hub data under it's named section
-            c.state[hubSection]['hubToken'] = hubToken
-            c.state[hubSection]['host'] = hubIp
-            c.state[hubSection]['hubName'] = hubName
-            c.stateWrite()
+            hub._setAttr(hub_id, 'host', hub_ip, commit=False)
+            hub._setAttr(hub_id, 'hubName', hub_name, commit=False)
+            hub.token(hub_id, hub_token)
     return True
 
 def resetState():
@@ -217,7 +214,7 @@ def _need_refresh(force, expiry):
     if force or last_refresh + expiry < now:
         return True
 
-def _needRemoteToken(trust=True):
+def _need_cloud_token(trust=True):
     """Validate current remote token and decide if we'll request it during authentication.
 
     Args:
@@ -227,7 +224,7 @@ def _needRemoteToken(trust=True):
         bool: True to indicate a need to request token.
     """
 
-    # check if we've got a remoteToken before doing expensive checks
+    # check if we've got a cloud_token before doing expensive checks
     if trust and 'remoteToken' in c.state['Cloud']:
         if c.state['Cloud']['remoteToken'] is None:
             return True
@@ -235,7 +232,7 @@ def _needRemoteToken(trust=True):
             return not ping()
     return True
 
-def _needHubToken(trust=True):
+def _need_hub_token(trust=True):
     """Validate current hub token and decide if we'll request it during authentication.
 
     Args:
@@ -299,6 +296,14 @@ def _setAttr(attr, value, commit=True):
     else:
         logging.warning('Section {0} not found in state.'.format(section))
         raise AttributeError
+
+def _isAttr(attr):
+    """Check validity of attribute by attr name.
+
+    Returns:
+        bool: True if attribute exists
+    """
+    return attr in c.state['Cloud'] and c.state['Cloud'][attr]
 
 def token(new_token=None):
     """Get currently used cloud_token or set a new one.
@@ -369,17 +374,17 @@ def _lan_ip():
     else:
         raise APIError(response.status_code, response.text)
 
-def _hubkeys(remoteToken):
+def _hubkeys(cloud_token):
     """1:1 implementation of user/hubkeys
 
     Args:
-        remoteToken(str) Cloud remote authentication token.
+        cloud_token(str) Cloud remote authentication token.
 
     Returns:
-        dict: Map of hubId: hubToken pairs.
+        dict: Map of hub_id: hub_token pairs.
     """
     headers = {
-            'Authorization': remoteToken
+            'Authorization': cloud_token
     }
     response = requests.get(cloudBase + 'user/hubkeys', headers=headers)
     if response.status_code == 200:
@@ -387,17 +392,17 @@ def _hubkeys(remoteToken):
     else:
         raise APIError(response.status_code, response.text)
 
-def _refreshsession(remoteToken):
+def _refreshsession(cloud_token):
     """1:1 implementation of user/refreshsession
 
     Args:
-        remoteToken(str) Cloud remote authentication token.
+        cloud_token(str) Cloud remote authentication token.
 
     Returns:
         str: New cloud remote authentication token. Not automatically stored into state.
     """
     headers = {
-            'Authorization': remoteToken
+            'Authorization': cloud_token
     }
     response = requests.get(cloudBase + 'user/refreshsession', headers=headers)
     if response.status_code == 200:

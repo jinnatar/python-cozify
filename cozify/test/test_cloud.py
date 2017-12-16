@@ -7,15 +7,15 @@ from cozify.test import debug
 
 def test_auth_cloud():
     print('Baseline;')
-    print('needRemote: {0}'.format(cloud._needRemoteToken(True)))
-    print('needHub: {0}'.format(cloud._needHubToken(True)))
+    print('needRemote: {0}'.format(cloud._need_cloud_token(True)))
+    print('needHub: {0}'.format(cloud._need_hub_token(True)))
     print('Authentication with default trust;')
     print(cloud.authenticate())
 
 def test_auth_hub():
     print('Baseline;')
-    print('needRemote: {0}'.format(cloud._needRemoteToken(True)))
-    print('needHub: {0}'.format(cloud._needHubToken(True)))
+    print('needRemote: {0}'.format(cloud._need_cloud_token(True)))
+    print('needHub: {0}'.format(cloud._need_hub_token(True)))
 
     print('Authentication with no hub trust;')
     print(cloud.authenticate(trustHub=False))
