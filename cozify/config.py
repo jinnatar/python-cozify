@@ -33,7 +33,7 @@ def setStatePath(filepath):
     state = _initState(state_file)
 
 def dump_state():
-    """Print out current state file to stdout
+    """Print out current state file to stdout. Long values are truncated since this is only for visualization.
     """
     for section in state.sections():
         print('[{0:.10}]'.format(section))
