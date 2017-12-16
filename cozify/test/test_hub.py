@@ -5,13 +5,14 @@ from cozify import hub, config, multisensor
 from cozify.test import debug
 
 class tmp_hub():
-    """Creates a temporary hub section (with test data) in the current state.
+    """Creates a temporary hub section (with test data) in the current live state.
     """
     def __init__(self):
         self.id = 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
         self.name = 'HubbyMcHubFace'
         self.section = 'Hubs.%s' % self.id
     def __enter__(self):
+        config.setStatePath() # reset to default
         config.state.add_section(self.section)
         config.state[self.section]['hubname'] = self.name
         return self
@@ -30,7 +31,9 @@ def tmphub(scope='module'):
 def id(scope='module'):
     return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
 
-def test_tz():
+def test_tz(tmphub):
+    # this actually runs against a real hub so dump state to have any chance of debugging
+    config.dump_state()
     assert hub.ping() # make sure we have valid auth
     assert hub.tz()
     # hand craft data needed for low-level api call _tz

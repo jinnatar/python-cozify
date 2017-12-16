@@ -5,7 +5,7 @@ Attributes:
 
 """
 
-import json, requests, logging
+import json, requests, logging, datetime
 
 from . import config as c
 from . import hub
@@ -156,30 +156,65 @@ def ping():
     else:
         return True
 
-def refresh():
+def refresh(force=False, expiry=datetime.timedelta(days=1)):
     """Renew current cloud token and store new token in state.
 
     This call will only succeed if the current cloud token is still valid.
-    A new refreshed token is requested from the API and stored in state.
+    A new refreshed token is requested from the API only if sufficient time has passed since the previous refresh.
+
+    Args:
+        force(bool): Set to True to always perform a refresh regardless of time passed since previous refresh.
+        expiry(datetime.timedelta): timedelta object for duration of refresh expiry. Defaults to one day.
 
     Returns:
-        bool: Success of refresh attempt.
+        bool: Success of refresh attempt, True also when expiry wasn't over yet even though no refresh was performed.
     """
-    try:
-        newRemoteToken = _refreshsession(token())
-    except APIError as e:
-        if e.status_code == 401:
-            # too late, our token is already dead
-            return False
+    if _need_refresh(force, expiry):
+        try:
+            cloud_token = _refreshsession(token())
+        except APIError as e:
+            if e.status_code == 401:
+                # too late, our token is already dead
+                return False
+            else:
+                raise
         else:
-            raise
+            _setAttr('last_refresh', config._iso_now(), commit=False)
+            _setAttr('remoteToken', cloud_token, commit=True)
+
+            return True
     else:
-        # TODO(artanicus): feels dirty writing direct to state, needs some middleware
-        c.state['Cloud']['remoteToken'] = newRemoteToken
-        c.stateWrite()
+        logging.debug("Not refreshing token: {0} + {1} > {2})".format(last_refresh, expiry, now))
+
+def _need_refresh(force, expiry):
+    """Evaluate if refresh timer is already over or if forcing is valid.
+
+    Args:
+        force(bool): Set to True to always perform a refresh regardless of time passed since previous refresh.
+        expiry(datetime.timedelta): timedelta object for duration of refresh expiry.
+
+    Returns:
+        bool: True if refresh should be done according to forcing and expiry.
+    """
+
+    last_refresh_str = None
+
+    try:
+        last_refresh_str = _getAttr('last_refresh')
+    except AttributeError: # not stored in state yet, e.g. first refresh
+        logging.info("Last cloud token refresh unknown, will force refresh.")
+        force = True
+    else:
+        try:
+            last_refresh = datetime.datetime.strptime(last_refresh_str, "%Y-%m-%dT%H:%M:%S")
+        except AttributeError: # not readable as a timestamp
+            logging.error("Last cloud token refresh timestamp invalid, will force refresh.")
+            force = True
+
+    now = datetime.datetime.now()
+
+    if force or last_refresh + expiry < now:
         return True
-
-
 
 def _needRemoteToken(trust=True):
     """Validate current remote token and decide if we'll request it during authentication.
@@ -232,7 +267,7 @@ def _getEmail():
 
 def _getAttr(attr):
     """Get cloud state attributes by attr name
-    
+
     Args:
         attr(str): Name of cloud state attribute to retrieve
     Returns:
@@ -245,19 +280,23 @@ def _getAttr(attr):
         logging.warning('Cloud attribute {0} not found in state.'.format(attr))
         raise AttributeError
 
-def _setAttr(attr, value):
+def _setAttr(attr, value, commit=True):
     """Set cloud state attributes by attr name
-    
+
     Args:
-        attr(str): Name of cloud state attribute to overwrite
+        attr(str): Name of cloud state attribute to overwrite. Attribute will be created if it doesn't exist.
         value(str): Value to store
+        commit(bool): True to commit state after set. Defaults to True.
     """
     section = 'Cloud'
-    if section in c.state and attr in c.state[section]:
+    if section in c.state:
+        if attr not in c.state[section]:
+            logging.info("Attribute {0} was not already in {1} state, new attribute created.".format(attr, section))
         c.state[section][attr] = value
-        c.stateWrite()
+        if commit:
+            c.stateWrite()
     else:
-        logging.warning('Cloud attribute {0} not found in state.'.format(attr))
+        logging.warning('Section {0} not found in state.'.format(section))
         raise AttributeError
 
 def token(new_token=None):
@@ -279,7 +318,7 @@ def email(new_email=None):
     if new_email:
         _setAttr('email', new_email)
     return _getAttr('email')
-        
+
 def _requestlogin(email):
     """Raw Cloud API call, request OTP to be sent to account email address.
 
