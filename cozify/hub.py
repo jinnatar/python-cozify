@@ -27,21 +27,23 @@ def getDevices(hubName=None, hubId=None):
         dict: full live device state as returned by the API
 
     """
-    # No matter what we got we resolve it down to a hubId
-    if not hubId and hubName:
-        hubId = getHubId(hubName)
-    if not hubName and not hubId:
-        hubId = getDefaultHub()
+    hub_id = hubId # transitional assignments so the inner code can already use a proper name before compatibility is broken in v0.3
+    hub_name = hubName
 
-    configName = 'Hubs.' + hubId
+    # No matter what we got we resolve it down to a hub_id
+    if not hub_id and hub_name:
+        hub_id = getHubId(hub_name)
+    if not hub_name and not hub_id:
+        hub_id = getDefaultHub()
+
     if cloud._need_hub_token():
         logging.warning('No valid authentication token, requesting authentication')
         cloud.authenticate()
-    hub_token = c.state[configName]['hubtoken']
-    cloud_token = c.state['Cloud']['remotetoken']
-    host = c.state[configName]['host']
+    hub_token = token(hub_id)
+    cloud_token = cloud.token()
+    hostname = host(hub_id)
 
-    return hub_api.devices(host=host, hub_token=hub_token, remote=remote, cloud_token=cloud_token)
+    return hub_api.devices(host=hostname, hub_token=hub_token, remote=remote, cloud_token=cloud_token)
 
 def getDefaultHub():
     """Return id of default Hub.
