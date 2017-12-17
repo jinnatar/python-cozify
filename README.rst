@@ -2,8 +2,8 @@ python-cozify
 =============
 
 Unofficial Python3 API bindings for the (unpublished) Cozify API.
-Includes 1:1 API calls plus helper functions to string together an
-authentication flow.
+Includes high-level helpers for easier use of the APIs,
+for example an automatic authentication flow, and low-level 1:1 API functions.
 
 Installation
 ------------
