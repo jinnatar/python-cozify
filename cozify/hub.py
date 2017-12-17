@@ -6,7 +6,7 @@ Attributes:
 
 """
 
-import requests, json, logging
+import requests, logging
 from . import config as c
 from . import cloud
 from . import hub_api
