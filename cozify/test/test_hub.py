@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pytest
 import os, sys
-from cozify import hub, config, multisensor
+from cozify import hub, hub_api, config, multisensor
 from cozify.test import debug
 
 class tmp_hub():
@@ -36,11 +36,12 @@ def test_tz(tmphub):
     config.dump_state()
     assert hub.ping() # make sure we have valid auth
     assert hub.tz()
-    # hand craft data needed for low-level api call _tz
+    # hand craft data needed for low-level api call hub_api.tz
     hubSection = 'Hubs.' + config.state['Hubs']['default']
-    print(hub._tz(
+    print(hub_api.tz(
         host=config.state[hubSection]['host'],
         hub_token=config.state[hubSection]['hubtoken'],
+        remote=hub.remote,
         cloud_token=config.state['Cloud']['remotetoken']
         ))
 
