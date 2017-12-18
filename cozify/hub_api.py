@@ -25,12 +25,10 @@ def get(call, hub_token_header=True, base=apiPath, **kwargs):
         call(str): API path to call after apiPath, needs to include leading /.
         hub_token_header(bool): Set to False to omit hub_token usage in call headers.
         base(str): Base path to call from API instead of global apiPath. Defaults to apiPath.
-
-    Kwargs:
-        host(str): ip address or hostname of hub.
-        hub_token(str): Hub authentication token.
-        remote(bool): If call is to be local or remote (bounced via cloud).
-        cloud_token(str): Cloud authentication token. Only needed if remote = True.
+        **host(str): ip address or hostname of hub.
+        **hub_token(str): Hub authentication token.
+        **remote(bool): If call is to be local or remote (bounced via cloud).
+        **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
     response = None
     headers = None
