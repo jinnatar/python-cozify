@@ -12,6 +12,9 @@ apiPath = '/cc/1.6'
 def _getBase(host, port=8893, api=apiPath):
     return 'http://%s:%s%s' % (host, port, api)
 
+def _headers(hub_token):
+    return { 'Authorization': hub_token }
+
 def hub(host=None, remoteToken=None, hubToken=None):
     """1:1 implementation of /hub API call
 
@@ -48,12 +51,11 @@ def tz(host, hub_token, remote, cloud_token=None):
         str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
 
-    headers = { 'Authorization': hub_token }
     call = '/hub/tz'
     if remote:
         response = cloud._remote(cloud_token=cloud_token, hub_token=hub_token, apicall=apiPath + call)
     else:
-        response = requests.get(_getBase(host=host) + call, headers=headers)
+        response = requests.get(_getBase(host=host) + call, headers=_headers(hub_token))
     if response.status_code == 200:
         return response.json()
     else:
@@ -73,12 +75,11 @@ def devices(host, hub_token, remote, cloud_token=None):
 
     """
 
-    headers = { 'Authorization': hub_token }
     call = '/devices'
     if remote:
         response = cloud._remote(cloud_token, hub_token, apiPath + call)
     else:
-        response = requests.get(_getBase(host=host) + call, headers=headers)
+        response = requests.get(_getBase(host=host) + call, headers=_headers(hub_token))
     if response.status_code == 200:
         return response.json()
     else:
