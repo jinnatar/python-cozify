@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import pytest
 import os, sys
+
+from cozify import conftest
+
 from cozify import hub, hub_api, config, multisensor
 from cozify.test import debug
 
@@ -31,6 +34,7 @@ def tmphub(scope='module'):
 def id(scope='module'):
     return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
 
+@pytest.mark.live
 def test_tz(tmphub):
     # this actually runs against a real hub so dump state to have any chance of debugging
     config.dump_state()
@@ -51,6 +55,7 @@ def test_hub_id_to_name(tmphub):
 def test_hub_name_to_id(tmphub):
     assert hub.getHubId(tmphub.name) == tmphub.id
 
+@pytest.mark.live
 def test_multisensor():
     data = hub.getDevices()
     print(multisensor.getMultisensorData(data))

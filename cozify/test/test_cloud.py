@@ -2,23 +2,20 @@
 
 import os, pytest, tempfile, datetime
 
+from cozify import conftest
+
 from cozify import cloud, config
 from cozify.test import debug
 
+## basic cloud.authenticate() tests
+
+@pytest.mark.live
 def test_auth_cloud():
-    print('Baseline;')
-    print('needRemote: {0}'.format(cloud._need_cloud_token(True)))
-    print('needHub: {0}'.format(cloud._need_hub_token(True)))
-    print('Authentication with default trust;')
-    print(cloud.authenticate())
+    assert cloud.authenticate()
 
+@pytest.mark.live
 def test_auth_hub():
-    print('Baseline;')
-    print('needRemote: {0}'.format(cloud._need_cloud_token(True)))
-    print('needHub: {0}'.format(cloud._need_hub_token(True)))
-
-    print('Authentication with no hub trust;')
-    print(cloud.authenticate(trustHub=False))
+    assert cloud.authenticate(trustHub=False)
 
 class tmp_cloud():
     """Creates a temporary cloud state with test data.
@@ -55,6 +52,8 @@ def tmpcloud(scope='module'):
 def id(scope='module'):
     return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
 
+
+## cloud.refresh() logic tests
 
 def test_cloud_refresh_cold(tmpcloud):
     config.state.remove_option('Cloud', 'last_refresh')
