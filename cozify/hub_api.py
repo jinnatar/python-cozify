@@ -45,7 +45,7 @@ def get(call, hub_token_header=True, base=apiPath, **kwargs):
         raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
 
 def hub(**kwargs):
-    """1:1 implementation of /hub API call. For kwargs see cozify.cloud_api.get()
+    """1:1 implementation of /hub API call. For kwargs see cozify.hub_api.get()
 
     Returns:
         dict: Hub state dict.
@@ -53,7 +53,7 @@ def hub(**kwargs):
     return get('hub', base='/', hub_token_header=False, **kwargs)
 
 def tz(**kwargs):
-    """1:1 implementation of /hub/tz API call. For kwargs see cozify.cloud_api.get()
+    """1:1 implementation of /hub/tz API call. For kwargs see cozify.hub_api.get()
 
     Returns:
         str: Timezone of the hub, for example: 'Europe/Helsinki'
@@ -61,7 +61,7 @@ def tz(**kwargs):
     return get('/hub/tz', **kwargs)
 
 def devices(**kwargs):
-    """1:1 implementation of /devices API call. For kwargs see cozify.cloud_api.get()
+    """1:1 implementation of /devices API call. For kwargs see cozify.hub_api.get()
 
     Returns:
         json: Full live device state as returned by the API
