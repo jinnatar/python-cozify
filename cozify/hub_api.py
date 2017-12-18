@@ -5,6 +5,9 @@ Attributes:
 """
 
 import requests, json
+
+from cozify import cloud_api
+
 from .Error import APIError
 
 apiPath = '/cc/1.6'
@@ -15,72 +18,54 @@ def _getBase(host, port=8893, api=apiPath):
 def _headers(hub_token):
     return { 'Authorization': hub_token }
 
-def hub(host=None, remoteToken=None, hubToken=None):
-    """1:1 implementation of /hub API call
+def get(call, hub_token_header=True, base=apiPath, **kwargs):
+    """GET method for calling hub API.
 
     Args:
-        host(str): ip address or hostname of hub
-        remoteToken(str): Cloud remote authentication token. Only needed if authenticating remotely, i.e. via the cloud. Defaults to None.
-        hubToken(str): Hub authentication token. Only needed if authenticating remotely, i.e. via the cloud. Defaults to None.
+        call(str): API path to call after apiPath, needs to include leading /.
+        hub_token_header(bool): Set to False to omit hub_token usage in call headers.
+        base(str): Base path to call from API instead of global apiPath. Defaults to apiPath.
 
-    Returns:
-        dict: Hub state dict converted from the raw json dictionary.
+    Kwargs:
+        host(str): ip address or hostname of hub.
+        hub_token(str): Hub authentication token.
+        remote(bool): If call is to be local or remote (bounced via cloud).
+        cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
-
     response = None
-    if host:
-        response = requests.get(_getBase(host=host, api='/') + 'hub')
-    elif remoteToken and hubToken:
-        response = cloud._remote(remoteToken, hubToken, '/hub')
+    headers = None
+    if kwargs['remote'] and kwargs['cloud_token']:
+        response = cloud_api.remote(apicall=base + call, **kwargs)
+    else:
+        if hub_token_header:
+            headers = _headers(kwargs['hub_token'])
+        response = requests.get(_getBase(host=kwargs['host'], api=base) + call, headers=headers)
 
     if response.status_code == 200:
-        return json.loads(response.text)
+        return response.json()
     else:
-        raise APIError(response.status_code, response.text)
+        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
 
-def tz(host, hub_token, remote, cloud_token=None):
-    """1:1 implementation of /hub/tz API call
+def hub(**kwargs):
+    """1:1 implementation of /hub API call. For kwargs see cozify.cloud_api.get()
 
-    Args:
-        host(str): ip address or hostname of hub
-        hub_token(str): Hub authentication token.
-        remote(bool): If call is to be local or remote.
-        cloud_token(str): Cloud authentication token. Only needed if authenticating remotely, i.e. via the cloud. Defaults to None.
+    Returns:
+        dict: Hub state dict.
+    """
+    return get('hub', base='/', hub_token_header=False, **kwargs)
+
+def tz(**kwargs):
+    """1:1 implementation of /hub/tz API call. For kwargs see cozify.cloud_api.get()
 
     Returns:
         str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
+    return get('/hub/tz', **kwargs)
 
-    call = '/hub/tz'
-    if remote:
-        response = cloud._remote(cloud_token=cloud_token, hub_token=hub_token, apicall=apiPath + call)
-    else:
-        response = requests.get(_getBase(host=host) + call, headers=_headers(hub_token))
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
+def devices(**kwargs):
+    """1:1 implementation of /devices API call. For kwargs see cozify.cloud_api.get()
 
-
-def devices(host, hub_token, remote, cloud_token=None):
-    """1:1 implementation of /devices
-
-    Args:
-        host(str): ip address or hostname of hub.
-        hub_token(str): Hub authentication token.
-        remote(bool): If call is to be local or remote.
-        cloud_token(str): Cloud authentication token. Only needed if authenticating remotely, i.e. via the cloud. Defaults to None.
     Returns:
         json: Full live device state as returned by the API
-
     """
-
-    call = '/devices'
-    if remote:
-        response = cloud._remote(cloud_token, hub_token, apiPath + call)
-    else:
-        response = requests.get(_getBase(host=host) + call, headers=_headers(hub_token))
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
+    return get('/devices', **kwargs)

@@ -96,7 +96,7 @@ def refreshsession(cloud_token):
     else:
         raise APIError(response.status_code, response.text)
 
-def remote(cloud_token, hub_token, apicall, put=False):
+def remote(cloud_token, hub_token, apicall, put=False, **kwargs):
     """1:1 implementation of 'hub/remote'
 
     Args:

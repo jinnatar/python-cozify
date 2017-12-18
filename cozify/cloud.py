@@ -83,7 +83,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             # if we're remote, we didn't get a valid ip
             if not localHubs:
                 logging.info('No local Hubs detected, attempting authentication via Cozify Cloud.')
-                hub_info = hub_api.hub(cloud_token=cloud_token, hub_token=hub_token)
+                hub_info = hub_api.hub(remote=True, cloud_token=cloud_token, hub_token=hub_token)
                 # if the hub wants autoremote we flip the state
                 if hub.autoremote and not hub.remote:
                     logging.info('[autoremote] Flipping hub remote status from local to remote.')
@@ -94,7 +94,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 # TODO(artanicus): Need to truly test how multihub works before implementing ip to hub resolution. See issue #7
                 logging.debug('data structure: {0}'.format(localHubs))
                 hub_ip = localHubs[0]
-                hub_info = hub_api.hub(host=hub_ip)
+                hub_info = hub_api.hub(host=hub_ip, remote=False)
                 # if the hub wants autoremote we flip the state
                 if hub.autoremote and hub.remote:
                     logging.info('[autoremote] Flipping hub remote status from remote to local.')

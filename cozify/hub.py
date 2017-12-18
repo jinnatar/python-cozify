@@ -16,8 +16,8 @@ from .Error import APIError
 remote = False
 autoremote = True
 
-def getDevices(hubName=None, hubId=None):
-    """Get up to date full devices data set as a dict
+def getDevices(hubName=None, hubId=None, **kwargs):
+    """Get up to date full devices data set as a dict. For kwargs see cozify.hub_api.get()
 
     Args:
         hubName(str): optional name of hub to query. Will get converted to hubId for use.
@@ -52,9 +52,10 @@ def getDefaultHub():
     """
 
     if 'default' not in c.state['Hubs']:
-        logging.warning('no hub name given and no default known, running authentication.')
-        cloud.authenticate(remote=remote, autoremote=autoremote)
-    return c.state['Hubs']['default']
+        logging.critical('no hub name given and no default known, you should run cozify.authenticate()')
+        raise AttributeError
+    else:
+        return c.state['Hubs']['default']
 
 def getHubId(hub_name):
     """Get hub id by it's name.
@@ -145,8 +146,8 @@ def token(hub_id, new_token=None):
         _setAttr(hub_id, 'hubtoken', new_token)
     return _getAttr(hub_id, 'hubtoken')
 
-def ping(hub_id=None, hub_name=None):
-    """Perform a cheap API call to trigger any potential APIError and return boolean for success/failure
+def ping(hub_id=None, hub_name=None, **kwargs):
+    """Perform a cheap API call to trigger any potential APIError and return boolean for success/failure. For optional kwargs see cozify.hub_api.get()
 
     Args:
         hub_id(str): Hub to ping or default if None. Defaults to None.
@@ -185,8 +186,8 @@ def ping(hub_id=None, hub_name=None):
         return True
 
 
-def tz(hub_id=None):
-    """Get timezone of given hub or default hub if no id is specified.
+def tz(hub_id=None, **kwargs):
+    """Get timezone of given hub or default hub if no id is specified. For kwargs see cozify.hub_api.get()
 
     Args:
     hub_id(str): Hub to query, by default the default hub is used.
@@ -200,8 +201,10 @@ def tz(hub_id=None):
 
     ip = host(hub_id)
     hub_token = token(hub_id)
-    cloud_token = None
-    if remote:
-        cloud_token = cloud.token()
+    cloud_token = cloud.token()
 
-    return hub_api.tz(ip, hub_token, remote, cloud_token)
+    # if remote state not already set in the parameters, include it
+    if remote not in kwargs:
+        kwargs['remote'] = remote
+
+    return hub_api.tz(host=ip, hub_token=hub_token, cloud_token=cloud_token, **kwargs)

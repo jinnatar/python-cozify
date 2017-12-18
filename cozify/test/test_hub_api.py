@@ -13,6 +13,7 @@ def default_hub(scope='module'):
     tmphub.name = hub.name(tmphub.hub_id)
     tmphub.host = hub.host(tmphub.hub_id)
     tmphub.token = hub.token(tmphub.hub_id)
+    tmphub.remote = hub.remote
     return tmphub
 
 @pytest.fixture
@@ -25,6 +26,7 @@ def live_cloud(scope='module'):
 def test_hub(live_cloud, default_hub):
     assert hub_api.hub(
             host = default_hub.host,
-            remoteToken = live_cloud.token,
-            hubToken = default_hub.token
+            remote = default_hub.remote,
+            remote_token = live_cloud.token,
+            hub_token = default_hub.token
             )

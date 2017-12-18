@@ -4,7 +4,7 @@ import os, pytest, tempfile, datetime
 
 from cozify import conftest
 
-from cozify import cloud, config
+from cozify import cloud, config, hub
 from cozify.test import debug
 
 ## basic cloud.authenticate() tests
@@ -49,6 +49,11 @@ def tmpcloud(scope='module'):
         yield cloud
 
 @pytest.fixture
+def livecloud(scope='module'):
+    config.setStatePath() # reset to default
+    return cloud
+
+@pytest.fixture
 def id(scope='module'):
     return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
 
@@ -71,3 +76,13 @@ def test_cloud_refresh_expiry_over(tmpcloud):
 def test_cloud_refresh_expiry_not_over(tmpcloud):
     config.dump_state()
     assert not cloud._need_refresh(force=False, expiry=datetime.timedelta(days=2))
+
+## integration tests for remote
+
+@pytest.mark.live
+def test_cloud_remote_match(livecloud):
+    config.dump_state()
+    local_tz = hub.tz()
+    remote_tz = hub.tz(remote=True)
+
+    assert local_tz == remote_tz
