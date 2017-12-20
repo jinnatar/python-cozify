@@ -13,7 +13,7 @@ from . import cloud
 
 from .Error import APIError
 
-apiPath = '/cc/1.6'
+apiPath = '/cc/1.7'
 remote = False
 autoremote = True
 
