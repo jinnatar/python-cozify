@@ -41,6 +41,37 @@ def get(call, hub_token_header=True, base=apiPath, **kwargs):
 
     if response.status_code == 200:
         return response.json()
+    elif response.status_code == 410:
+        raise APIError(response.status_code, 'API version outdated. Update python-cozify. %s - %s - %s' % (response.reason, response.url, response.text))
+    else:
+        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
+
+def put(call, payload, hub_token_header=True, base=apiPath, **kwargs):
+    """PUT method for calling hub API.
+
+    Args:
+        call(str): API path to call after apiPath, needs to include leading /.
+        payload(str): json string to push out as the payload.
+        hub_token_header(bool): Set to False to omit hub_token usage in call headers.
+        base(str): Base path to call from API instead of global apiPath. Defaults to apiPath.
+        **host(str): ip address or hostname of hub.
+        **hub_token(str): Hub authentication token.
+        **remote(bool): If call is to be local or remote (bounced via cloud).
+        **cloud_token(str): Cloud authentication token. Only needed if remote = True.
+    """
+    response = None
+    headers = None
+    if kwargs['remote'] and kwargs['cloud_token']:
+        response = cloud_api.remote(apicall=base + call, put=True, payload=payload, **kwargs)
+    else:
+        if hub_token_header:
+            headers = _headers(kwargs['hub_token'])
+        response = requests.put(_getBase(host=kwargs['host'], api=base) + call, headers=headers, data=payload)
+
+    if response.status_code == 200:
+        return response.json()
+    elif response.status_code == 410:
+        raise APIError(response.status_code, 'API version outdated. Update python-cozify. %s - %s - %s' % (response.reason, response.url, response.text))
     else:
         raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
 
@@ -67,3 +98,14 @@ def devices(**kwargs):
         json: Full live device state as returned by the API
     """
     return get('/devices', **kwargs)
+
+def devices_command(command, **kwargs):
+    """1:1 implementation of /devices/command. For kwargs see cozify.hub_api.put()
+
+    Args:
+        command(str): json string of type DeviceData containing the changes wanted
+
+    Returns:
+        str: What ever the API replied or an APIException on failure.
+    """
+    return put('/devices/command', command, **kwargs)

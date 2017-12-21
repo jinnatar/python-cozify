@@ -96,13 +96,15 @@ def refreshsession(cloud_token):
     else:
         raise APIError(response.status_code, response.text)
 
-def remote(cloud_token, hub_token, apicall, put=False, **kwargs):
+def remote(cloud_token, hub_token, apicall, put=False, payload=None, **kwargs):
     """1:1 implementation of 'hub/remote'
 
     Args:
         cloud_token(str): Cloud remote authentication token.
         hub_token(str): Hub authentication token.
         apicall(str): Full API call that would normally go directly to hub, e.g. '/cc/1.6/hub/colors'
+        put(bool): Use PUT instead of GET.
+        payload(str): json string to use as payload if put = True.
 
     Returns:
         requests.response: Requests response object.
@@ -113,7 +115,7 @@ def remote(cloud_token, hub_token, apicall, put=False, **kwargs):
             'X-Hub-Key': hub_token
     }
     if put:
-        response = requests.put(cloudBase + 'hub/remote' + apicall, headers=headers)
+        response = requests.put(cloudBase + 'hub/remote' + apicall, headers=headers, data=payload)
     else:
         response = requests.get(cloudBase + 'hub/remote' + apicall, headers=headers)
 
