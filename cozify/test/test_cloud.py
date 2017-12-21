@@ -2,23 +2,20 @@
 
 import os, pytest, tempfile, datetime
 
-from cozify import cloud, config
+from cozify import conftest
+
+from cozify import cloud, config, hub
 from cozify.test import debug
 
+## basic cloud.authenticate() tests
+
+@pytest.mark.live
 def test_auth_cloud():
-    print('Baseline;')
-    print('needRemote: {0}'.format(cloud._need_cloud_token(True)))
-    print('needHub: {0}'.format(cloud._need_hub_token(True)))
-    print('Authentication with default trust;')
-    print(cloud.authenticate())
+    assert cloud.authenticate()
 
+@pytest.mark.live
 def test_auth_hub():
-    print('Baseline;')
-    print('needRemote: {0}'.format(cloud._need_cloud_token(True)))
-    print('needHub: {0}'.format(cloud._need_hub_token(True)))
-
-    print('Authentication with no hub trust;')
-    print(cloud.authenticate(trustHub=False))
+    assert cloud.authenticate(trustHub=False)
 
 class tmp_cloud():
     """Creates a temporary cloud state with test data.
@@ -52,9 +49,16 @@ def tmpcloud(scope='module'):
         yield cloud
 
 @pytest.fixture
+def livecloud(scope='module'):
+    config.setStatePath() # reset to default
+    return cloud
+
+@pytest.fixture
 def id(scope='module'):
     return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
 
+
+## cloud.refresh() logic tests
 
 def test_cloud_refresh_cold(tmpcloud):
     config.state.remove_option('Cloud', 'last_refresh')
@@ -72,3 +76,13 @@ def test_cloud_refresh_expiry_over(tmpcloud):
 def test_cloud_refresh_expiry_not_over(tmpcloud):
     config.dump_state()
     assert not cloud._need_refresh(force=False, expiry=datetime.timedelta(days=2))
+
+## integration tests for remote
+
+@pytest.mark.live
+def test_cloud_remote_match(livecloud):
+    config.dump_state()
+    local_tz = hub.tz()
+    remote_tz = hub.tz(remote=True)
+
+    assert local_tz == remote_tz

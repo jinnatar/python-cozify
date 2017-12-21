@@ -1,18 +1,14 @@
-"""Module for handling Cozify Cloud API operations
-
-Attributes:
-    cloudBase(str): API endpoint including version
-
+"""Module for handling Cozify Cloud highlevel operations.
 """
 
-import json, requests, logging, datetime
+import logging, datetime
 
 from . import config as c
 from . import hub
+from . import hub_api
+from . import cloud_api
 
 from .Error import APIError, AuthenticationError
-
-cloudBase='https://cloud2.cozify.fi/ui/0.2/'
 
 def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
     """Authenticate with the Cozify Cloud and Hub.
@@ -44,7 +40,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
 
     if _need_cloud_token(trustCloud):
         try:
-            _requestlogin(email)
+            cloud_api.requestlogin(email)
         except APIError:
             resetState() # a bogus email will shaft all future attempts, better to reset
             raise
@@ -57,7 +53,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             raise AuthenticationError(message)
 
         try:
-            cloud_token = _emaillogin(email, otp)
+            cloud_token = cloud_api.emaillogin(email, otp)
         except APIError:
             logging.error('OTP authentication has failed.')
             resetState()
@@ -71,9 +67,9 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
         cloud_token = _getAttr('remoteToken')
 
     if _need_hub_token(trustHub):
-        localHubs = _lan_ip() # will only work if we're local to the Hub, otherwise None
+        localHubs = cloud_api.lan_ip() # will only work if we're local to the Hub, otherwise None
         # TODO(artanicus): unknown what will happen if there is a local hub but another one remote. Needs testing by someone with multiple hubs. Issue #7
-        hubkeys = _hubkeys(cloud_token) # get all registered hubs and their keys from the cloud.
+        hubkeys = cloud_api.hubkeys(cloud_token) # get all registered hubs and their keys from the cloud.
         if not hubkeys:
             logging.critical('You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.')
 
@@ -87,18 +83,18 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             # if we're remote, we didn't get a valid ip
             if not localHubs:
                 logging.info('No local Hubs detected, attempting authentication via Cozify Cloud.')
-                hub_info = hub._hub(cloud_token=cloud_token, hub_token=hub_token)
+                hub_info = hub_api.hub(remote=True, cloud_token=cloud_token, hub_token=hub_token)
                 # if the hub wants autoremote we flip the state
                 if hub.autoremote and not hub.remote:
                     logging.info('[autoremote] Flipping hub remote status from local to remote.')
                     hub.remote = True
             else:
                 # localHubs is valid so a hub is in the lan. A mixed environment cannot yet be detected.
-                # _lan_ip cannot provide a map as to which ip is which hub. Thus we actually need to determine the right one.
+                # cloud_api.lan_ip cannot provide a map as to which ip is which hub. Thus we actually need to determine the right one.
                 # TODO(artanicus): Need to truly test how multihub works before implementing ip to hub resolution. See issue #7
                 logging.debug('data structure: {0}'.format(localHubs))
                 hub_ip = localHubs[0]
-                hub_info = hub._hub(host=hub_ip)
+                hub_info = hub_api.hub(host=hub_ip, remote=False)
                 # if the hub wants autoremote we flip the state
                 if hub.autoremote and hub.remote:
                     logging.info('[autoremote] Flipping hub remote status from remote to local.')
@@ -149,7 +145,7 @@ def ping(autorefresh=True, expiry=None):
     """
 
     try:
-        _hubkeys(token()) # TODO(artanicus): see if there's a cheaper API call
+        cloud_api.hubkeys(token()) # TODO(artanicus): see if there's a cheaper API call
     except APIError as e:
         if e.status_code == 401:
             return False
@@ -177,7 +173,7 @@ def refresh(force=False, expiry=datetime.timedelta(days=1)):
     """
     if _need_refresh(force, expiry):
         try:
-            cloud_token = _refreshsession(token())
+            cloud_token = cloud_api.refreshsession(token())
         except APIError as e:
             if e.status_code == 401:
                 # too late, our token is already dead
@@ -333,111 +329,3 @@ def email(new_email=None):
     if new_email:
         _setAttr('email', new_email)
     return _getAttr('email')
-
-def _requestlogin(email):
-    """Raw Cloud API call, request OTP to be sent to account email address.
-
-    Args:
-        email(str): Email address connected to Cozify account.
-    """
-
-    payload = { 'email': email }
-    response = requests.post(cloudBase + 'user/requestlogin', params=payload)
-    if response.status_code is not 200:
-        raise APIError(response.status_code, response.text)
-
-def _emaillogin(email, otp):
-    """Raw Cloud API call, request cloud token with email address & OTP.
-
-    Args:
-        email(str): Email address connected to Cozify account.
-        otp(int): One time passcode.
-
-    Returns:
-        str: cloud token
-    """
-
-    payload = {
-            'email': email,
-            'password': otp
-    }
-
-    response = requests.post(cloudBase + 'user/emaillogin', params=payload)
-    if response.status_code == 200:
-        return response.text
-    else:
-        raise APIError(response.status_code, response.text)
-
-def _lan_ip():
-    """1:1 implementation of hub/lan_ip
-
-    This call will fail with an APIError if the requesting source address is not the same as that of the hub, i.e. if they're not in the same NAT network.
-    The above is based on observation and may only be partially true.
-
-    Returns:
-        list: List of Hub ip addresses.
-    """
-    response = requests.get(cloudBase + 'hub/lan_ip')
-    if response.status_code == 200:
-        return json.loads(response.text)
-    else:
-        raise APIError(response.status_code, response.text)
-
-def _hubkeys(cloud_token):
-    """1:1 implementation of user/hubkeys
-
-    Args:
-        cloud_token(str) Cloud remote authentication token.
-
-    Returns:
-        dict: Map of hub_id: hub_token pairs.
-    """
-    headers = {
-            'Authorization': cloud_token
-    }
-    response = requests.get(cloudBase + 'user/hubkeys', headers=headers)
-    if response.status_code == 200:
-        return json.loads(response.text)
-    else:
-        raise APIError(response.status_code, response.text)
-
-def _refreshsession(cloud_token):
-    """1:1 implementation of user/refreshsession
-
-    Args:
-        cloud_token(str) Cloud remote authentication token.
-
-    Returns:
-        str: New cloud remote authentication token. Not automatically stored into state.
-    """
-    headers = {
-            'Authorization': cloud_token
-    }
-    response = requests.get(cloudBase + 'user/refreshsession', headers=headers)
-    if response.status_code == 200:
-        return response.text
-    else:
-        raise APIError(response.status_code, response.text)
-
-def _remote(cloud_token, hub_token, apicall, put=False):
-    """1:1 implementation of 'hub/remote'
-
-    Args:
-        cloud_token(str): Cloud remote authentication token.
-        hub_token(str): Hub authentication token.
-        apicall(str): Full API call that would normally go directly to hub, e.g. '/cc/1.6/hub/colors'
-
-    Returns:
-        requests.response: Requests response object.
-    """
-
-    headers = {
-            'Authorization': cloud_token,
-            'X-Hub-Key': hub_token
-    }
-    if put:
-        response = requests.put(cloudBase + 'hub/remote' + apicall, headers=headers)
-    else:
-        response = requests.get(cloudBase + 'hub/remote' + apicall, headers=headers)
-
-    return response

@@ -2,8 +2,8 @@ python-cozify
 =============
 
 Unofficial Python3 API bindings for the (unpublished) Cozify API.
-Includes 1:1 API calls plus helper functions to string together an
-authentication flow.
+Includes high-level helpers for easier use of the APIs,
+for example an automatic authentication flow, and low-level 1:1 API functions.
 
 Installation
 ------------
@@ -89,18 +89,25 @@ And the expiry duration can be altered (also when calling cloud.ping()):
 Tests
 -----
 pytest is used for unit tests. Test coverage is still quite spotty and under active development.
+Certain tests are marked as "live" tests and require an active authentication state and a real hub to query against.
+Live tests are non-destructive.
 
 During development you can run the test suite right from the source directory:
 
 .. code:: bash
 
-    pytest -v
+    pytest -v cozify/
+    # or include the live tests as well:
+    pytest -v cozify/ --live
 
 To run the test suite on an already installed python-cozify:
 
 .. code:: bash
 
     pytest -v --pyargs cozify
+    # or including live tests:
+    pytest -v --pyargs cozify --live
+
 
 Current limitations
 -------------------

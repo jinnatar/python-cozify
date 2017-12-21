@@ -1,48 +1,96 @@
-"""Module for handling Cozify Hub API operations
+"""Module for handling highlevel Cozify Hub operations.
 
 Attributes:
-    apiPath(str): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
     remote(bool): Selector to treat a hub as being outside the LAN, i.e. calls will be routed via the Cozify Cloud remote call system. Defaults to False.
     autoremote(bool): Selector to autodetect hub LAN presence and flip to remote mode if needed. Defaults to True.
+    capability(capability): Enum of known device capabilities. Alphabetically sorted, numeric value not guaranteed to stay constant between versions if new capabilities are added.
 
 """
 
-import requests, json, logging
+import requests, logging
 from . import config as c
 from . import cloud
+from . import hub_api
+from enum import Enum
+
 
 from .Error import APIError
 
-apiPath = '/cc/1.7'
 remote = False
 autoremote = True
 
-def getDevices(hubName=None, hubId=None):
-    """Get up to date full devices data set as a dict
+capability = Enum('capability', 'BASS BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT DEVICE HUMIDITY LOUDNESS MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS SEEK STOP TEMPERATURE TRANSITION TREBLE USER_PRESENCE VOLUME')
+
+def getDevices(**kwargs):
+    """Deprecated, will be removed in v0.3. Get up to date full devices data set as a dict.
 
     Args:
-        hubName(str): optional name of hub to query. Will get converted to hubId for use.
-        hubId(str): optional id of hub to query. A specified hubId takes presedence over a hubName or default Hub. Providing incorrect hubId's will create cruft in your state but it won't hurt anything beyond failing the current operation.
+        **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
+        **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
+        **remote(bool): Remote or local query.
+        **hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
+        **hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
 
     Returns:
         dict: full live device state as returned by the API
 
     """
-    # No matter what we got we resolve it down to a hubId
-    if not hubId and hubName:
-        hubId = getHubId(hubName)
-    if not hubName and not hubId:
-        hubId = getDefaultHub()
+    hub_id = _get_id(**kwargs)
+    hub_token = token(hub_id)
+    cloud_token = cloud.token()
+    hostname = host(hub_id)
 
-    configName = 'Hubs.' + hubId
-    if cloud._need_hub_token():
-        logging.warning('No valid authentication token, requesting authentication')
-        cloud.authenticate()
-    hub_token = c.state[configName]['hubtoken']
-    cloud_token = c.state['Cloud']['remotetoken']
-    host = c.state[configName]['host']
+    if 'remote' not in kwargs:
+        kwargs['remote'] = remote
 
-    return _devices(host=host, hub_token=hub_token, cloud_token=cloud_token)
+    return devices(capability=None, **kwargs)
+
+def devices(*, capability=None, **kwargs):
+    """Get up to date full devices data set as a dict. Optionally can be filtered to only include certain devices.
+
+    Args:
+        capability(cozify.hub.capability): Capability to filter by, for example: cozify.hub.capability.TEMPERATURE. Defaults to no filtering.
+        **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
+        **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
+        **remote(bool): Remote or local query.
+        **hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
+        **hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
+
+    Returns:
+        dict: full live device state as returned by the API
+
+    """
+    hub_id = _get_id(**kwargs)
+    hub_token = token(hub_id)
+    cloud_token = cloud.token()
+    hostname = host(hub_id)
+
+    devs = hub_api.devices(host=hostname, hub_token=hub_token, remote=remote, cloud_token=cloud_token)
+    if capability:
+        return { key : value for key, value in devs.items() if capability.name in value['capabilities']['values'] }
+    else:
+        return devs
+
+def _get_id(**kwargs):
+    """Get a hub_id from various sources, meant so that you can just throw kwargs at it and get a valid id.
+    If no data is available to determine which hub was meant, will default to the default hub. If even that fails, will raise an AttributeError.
+
+    Args:
+        **hub_id(str): Will be returned as-is if defined.
+        **hub_name(str): Name of hub.
+        hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
+        hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
+    """
+    if 'hub_id' in kwargs or 'hubId' in kwargs:
+        logging.debug("Redundant hub._get_id call, resolving hub_id to itself.")
+        if 'hub_id' in kwargs:
+            return kwargs['hub_id']
+        return kwargs['hubId']
+    if 'hub_name' in kwargs or 'hubName' in kwargs:
+        if 'hub_name' in kwargs:
+            return getHubId(kwargs['hub_name'])
+        return getHubId(kwargs['hubName'])
+    return getDefaultHub()
 
 def getDefaultHub():
     """Return id of default Hub.
@@ -51,9 +99,10 @@ def getDefaultHub():
     """
 
     if 'default' not in c.state['Hubs']:
-        logging.warning('no hub name given and no default known, running authentication.')
-        cloud.authenticate(remote=remote, autoremote=autoremote)
-    return c.state['Hubs']['default']
+        logging.critical('no hub name given and no default known, you should run cozify.authenticate()')
+        raise AttributeError
+    else:
+        return c.state['Hubs']['default']
 
 def getHubId(hub_name):
     """Get hub id by it's name.
@@ -144,11 +193,8 @@ def token(hub_id, new_token=None):
         _setAttr(hub_id, 'hubtoken', new_token)
     return _getAttr(hub_id, 'hubtoken')
 
-def _getBase(host, port=8893, api=apiPath):
-    return 'http://%s:%s%s' % (host, port, api)
-
-def ping(hub_id=None, hub_name=None):
-    """Perform a cheap API call to trigger any potential APIError and return boolean for success/failure
+def ping(hub_id=None, hub_name=None, **kwargs):
+    """Perform a cheap API call to trigger any potential APIError and return boolean for success/failure. For optional kwargs see cozify.hub_api.get()
 
     Args:
         hub_id(str): Hub to ping or default if None. Defaults to None.
@@ -187,31 +233,8 @@ def ping(hub_id=None, hub_name=None):
         return True
 
 
-def _hub(host=None, remoteToken=None, hubToken=None):
-    """1:1 implementation of /hub API call
-
-    Args:
-        host(str): ip address or hostname of hub
-        remoteToken(str): Cloud remote authentication token. Only needed if authenticating remotely, i.e. via the cloud. Defaults to None.
-        hubToken(str): Hub authentication token. Only needed if authenticating remotely, i.e. via the cloud. Defaults to None.
-
-    Returns:
-        dict: Hub state dict converted from the raw json dictionary.
-    """
-
-    response = None
-    if host:
-        response = requests.get(_getBase(host=host, api='/') + 'hub')
-    elif remoteToken and hubToken:
-        response = cloud._remote(remoteToken, hubToken, '/hub')
-
-    if response.status_code == 200:
-        return json.loads(response.text)
-    else:
-        raise APIError(response.status_code, response.text)
-
-def tz(hub_id=None):
-    """Get timezone of given hub or default hub if no id is specified.
+def tz(hub_id=None, **kwargs):
+    """Get timezone of given hub or default hub if no id is specified. For kwargs see cozify.hub_api.get()
 
     Args:
     hub_id(str): Hub to query, by default the default hub is used.
@@ -225,55 +248,10 @@ def tz(hub_id=None):
 
     ip = host(hub_id)
     hub_token = token(hub_id)
-    cloud_token = None
-    if remote:
-        cloud_token = cloud.token()
+    cloud_token = cloud.token()
 
-    return _tz(ip, hub_token, cloud_token)
+    # if remote state not already set in the parameters, include it
+    if remote not in kwargs:
+        kwargs['remote'] = remote
 
-def _tz(host, hub_token, cloud_token=None):
-    """1:1 implementation of /hub/tz API call
-
-    Args:
-        host(str): ip address or hostname of hub
-        hub_token(str): Hub authentication token.
-        cloud_token(str): Cloud authentication token. Only needed if authenticating remotely, i.e. via the cloud. Defaults to None.
-
-    Returns:
-        str: Timezone of the hub, for example: 'Europe/Helsinki'
-    """
-
-    headers = { 'Authorization': hub_token }
-    call = '/hub/tz'
-    if remote:
-        response = cloud._remote(cloud_token=cloud_token, hub_token=hub_token, apicall=apiPath + call)
-    else:
-        response = requests.get(_getBase(host=host) + call, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
-
-
-def _devices(host, hub_token, cloud_token=None):
-    """1:1 implementation of /devices
-
-    Args:
-        host(str): ip address or hostname of hub.
-        hub_token(str): Hub authentication token.
-        cloud_token(str): Cloud authentication token. Only needed if authenticating remotely, i.e. via the cloud. Defaults to None.
-    Returns:
-        json: Full live device state as returned by the API
-
-    """
-
-    headers = { 'Authorization': hub_token }
-    call = '/devices'
-    if remote:
-        response = cloud._remote(cloud_token, hub_token, apiPath + call)
-    else:
-        response = requests.get(_getBase(host=host) + call, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
+    return hub_api.tz(host=ip, hub_token=hub_token, cloud_token=cloud_token, **kwargs)

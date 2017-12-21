@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import pytest
-import os, sys
-from cozify import hub, config, multisensor
+
+from cozify import conftest
+
+from cozify import hub, hub_api, config, multisensor
 from cozify.test import debug
 
 class tmp_hub():
@@ -10,11 +12,14 @@ class tmp_hub():
     def __init__(self):
         self.id = 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
         self.name = 'HubbyMcHubFace'
-        self.section = 'Hubs.%s' % self.id
+        self.host = '127.0.0.1'
+        self.section = 'Hubs.{0}'.format(self.id)
     def __enter__(self):
         config.setStatePath() # reset to default
         config.state.add_section(self.section)
         config.state[self.section]['hubname'] = self.name
+        config.state[self.section]['host'] = self.host
+        config.state['Hubs']['default'] = self.id
         return self
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is not None:
@@ -31,16 +36,23 @@ def tmphub(scope='module'):
 def id(scope='module'):
     return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
 
-def test_tz(tmphub):
-    # this actually runs against a real hub so dump state to have any chance of debugging
-    config.dump_state()
-    assert hub.ping() # make sure we have valid auth
+@pytest.fixture
+def livehub(scope='module'):
+    config.setStatePath() # default config assumed to be live
+    config.dump_state() # dump state so it's visible in failed test output
+    assert hub.ping()
+    return hub
+
+@pytest.mark.live
+def test_tz(livehub):
     assert hub.tz()
-    # hand craft data needed for low-level api call _tz
+
+    # hand craft data needed for low-level api call hub_api.tz
     hubSection = 'Hubs.' + config.state['Hubs']['default']
-    print(hub._tz(
+    print(hub_api.tz(
         host=config.state[hubSection]['host'],
         hub_token=config.state[hubSection]['hubtoken'],
+        remote=hub.remote,
         cloud_token=config.state['Cloud']['remotetoken']
         ))
 
@@ -50,6 +62,17 @@ def test_hub_id_to_name(tmphub):
 def test_hub_name_to_id(tmphub):
     assert hub.getHubId(tmphub.name) == tmphub.id
 
-def test_multisensor():
+@pytest.mark.live
+def test_multisensor(livehub):
     data = hub.getDevices()
     print(multisensor.getMultisensorData(data))
+
+def test_hub_get_id(tmphub):
+    assert hub._get_id(hub_id=tmphub.id) == tmphub.id
+    assert hub._get_id(hub_name=tmphub.name) == tmphub.id
+    assert hub._get_id(hub_name=tmphub.name, hub_id=tmphub.id) == tmphub.id
+    assert hub._get_id(hubName=tmphub.name) == tmphub.id
+    assert hub._get_id(hubId=tmphub.id) == tmphub.id
+    assert hub._get_id() == tmphub.id
+    assert not hub._get_id(hub_id='foo') == tmphub.id
+

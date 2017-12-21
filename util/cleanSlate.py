@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import tempfile, os
-from cozify import config, cloud
+from cozify import config, cloud, hub
 
 def main():
     fh, tmp = tempfile.mkstemp()
     config.setStatePath(tmp)
     
-    cloud.authenticate()
+    assert cloud.authenticate()
     config.dump_state()
+    print(hub.tz(hub.getDefaultHub()))
     os.remove(tmp)
 
 if __name__ == "__main__":
