@@ -9,6 +9,8 @@ tmpcloud = lambda:0
 
 @pytest.fixture
 def default_hub(scope='module'):
+    config.setStatePath() # reset to default config
+    config.dump_state()
     tmphub.hub_id = hub.getDefaultHub()
     tmphub.name = hub.name(tmphub.hub_id)
     tmphub.host = hub.host(tmphub.hub_id)

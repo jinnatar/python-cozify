@@ -16,34 +16,46 @@ from .Error import APIError
 remote = False
 autoremote = True
 
-def getDevices(hubName=None, hubId=None, **kwargs):
+def getDevices(**kwargs):
     """Get up to date full devices data set as a dict. For kwargs see cozify.hub_api.get()
 
     Args:
-        hubName(str): optional name of hub to query. Will get converted to hubId for use.
-        hubId(str): optional id of hub to query. A specified hubId takes presedence over a hubName or default Hub. Providing incorrect hubId's will create cruft in your state but it won't hurt anything beyond failing the current operation.
+        **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
+        **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
+        **hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
+        **hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
 
     Returns:
         dict: full live device state as returned by the API
 
     """
-    hub_id = hubId # transitional assignments so the inner code can already use a proper name before compatibility is broken in v0.3
-    hub_name = hubName
-
-    # No matter what we got we resolve it down to a hub_id
-    if not hub_id and hub_name:
-        hub_id = getHubId(hub_name)
-    if not hub_name and not hub_id:
-        hub_id = getDefaultHub()
-
-    if cloud._need_hub_token():
-        logging.warning('No valid authentication token, requesting authentication')
-        cloud.authenticate()
+    hub_id = _get_id(**kwargs)
     hub_token = token(hub_id)
     cloud_token = cloud.token()
     hostname = host(hub_id)
 
     return hub_api.devices(host=hostname, hub_token=hub_token, remote=remote, cloud_token=cloud_token)
+
+def _get_id(**kwargs):
+    """Get a hub_id from various sources, meant so that you can just throw kwargs at it and get a valid id.
+    If no data is available to determine which hub was meant, will default to the default hub. If even that fails, will raise an AttributeError.
+
+    Args:
+        **hub_id(str): Will be returned as-is if defined.
+        **hub_name(str): Name of hub.
+        hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
+        hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
+    """
+    if 'hub_id' in kwargs or 'hubId' in kwargs:
+        logging.debug("Redundant hub._get_id call, resolving hub_id to itself.")
+        if 'hub_id' in kwargs:
+            return kwargs['hub_id']
+        return kwargs['hubId']
+    if 'hub_name' in kwargs or 'hubName' in kwargs:
+        if 'hub_name' in kwargs:
+            return getHubId(kwargs['hub_name'])
+        return getHubId(kwargs['hubName'])
+    return getDefaultHub()
 
 def getDefaultHub():
     """Return id of default Hub.
