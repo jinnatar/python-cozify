@@ -35,6 +35,8 @@ def getDevices(**kwargs):
         dict: full live device state as returned by the API
 
     """
+    cloud.authenticate() # the old version of getDevices did more than it was supposed to, including making sure there was a valid connection
+
     hub_id = _get_id(**kwargs)
     hub_token = token(hub_id)
     cloud_token = cloud.token()
