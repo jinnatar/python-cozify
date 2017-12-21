@@ -3,6 +3,7 @@
 Attributes:
     remote(bool): Selector to treat a hub as being outside the LAN, i.e. calls will be routed via the Cozify Cloud remote call system. Defaults to False.
     autoremote(bool): Selector to autodetect hub LAN presence and flip to remote mode if needed. Defaults to True.
+    capability(capability): Enum of known device capabilities. Alphabetically sorted, numeric value not guaranteed to stay constant between versions if new capabilities are added.
 
 """
 
@@ -10,18 +11,23 @@ import requests, logging
 from . import config as c
 from . import cloud
 from . import hub_api
+from enum import Enum
+
 
 from .Error import APIError
 
 remote = False
 autoremote = True
 
+capability = Enum('capability', 'BASS BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT DEVICE HUMIDITY LOUDNESS MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS SEEK STOP TEMPERATURE TRANSITION TREBLE USER_PRESENCE VOLUME')
+
 def getDevices(**kwargs):
-    """Get up to date full devices data set as a dict. For kwargs see cozify.hub_api.get()
+    """Deprecated, will be removed in v0.3. Get up to date full devices data set as a dict.
 
     Args:
         **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
         **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
+        **remote(bool): Remote or local query.
         **hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
         **hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
 
@@ -34,7 +40,36 @@ def getDevices(**kwargs):
     cloud_token = cloud.token()
     hostname = host(hub_id)
 
-    return hub_api.devices(host=hostname, hub_token=hub_token, remote=remote, cloud_token=cloud_token)
+    if 'remote' not in kwargs:
+        kwargs['remote'] = remote
+
+    return devices(capability=None, **kwargs)
+
+def devices(*, capability=None, **kwargs):
+    """Get up to date full devices data set as a dict. Optionally can be filtered to only include certain devices.
+
+    Args:
+        capability(cozify.hub.capability): Capability to filter by, for example: cozify.hub.capability.TEMPERATURE. Defaults to no filtering.
+        **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
+        **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
+        **remote(bool): Remote or local query.
+        **hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
+        **hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
+
+    Returns:
+        dict: full live device state as returned by the API
+
+    """
+    hub_id = _get_id(**kwargs)
+    hub_token = token(hub_id)
+    cloud_token = cloud.token()
+    hostname = host(hub_id)
+
+    devs = hub_api.devices(host=hostname, hub_token=hub_token, remote=remote, cloud_token=cloud_token)
+    if capability:
+        return { key : value for key, value in devs.items() if capability.name in value['capabilities']['values'] }
+    else:
+        return devs
 
 def _get_id(**kwargs):
     """Get a hub_id from various sources, meant so that you can just throw kwargs at it and get a valid id.
