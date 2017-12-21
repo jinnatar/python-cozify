@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 import sys
 import requests
-from cozify import hub
+from cozify import hub, hub_api
 from cozify.Error import APIError
 
-def main(start=hub.apiPath):
+def main(start=hub_api.apiPath):
     id = hub.getDefaultHub()
     host = hub.host(id)
     token = hub.token(id)
     api = start
 
-    print('Testing against {0}, starting from {1}'.format(id, hub._getBase(host, api=start)))
+    print('Testing against {0}, starting from {1}'.format(id, hub_api._getBase(host, api=start)))
 
     while True:
-        base = hub._getBase(host, api=api)
+        base = hub_api._getBase(host, api=api)
         if not ping(base, token):
             print('Fail: {0}'.format(api))
         else:
