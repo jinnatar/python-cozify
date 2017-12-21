@@ -10,7 +10,7 @@ from cozify import cloud_api
 
 from .Error import APIError
 
-apiPath = '/cc/1.6'
+apiPath = '/cc/1.7'
 
 def _getBase(host, port=8893, api=apiPath):
     return 'http://%s:%s%s' % (host, port, api)
