@@ -1,4 +1,6 @@
 import pytest
+from cozify.test.fixtures import *
+
 def pytest_addoption(parser):
     parser.addoption("--live", action="store_true",
                      default=False, help="run tests requiring a functional auth and a real hub.")
