@@ -8,7 +8,7 @@ Attributes:
 """
 
 import requests, logging
-from . import config as c
+from . import config
 from . import cloud
 from . import hub_api
 from enum import Enum
@@ -100,11 +100,11 @@ def getDefaultHub():
     If default hub isn't known, run authentication to make it known.
     """
 
-    if 'default' not in c.state['Hubs']:
+    if 'default' not in config.state['Hubs']:
         logging.critical('no hub name given and no default known, you should run cozify.authenticate()')
         raise AttributeError
     else:
-        return c.state['Hubs']['default']
+        return config.state['Hubs']['default']
 
 def getHubId(hub_name):
     """Get hub id by it's name.
@@ -116,10 +116,10 @@ def getHubId(hub_name):
         str: Hub id or None if the hub wasn't found.
     """
 
-    for section in c.state.sections():
+    for section in config.state.sections():
         if section.startswith("Hubs."):
             logging.debug('Found hub {0}'.format(section))
-            if c.state[section]['hubname'] == hub_name:
+            if config.state[section]['hubname'] == hub_name:
                 return section[5:] # cut out "Hubs."
     return None
 
@@ -133,8 +133,8 @@ def _getAttr(hub_id, attr):
         str: Value of attribute or exception on failure.
     """
     section = 'Hubs.' + hub_id
-    if section in c.state and attr in c.state[section]:
-        return c.state[section][attr]
+    if section in config.state and attr in config.state[section]:
+        return config.state[section][attr]
     else:
         logging.warning('Hub id "{0}" not found in state or attribute {1} not set for hub.'.format(hub_id, attr))
         raise AttributeError
@@ -149,12 +149,12 @@ def _setAttr(hub_id, attr, value, commit=True):
         commit(bool): True to commit state after set. Defaults to True.
     """
     section = 'Hubs.' + hub_id
-    if section in c.state:
-        if attr not in c.state[section]:
+    if section in config.state:
+        if attr not in config.state[section]:
             logging.info("Attribute {0} was not already in {1} state, new attribute created.".format(attr, section))
-        c.state[section][attr] = value
+        config.state[section][attr] = value
         if commit:
-            c.stateWrite()
+            config.stateWrite()
     else:
         logging.warning('Section {0} not found in state.'.format(section))
         raise AttributeError
@@ -215,7 +215,7 @@ def ping(hub_id=None, hub_name=None, **kwargs):
         config_name = 'Hubs.' + hub_id
         hub_token = _getAttr(hub_id, 'hubtoken')
         hub_host = _getAttr(hub_id, 'host')
-        cloud_token = c.state['Cloud']['remotetoken']
+        cloud_token = config.state['Cloud']['remotetoken']
 
         # if we don't have a stored host then we assume the hub is remote
         global remote
