@@ -86,8 +86,21 @@ And the expiry duration can be altered (also when calling cloud.ping()):
     # or
     cloud.ping(autorefresh=True, expiry=datetime.timedelta(days=20))
 
+Sample projects
+---------------
+
+-  `github.com/Artanicus/cozify-temp <https://github.com/Artanicus/cozify-temp>`__
+   - Store Multisensor data into InfluxDB
+-  Take a look at the util/ directory for some crude small tools using the library that have been useful during development.
+-  File an issue to get your project added here
+
+Development
+-----------
+To develop python-cozify clone the devel branch and submit pull requests against the devel branch.
+New releases are cut from the devel branch as needed.
+    
 Tests
------
+~~~~~
 pytest is used for unit tests. Test coverage is still quite spotty and under active development.
 Certain tests are marked as "live" tests and require an active authentication state and a real hub to query against.
 Live tests are non-destructive.
@@ -109,18 +122,12 @@ To run the test suite on an already installed python-cozify:
     pytest -v --pyargs cozify --live
 
 
-Current limitations
--------------------
+Roadmap, aka. Current Limitations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  Token functionality is sanity-checked up to a point and renewal is
-   attempted. This however is new code and may not be perfect.
--  For now there are only read calls. New API call requests are welcome
-   as issues or pull requests!
--  authentication flow is as automatic as possible but if the Cozify
-   Cloud token expires we can't help but request it and ask it to be
-   entered. If you are running a daemon that requires authentication and
-   your cloud token expires, run just the authenticate() flow in an
-   interactive terminal and then restart your daemon.
+-  Authentication flow has been improved quite a bit but it would benefit a lot from real-world feedback.
+-  For now there are only read calls. Next up is implementing ~all hub calls at the raw level and then wrapping them for ease of use. If there's something you want to use sooner than later file an issue so it can get prioritized!
+-  Device model is non-existant and the old implementations are bad and deprecated. Active work ongoing to filter by capability at a low level first, then perhaps a more object oriented model on top of that.
 
 Sample projects
 ---------------
