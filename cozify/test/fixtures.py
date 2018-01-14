@@ -4,6 +4,8 @@ import os, pytest, tempfile, datetime
 
 from cozify import conftest, config, hub, cloud
 
+from . import fixtures_devices as dev
+
 @pytest.fixture
 def default_hub(scope='module'):
     barehub = lambda:0
@@ -80,11 +82,13 @@ class tmp_hub():
         self.name = 'HubbyMcHubFace'
         self.host = '127.0.0.1'
         self.section = 'Hubs.{0}'.format(self.id)
+        self.token = 'eyJkb20iOiJ1ayIsImFsZyI6IkhTNTEyIiwidHlwIjoiSldUIn0.eyJyb2xlIjo4LCJpYXQiOjE1MTI5ODg5NjksImV4cCI6MTUxNTQwODc2OSwidXNlcl9pZCI6ImRlYWRiZWVmLWFhYWEtYmJiYi1jY2NjLWRkZGRkZGRkZGRkZCIsImtpZCI6ImRlYWRiZWVmLWRkZGQtY2NjYy1iYmJiLWFhYWFhYWFhYWFhYSIsImlzcyI6IkNsb3VkIn0.QVKKYyfTJPks_BXeKs23uvslkcGGQnBTKodA-UGjgHg' # valid but useless jwt token.
     def __enter__(self):
         config.setStatePath() # reset to default
         config.state.add_section(self.section)
         config.state[self.section]['hubname'] = self.name
         config.state[self.section]['host'] = self.host
+        config.state[self.section]['hubtoken'] = self.token
         config.state['Hubs']['default'] = self.id
         return self
     def __exit__(self, exc_type, exc_value, traceback):
@@ -92,3 +96,6 @@ class tmp_hub():
             debug.logger.error("%s, %s, %s" % (exc_type, exc_value, traceback))
             return False
         config.state.remove_section(self.section)
+
+    def devices(self):
+        return dev.device_ids, dev.devices
