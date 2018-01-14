@@ -19,7 +19,7 @@ from .Error import APIError
 remote = False
 autoremote = True
 
-capability = Enum('capability', 'BASS BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT DEVICE HUMIDITY LOUDNESS MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS SEEK STOP TEMPERATURE TRANSITION TREBLE USER_PRESENCE VOLUME')
+capability = Enum('capability', 'ALERT BASS BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT DEVICE HUMIDITY LOUDNESS MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS SEEK STOP TEMPERATURE TRANSITION TREBLE TWILIGHT USER_PRESENCE VOLUME')
 
 def getDevices(**kwargs):
     """Deprecated, will be removed in v0.3. Get up to date full devices data set as a dict.
@@ -47,11 +47,12 @@ def getDevices(**kwargs):
 
     return devices(capability=None, **kwargs)
 
-def devices(*, capability=None, **kwargs):
+def devices(*, capabilities=None, and_filter=False, **kwargs):
     """Get up to date full devices data set as a dict. Optionally can be filtered to only include certain devices.
 
     Args:
-        capability(cozify.hub.capability): Capability to filter by, for example: cozify.hub.capability.TEMPERATURE. Defaults to no filtering.
+        capabilities(cozify.hub.capability): Single or list of cozify.hub.capability types to filter by, for example: [ cozify.hub.capability.TEMPERATURE, cozify.hub.capability.HUMIDITY ]. Defaults to no filtering.
+        and_filter(bool): Multi-filter by AND instead of default OR. Defaults to False.
         **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
         **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
         **remote(bool): Remote or local query.
@@ -66,11 +67,20 @@ def devices(*, capability=None, **kwargs):
     hub_token = token(hub_id)
     cloud_token = cloud.token()
     hostname = host(hub_id)
+    if remote not in kwargs:
+        kwargs['remote'] = remote
 
-    devs = hub_api.devices(host=hostname, hub_token=hub_token, remote=remote, cloud_token=cloud_token)
-    if capability:
-        return { key : value for key, value in devs.items() if capability.name in value['capabilities']['values'] }
-    else:
+    devs = hub_api.devices(host=hostname, hub_token=hub_token, cloud_token=cloud_token, **kwargs)
+    if capabilities:
+        if isinstance(capabilities, capability): # single capability given
+            logging.debug("single capability {0}".format(capabilities.name))
+            return { key : value for key, value in devs.items() if capabilities.name in value['capabilities']['values'] }
+        else: # multi-filter
+            if and_filter:
+                return { key : value for key, value in devs.items() if all(c.name in value['capabilities']['values'] for c in capabilities) }
+            else: # or_filter
+                return { key : value for key, value in devs.items() if any(c.name in value['capabilities']['values'] for c in capabilities) }
+    else: # no filtering
         return devs
 
 def _get_id(**kwargs):
@@ -178,7 +188,7 @@ def host(hub_id):
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
 
     Returns:
-        str: ip address of matching hub. Be aware that this may be empty if the hub is only known remotely and will still give you an ip address even if the hub is currently remote.
+        str: ip address of matching hub. Be aware that this may be empty if the hub is only known remotely and will still give you an ip address even if the hub is currently remote and an ip address was previously locally known.
     """
     return _getAttr(hub_id, 'host')
 

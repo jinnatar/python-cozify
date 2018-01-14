@@ -39,3 +39,20 @@ def test_hub_get_id(tmphub):
     assert hub._get_id() == tmphub.id
     assert not hub._get_id(hub_id='foo') == tmphub.id
 
+def test_hub_devices_filter_single(tmphub):
+    ids, devs = tmphub.devices()
+    out = hub.devices(hub_id=tmphub.id, capabilities=hub.capability.COLOR_LOOP, mock_devices=devs)
+    assert all(i in out for i in [ ids['lamp_osram'], ids['strip_osram'] ])
+    assert len(out) == 2
+
+def test_hub_devices_filter_or(tmphub):
+    ids, devs = tmphub.devices()
+    out = hub.devices(hub_id=tmphub.id, and_filter=False, capabilities=[hub.capability.TWILIGHT, hub.capability.COLOR_HS], mock_devices=devs)
+    assert all(i in out for i in [ ids['lamp_osram'], ids['strip_osram'], ids['twilight_nexa'] ])
+    assert len(out) == 3
+
+def test_hub_devices_filter_and(tmphub):
+    ids, devs = tmphub.devices()
+    out = hub.devices(hub_id=tmphub.id, and_filter=True, capabilities=[hub.capability.COLOR_HS, hub.capability.COLOR_TEMP], mock_devices=devs)
+    assert all(i in out for i in [ ids['lamp_osram'], ids['strip_osram'] ])
+    assert len(out) == 2
