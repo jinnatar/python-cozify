@@ -6,43 +6,6 @@ from cozify import conftest
 from cozify import hub, hub_api, config, multisensor
 from cozify.test import debug
 
-class tmp_hub():
-    """Creates a temporary hub section (with test data) in the current live state.
-    """
-    def __init__(self):
-        self.id = 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
-        self.name = 'HubbyMcHubFace'
-        self.host = '127.0.0.1'
-        self.section = 'Hubs.{0}'.format(self.id)
-    def __enter__(self):
-        config.setStatePath() # reset to default
-        config.state.add_section(self.section)
-        config.state[self.section]['hubname'] = self.name
-        config.state[self.section]['host'] = self.host
-        config.state['Hubs']['default'] = self.id
-        return self
-    def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type is not None:
-            debug.logger.error("%s, %s, %s" % (exc_type, exc_value, traceback))
-            return False
-        config.state.remove_section(self.section)
-
-@pytest.fixture
-def tmphub(scope='module'):
-    with tmp_hub() as hub:
-        yield hub
-
-@pytest.fixture
-def id(scope='module'):
-    return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
-
-@pytest.fixture
-def livehub(scope='module'):
-    config.setStatePath() # default config assumed to be live
-    config.dump_state() # dump state so it's visible in failed test output
-    assert hub.ping()
-    return hub
-
 @pytest.mark.live
 def test_tz(livehub):
     assert hub.tz()
@@ -76,3 +39,20 @@ def test_hub_get_id(tmphub):
     assert hub._get_id() == tmphub.id
     assert not hub._get_id(hub_id='foo') == tmphub.id
 
+def test_hub_devices_filter_single(tmphub):
+    ids, devs = tmphub.devices()
+    out = hub.devices(hub_id=tmphub.id, capabilities=hub.capability.COLOR_LOOP, mock_devices=devs)
+    assert all(i in out for i in [ ids['lamp_osram'], ids['strip_osram'] ])
+    assert len(out) == 2
+
+def test_hub_devices_filter_or(tmphub):
+    ids, devs = tmphub.devices()
+    out = hub.devices(hub_id=tmphub.id, and_filter=False, capabilities=[hub.capability.TWILIGHT, hub.capability.COLOR_HS], mock_devices=devs)
+    assert all(i in out for i in [ ids['lamp_osram'], ids['strip_osram'], ids['twilight_nexa'] ])
+    assert len(out) == 3
+
+def test_hub_devices_filter_and(tmphub):
+    ids, devs = tmphub.devices()
+    out = hub.devices(hub_id=tmphub.id, and_filter=True, capabilities=[hub.capability.COLOR_HS, hub.capability.COLOR_TEMP], mock_devices=devs)
+    assert all(i in out for i in [ ids['lamp_osram'], ids['strip_osram'] ])
+    assert len(out) == 2

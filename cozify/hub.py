@@ -8,7 +8,7 @@ Attributes:
 """
 
 import requests, logging
-from . import config as c
+from . import config
 from . import cloud
 from . import hub_api
 from enum import Enum
@@ -19,7 +19,7 @@ from .Error import APIError
 remote = False
 autoremote = True
 
-capability = Enum('capability', 'BASS BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT DEVICE HUMIDITY LOUDNESS MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS SEEK STOP TEMPERATURE TRANSITION TREBLE USER_PRESENCE VOLUME')
+capability = Enum('capability', 'ALERT BASS BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT DEVICE HUMIDITY LOUDNESS MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS SEEK STOP TEMPERATURE TRANSITION TREBLE TWILIGHT USER_PRESENCE VOLUME')
 
 def getDevices(**kwargs):
     """Deprecated, will be removed in v0.3. Get up to date full devices data set as a dict.
@@ -35,6 +35,8 @@ def getDevices(**kwargs):
         dict: full live device state as returned by the API
 
     """
+    cloud.authenticate() # the old version of getDevices did more than it was supposed to, including making sure there was a valid connection
+
     hub_id = _get_id(**kwargs)
     hub_token = token(hub_id)
     cloud_token = cloud.token()
@@ -45,11 +47,12 @@ def getDevices(**kwargs):
 
     return devices(capability=None, **kwargs)
 
-def devices(*, capability=None, **kwargs):
+def devices(*, capabilities=None, and_filter=False, **kwargs):
     """Get up to date full devices data set as a dict. Optionally can be filtered to only include certain devices.
 
     Args:
-        capability(cozify.hub.capability): Capability to filter by, for example: cozify.hub.capability.TEMPERATURE. Defaults to no filtering.
+        capabilities(cozify.hub.capability): Single or list of cozify.hub.capability types to filter by, for example: [ cozify.hub.capability.TEMPERATURE, cozify.hub.capability.HUMIDITY ]. Defaults to no filtering.
+        and_filter(bool): Multi-filter by AND instead of default OR. Defaults to False.
         **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
         **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
         **remote(bool): Remote or local query.
@@ -64,11 +67,20 @@ def devices(*, capability=None, **kwargs):
     hub_token = token(hub_id)
     cloud_token = cloud.token()
     hostname = host(hub_id)
+    if remote not in kwargs:
+        kwargs['remote'] = remote
 
-    devs = hub_api.devices(host=hostname, hub_token=hub_token, remote=remote, cloud_token=cloud_token)
-    if capability:
-        return { key : value for key, value in devs.items() if capability.name in value['capabilities']['values'] }
-    else:
+    devs = hub_api.devices(host=hostname, hub_token=hub_token, cloud_token=cloud_token, **kwargs)
+    if capabilities:
+        if isinstance(capabilities, capability): # single capability given
+            logging.debug("single capability {0}".format(capabilities.name))
+            return { key : value for key, value in devs.items() if capabilities.name in value['capabilities']['values'] }
+        else: # multi-filter
+            if and_filter:
+                return { key : value for key, value in devs.items() if all(c.name in value['capabilities']['values'] for c in capabilities) }
+            else: # or_filter
+                return { key : value for key, value in devs.items() if any(c.name in value['capabilities']['values'] for c in capabilities) }
+    else: # no filtering
         return devs
 
 def _get_id(**kwargs):
@@ -98,11 +110,11 @@ def getDefaultHub():
     If default hub isn't known, run authentication to make it known.
     """
 
-    if 'default' not in c.state['Hubs']:
+    if 'default' not in config.state['Hubs']:
         logging.critical('no hub name given and no default known, you should run cozify.authenticate()')
         raise AttributeError
     else:
-        return c.state['Hubs']['default']
+        return config.state['Hubs']['default']
 
 def getHubId(hub_name):
     """Get hub id by it's name.
@@ -114,10 +126,10 @@ def getHubId(hub_name):
         str: Hub id or None if the hub wasn't found.
     """
 
-    for section in c.state.sections():
+    for section in config.state.sections():
         if section.startswith("Hubs."):
             logging.debug('Found hub {0}'.format(section))
-            if c.state[section]['hubname'] == hub_name:
+            if config.state[section]['hubname'] == hub_name:
                 return section[5:] # cut out "Hubs."
     return None
 
@@ -131,8 +143,8 @@ def _getAttr(hub_id, attr):
         str: Value of attribute or exception on failure.
     """
     section = 'Hubs.' + hub_id
-    if section in c.state and attr in c.state[section]:
-        return c.state[section][attr]
+    if section in config.state and attr in config.state[section]:
+        return config.state[section][attr]
     else:
         logging.warning('Hub id "{0}" not found in state or attribute {1} not set for hub.'.format(hub_id, attr))
         raise AttributeError
@@ -147,12 +159,12 @@ def _setAttr(hub_id, attr, value, commit=True):
         commit(bool): True to commit state after set. Defaults to True.
     """
     section = 'Hubs.' + hub_id
-    if section in c.state:
-        if attr not in c.state[section]:
+    if section in config.state:
+        if attr not in config.state[section]:
             logging.info("Attribute {0} was not already in {1} state, new attribute created.".format(attr, section))
-        c.state[section][attr] = value
+        config.state[section][attr] = value
         if commit:
-            c.stateWrite()
+            config.stateWrite()
     else:
         logging.warning('Section {0} not found in state.'.format(section))
         raise AttributeError
@@ -176,7 +188,7 @@ def host(hub_id):
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
 
     Returns:
-        str: ip address of matching hub. Be aware that this may be empty if the hub is only known remotely and will still give you an ip address even if the hub is currently remote.
+        str: ip address of matching hub. Be aware that this may be empty if the hub is only known remotely and will still give you an ip address even if the hub is currently remote and an ip address was previously locally known.
     """
     return _getAttr(hub_id, 'host')
 
@@ -213,7 +225,7 @@ def ping(hub_id=None, hub_name=None, **kwargs):
         config_name = 'Hubs.' + hub_id
         hub_token = _getAttr(hub_id, 'hubtoken')
         hub_host = _getAttr(hub_id, 'host')
-        cloud_token = c.state['Cloud']['remotetoken']
+        cloud_token = config.state['Cloud']['remotetoken']
 
         # if we don't have a stored host then we assume the hub is remote
         global remote

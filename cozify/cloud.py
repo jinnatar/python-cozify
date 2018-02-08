@@ -3,7 +3,7 @@
 
 import logging, datetime
 
-from . import config as c
+from . import config
 from . import hub
 from . import hub_api
 from . import cloud_api
@@ -60,7 +60,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             raise
 
         # save the successful cloud_token
-        _setAttr('last_refresh', c._iso_now(), commit=False)
+        _setAttr('last_refresh', config._iso_now(), commit=False)
         _setAttr('remoteToken', cloud_token, commit=True)
     else:
         # cloud_token already fine, let's just use it
@@ -110,11 +110,11 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
 
             # if hub name not already known, create named section
             hubSection = 'Hubs.' + hub_id
-            if hubSection not in c.state:
-                c.state.add_section(hubSection)
+            if hubSection not in config.state:
+                config.state.add_section(hubSection)
             # if default hub not set, set this hub as the first as the default
-            if 'default' not in c.state['Hubs']:
-                c.state['Hubs']['default'] = hub_id
+            if 'default' not in config.state['Hubs']:
+                config.state['Hubs']['default'] = hub_id
 
             # store Hub data under it's named section
             hub._setAttr(hub_id, 'host', hub_ip, commit=False)
@@ -129,8 +129,8 @@ def resetState():
     Hub state is left intact.
     """
 
-    c.state['Cloud'] = {}
-    c.stateWrite()
+    config.state['Cloud'] = {}
+    config.stateWrite()
 
 def ping(autorefresh=True, expiry=None):
     """Test cloud token validity. On success will also trigger a refresh if it's needed by the current key expiry.
@@ -181,7 +181,7 @@ def refresh(force=False, expiry=datetime.timedelta(days=1)):
             else:
                 raise
         else:
-            _setAttr('last_refresh', c._iso_now(), commit=False)
+            _setAttr('last_refresh', config._iso_now(), commit=False)
             token(cloud_token)
             logging.info('cloud_token has been successfully refreshed.')
 
@@ -230,8 +230,8 @@ def _need_cloud_token(trust=True):
     """
 
     # check if we've got a cloud_token before doing expensive checks
-    if trust and 'remoteToken' in c.state['Cloud']:
-        if c.state['Cloud']['remoteToken'] is None:
+    if trust and 'remoteToken' in config.state['Cloud']:
+        if config.state['Cloud']['remoteToken'] is None:
             return True
         else: # perform more expensive check
             return not ping()
@@ -251,7 +251,7 @@ def _need_hub_token(trust=True):
         return True
 
     # First do quick checks, i.e. do we even have a token already
-    if 'default' not in c.state['Hubs'] or 'hubtoken' not in c.state['Hubs.' + c.state['Hubs']['default']]:
+    if 'default' not in config.state['Hubs'] or 'hubtoken' not in config.state['Hubs.' + config.state['Hubs']['default']]:
         logging.debug("We don't have a valid hubtoken or it's not trusted.")
         return True
     else: # if we have a token, we need to test if the API is callable
@@ -277,8 +277,8 @@ def _getAttr(attr):
         str: Value of attribute or exception on failure
     """
     section = 'Cloud'
-    if section in c.state and attr in c.state[section]:
-        return c.state[section][attr]
+    if section in config.state and attr in config.state[section]:
+        return config.state[section][attr]
     else:
         logging.warning('Cloud attribute {0} not found in state.'.format(attr))
         raise AttributeError
@@ -292,12 +292,12 @@ def _setAttr(attr, value, commit=True):
         commit(bool): True to commit state after set. Defaults to True.
     """
     section = 'Cloud'
-    if section in c.state:
-        if attr not in c.state[section]:
+    if section in config.state:
+        if attr not in config.state[section]:
             logging.info("Attribute {0} was not already in {1} state, new attribute created.".format(attr, section))
-        c.state[section][attr] = value
+        config.state[section][attr] = value
         if commit:
-            c.stateWrite()
+            config.stateWrite()
     else:
         logging.warning('Section {0} not found in state.'.format(section))
         raise AttributeError
@@ -308,7 +308,7 @@ def _isAttr(attr):
     Returns:
         bool: True if attribute exists
     """
-    return attr in c.state['Cloud'] and c.state['Cloud'][attr]
+    return attr in config.state['Cloud'] and config.state['Cloud'][attr]
 
 def token(new_token=None):
     """Get currently used cloud_token or set a new one.
