@@ -7,7 +7,7 @@ Attributes:
 
 """
 
-import requests, logging
+import logging
 from . import config
 from . import hub_api
 from enum import Enum
