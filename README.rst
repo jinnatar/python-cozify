@@ -118,8 +118,8 @@ If not, you will run into trouble printing for example device names with non-asc
 The solution is to change your system locale to support utf-8. How this is done is however system dependant.
 As a first test try temporarily overriding your locale:
 
-.. code:: shell
-     LC_ALL='en_US.utf8' python3 program.py
+.. code:: bash
+    LC_ALL='en_US.utf8' python3 program.py
 
 Sample projects
 ---------------
