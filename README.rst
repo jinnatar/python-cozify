@@ -60,7 +60,7 @@ authenticate with a non-default state storage
 
 On Capabilities
 ---------------
-The most practical way to "find" devices for operating on is currently to filter the devices list by their capabilties. The 
+The most practical way to "find" devices for operating on is currently to filter the devices list by their capabilties. The
 most up to date list of recognized capabilities can be seen at `cozify/hub.py <cozify/hub.py#L21>`_
 
 If the capability you need is not yet supported, open a bug to get it added. One way to compare your live hub device's capabilities
@@ -105,6 +105,21 @@ And the expiry duration can be altered (also when calling cloud.ping()):
     # or
     cloud.ping(autorefresh=True, expiry=datetime.timedelta(days=20))
 
+Enconding Pitfalls
+------------------
+The hub provides data encoded as a utf-8 json string. Python-cozify transforms this into a Python dictionary
+where string values are kept as unicode strings. Normally this isn't an issue, as long as your system supports utf-8.
+If not, you will run into trouble printing for example device names with non-ascii characters:
+
+.. code:: python
+
+    UnicodeEncodeError: 'ascii' codec can't encode character '\xe4' in position 34: ordinal not in range(128)
+
+The solution is to change your system locale to support utf-8. How this is done is however system dependant.
+As a first test try temporarily overriding your locale:
+.. code:: shell
+     LC_ALL='en_US.utf8' python3 program.py
+
 Sample projects
 ---------------
 
@@ -117,7 +132,7 @@ Development
 -----------
 To develop python-cozify clone the devel branch and submit pull requests against the devel branch.
 New releases are cut from the devel branch as needed.
-    
+
 Tests
 ~~~~~
 pytest is used for unit tests. Test coverage is still quite spotty and under active development.
