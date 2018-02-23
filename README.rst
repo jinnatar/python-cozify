@@ -58,6 +58,24 @@ authenticate with a non-default state storage
     # authentication and other useful data is now stored in the defined location instead of ~/.config/python-cozify/python-cozify.cfg
     # you could also use the environment variable XDG_CONFIG_HOME to override where config files are stored
 
+On Capabilities
+---------------
+The most practical way to "find" devices for operating on is currently to filter the devices list by their capabilties. The 
+most up to date list of recognized capabilities can be seen at [cozify/hub.py](cozify/hub.py#L22)
+
+If the capability you need is not yet supported, open a bug to get it added. One way to compare your live hub device's capabilities
+to those implemented is running the util/capabilities_list.py tool. It will list implemented and gathered capabilities from your live environment.
+To get all of your previously unknown capabilities implemented, just copy-paste the full output of the utility into a new bug.
+
+In short capabilities are tags assigned to devices by Cozify that mostly guarantee the data related to that capability will be in the same format and structure.
+For example the capabilities based example code in this document filters all the devices that claim to support temperature and reads their name and temperature state.
+Multiple capabilities can be given in a filter by providing a list of capabilities. By default any capability in the list can match (OR filter) but it can be flipped to AND mode
+where every capability must be present on a device for it to qualify. For example, if you only want multi-sensors that support both temperature and humidity monitoring you could define a filter as:
+
+.. code:: python
+
+    devices = hub.devices(capabilities=[ hub.capability.TEMPERATURE, hub.capability.HUMIDITY ], and_filter=True)
+
 Keeping authentication valid
 ----------------------------
 If the cloud token expires, the only option to get a new one is an interactive prompt for an OTP.
