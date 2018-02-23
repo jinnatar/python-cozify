@@ -42,6 +42,10 @@ def id(scope='module'):
     return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
 
 @pytest.fixture
+def devices(scope='module'):
+    return dev
+
+@pytest.fixture
 def livehub(scope='module'):
     config.setStatePath() # default config assumed to be live
     config.dump_state() # dump state so it's visible in failed test output
