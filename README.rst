@@ -27,14 +27,15 @@ Basic usage
 -----------
 These are merely some simple examples, for the full documentation see: `http://python-cozify.readthedocs.io/en/latest/`
 
-read devices, extract multisensor data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+read devices by capability, print temperature data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
-    from cozify import hub, multisensor
-    devices = hub.getDevices()
-    print(multisensor.getMultisensorData(devices))
+    from cozify import hub
+    devices = hub.devices(capabilities=hub.capability.TEMPERATURE)
+    for id, dev in devices.items():
+      print('{0}: {1}C'.format(dev['name'], dev['state']['temperature']))
 
 only authenticate
 ~~~~~~~~~~~~~~~~~
