@@ -4,6 +4,8 @@ from . import config
 
 # expects Cozify devices type json data
 def getMultisensorData(data):
+    """Deprecated, will be removed in v0.3
+    """
     out = []
     for device in data:
         state=data[device]['state']
