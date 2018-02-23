@@ -9,7 +9,6 @@ Attributes:
 
 import requests, logging
 from . import config
-from . import cloud
 from . import hub_api
 from enum import Enum
 
@@ -35,6 +34,7 @@ def getDevices(**kwargs):
         dict: full live device state as returned by the API
 
     """
+    from . import cloud
     cloud.authenticate() # the old version of getDevices did more than it was supposed to, including making sure there was a valid connection
 
     hub_id = _get_id(**kwargs)
@@ -63,6 +63,7 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
         dict: full live device state as returned by the API
 
     """
+    from . import cloud
     hub_id = _get_id(**kwargs)
     hub_token = token(hub_id)
     cloud_token = cloud.token()
@@ -254,6 +255,7 @@ def tz(hub_id=None, **kwargs):
     Returns:
         str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
+    from . import cloud
 
     if not hub_id:
         hub_id = getDefaultHub()

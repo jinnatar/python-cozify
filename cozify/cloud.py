@@ -4,7 +4,6 @@
 import logging, datetime
 
 from . import config
-from . import hub
 from . import hub_api
 from . import cloud_api
 
@@ -33,6 +32,8 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
     Returns:
         bool: True on authentication success. Failure will result in an exception.
     """
+
+    from . import hub
 
     if not _isAttr('email'):
          _setAttr('email', _getEmail())
@@ -246,6 +247,8 @@ def _need_hub_token(trust=True):
     Returns:
         bool: True to indicate a need to request token.
     """
+    from . import hub
+
     if not trust:
         logging.debug("hub_token not trusted so we'll say it needs to be renewed.")
         return True
