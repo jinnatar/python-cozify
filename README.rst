@@ -61,7 +61,7 @@ authenticate with a non-default state storage
 On Capabilities
 ---------------
 The most practical way to "find" devices for operating on is currently to filter the devices list by their capabilties. The 
-most up to date list of recognized capabilities can be seen at `cozify/hub.py <cozify/hub.py#L22>`_
+most up to date list of recognized capabilities can be seen at `cozify/hub.py <cozify/hub.py#L21>`_
 
 If the capability you need is not yet supported, open a bug to get it added. One way to compare your live hub device's capabilities
 to those implemented is running the util/capabilities_list.py tool. It will list implemented and gathered capabilities from your live environment.
