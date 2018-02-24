@@ -4,7 +4,7 @@ from cozify import hub, cloud, hub_api
 from cozify.test import debug
 
 def main():
-    hub_id = hub.getDefaultHub()
+    hub_id = hub.default()
 
     hub_api.tz(
             host = hub.host(hub_id),

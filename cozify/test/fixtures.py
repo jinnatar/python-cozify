@@ -11,7 +11,7 @@ def default_hub(scope='module'):
     barehub = lambda:0
     config.setStatePath() # reset to default config
     config.dump_state()
-    barehub.hub_id = hub.getDefaultHub()
+    barehub.hub_id = hub.default()
     barehub.name = hub.name(barehub.hub_id)
     barehub.host = hub.host(barehub.hub_id)
     barehub.token = hub.token(barehub.hub_id)

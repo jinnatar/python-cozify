@@ -103,16 +103,22 @@ def _get_id(**kwargs):
         if 'hub_name' in kwargs:
             return getHubId(kwargs['hub_name'])
         return getHubId(kwargs['hubName'])
-    return getDefaultHub()
+    return default()
 
 def getDefaultHub():
+    """Deprecated, use default(). Return id of default Hub.
+    """
+    logging.warn('hub.getDefaultHub is deprecated and will be removed soon. Use hub.default()')
+    return default()
+
+def default():
     """Return id of default Hub.
 
-    If default hub isn't known, run authentication to make it known.
+    If default hub isn't known an AttributeError will be raised.
     """
 
     if 'default' not in config.state['Hubs']:
-        logging.critical('no hub name given and no default known, you should run cozify.authenticate()')
+        logging.critical('Default hub not known, you should run cozify.authenticate()')
         raise AttributeError
     else:
         return config.state['Hubs']['default']
@@ -221,7 +227,7 @@ def ping(hub_id=None, hub_name=None, **kwargs):
         hub_id = getHubId(hub_name)
 
     if not hub_id and not hub_name:
-        hub_id = getDefaultHub()
+        hub_id = default()
     try:
         config_name = 'Hubs.' + hub_id
         hub_token = _getAttr(hub_id, 'hubtoken')
@@ -258,7 +264,7 @@ def tz(hub_id=None, **kwargs):
     from . import cloud
 
     if not hub_id:
-        hub_id = getDefaultHub()
+        hub_id = default()
 
     ip = host(hub_id)
     hub_token = token(hub_id)
