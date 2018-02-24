@@ -4,7 +4,7 @@ Attributes:
     apiPath(str): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
 """
 
-import requests, json
+import requests, json, logging
 
 from cozify import cloud_api
 
@@ -109,9 +109,11 @@ def devices_command(command, **kwargs):
     """1:1 implementation of /devices/command. For kwargs see cozify.hub_api.put()
 
     Args:
-        command(str): json string of type DeviceData containing the changes wanted
+        command(dict): dictionary of type DeviceData containing the changes wanted. Will be converted to json.
 
     Returns:
         str: What ever the API replied or an APIException on failure.
     """
+    command = json.dumps(command)
+    logging.debug('command json to send: {0}'.format(command))
     return put('/devices/command', command, **kwargs)
