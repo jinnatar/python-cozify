@@ -45,7 +45,7 @@ def getDevices(**kwargs):
     if 'remote' not in kwargs:
         kwargs['remote'] = remote
 
-    return devices(capability=None, **kwargs)
+    return devices(**kwargs)
 
 def devices(*, capabilities=None, and_filter=False, **kwargs):
     """Get up to date full devices data set as a dict. Optionally can be filtered to only include certain devices.
@@ -63,15 +63,8 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
         dict: full live device state as returned by the API
 
     """
-    from . import cloud
-    hub_id = _get_id(**kwargs)
-    hub_token = token(hub_id)
-    cloud_token = cloud.token()
-    hostname = host(hub_id)
-    if remote not in kwargs:
-        kwargs['remote'] = remote
-
-    devs = hub_api.devices(host=hostname, hub_token=hub_token, cloud_token=cloud_token, **kwargs)
+    _fill_kwargs(kwargs)
+    devs = hub_api.devices(**kwargs)
     if capabilities:
         if isinstance(capabilities, capability): # single capability given
             logging.debug("single capability {0}".format(capabilities.name))
@@ -83,6 +76,31 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
                 return { key : value for key, value in devs.items() if any(c.name in value['capabilities']['values'] for c in capabilities) }
     else: # no filtering
         return devs
+
+def toggle(device_id, **kwargs):
+    """Toggle power state of any device capable of it such as lamps. Eligibility is determined by the capability ON_OFF.
+
+    Args:
+        device_id: ID of the device to toggle.
+        **hub_id(str): optional id of hub to operate on. A specified hub_id takes presedence over a hub_name or default Hub.
+        **hub_name(str): optional name of hub to operate on.
+        **remote(bool): Remote or local query.
+    """
+    _fill_kwargs(kwargs)
+
+    # Get list of devices known to support toggle and find the device and it's state.
+    devs = devices(capabilities=capability.ON_OFF, **kwargs)
+    dev_state = devs[device_id]['state']
+    current_state = dev_state['isOn']
+    new_state = _clean_state(dev_state)
+    new_state['isOn'] = not current_state # reverse state
+    
+    command = {
+            "type": "CMD_DEVICE",
+            "id": device_id,
+            "state": new_state
+            }
+    hub_api.devices_command(command, **kwargs)
 
 def _get_id(**kwargs):
     """Get a hub_id from various sources, meant so that you can just throw kwargs at it and get a valid id.
@@ -104,6 +122,44 @@ def _get_id(**kwargs):
             return getHubId(kwargs['hub_name'])
         return getHubId(kwargs['hubName'])
     return default()
+
+def _fill_kwargs(kwargs):
+    """Check that common items are present in kwargs and fill them if not.
+
+    Args:
+    kwargs(dict): kwargs dictionary to fill.
+
+    Returns:
+        dict: Replacement kwargs dictionary with basic values filled.
+    """
+    if 'remote' not in kwargs:
+        kwargs['remote'] = remote
+    if 'hub_id' not in kwargs:
+        kwargs['hub_id'] = _get_id(**kwargs)
+    if 'hub_token' not in kwargs:
+        kwargs['hub_token'] = token(kwargs['hub_id'])
+    if 'cloud_token' not in kwargs:
+        from . import cloud
+        kwargs['cloud_token'] = cloud.token()
+    if 'host' not in kwargs:
+        kwargs['host'] = host(kwargs['hub_id'])
+
+def _clean_state(state):
+    """Return purged state of values so only wanted values can be modified.
+
+    Args:
+    state(dict): device state dictionary. Original won't be modified.
+    """
+    out = {}
+    for k, v in state.items():
+        if isinstance(v, dict): # recurse nested dicts
+            out[k] = _clean_state(v)
+        elif k == "type": # type values are kept
+            out[k] = v
+        else: # null out the rest
+            out[k] = None
+    return out
+
 
 def getDefaultHub():
     """Deprecated, use default(). Return id of default Hub.
