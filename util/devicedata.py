@@ -3,7 +3,7 @@ from cozify import hub
 import pprint, sys
 
 def main(device):
-    devs = hub.getDevices()
+    devs = hub.devices()
     pprint.pprint(devs[device])
 
 if __name__ == "__main__":
