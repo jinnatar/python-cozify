@@ -49,7 +49,7 @@ def devices():
 def livehub(request):
     config.setStatePath() # default config assumed to be live
     config.dump_state() # dump state so it's visible in failed test output
-    autoremote = getattr(request.module, "autoremote", True) # enable skipping ping
+    autoremote = request.param
     if autoremote:
         logging.debug('Livehub setup checking if connection valid.')
         assert hub.ping()
