@@ -2,7 +2,7 @@
 
 import os, pytest, tempfile, datetime, logging
 
-from cozify import conftest, config, hub, cloud
+from cozify import conftest, config
 
 from . import fixtures_devices as dev
 
@@ -11,6 +11,7 @@ def default_hub():
     barehub = lambda:0
     config.setStatePath() # reset to default config
     config.dump_state()
+    from cozify import hub
     barehub.hub_id = hub.default()
     barehub.name = hub.name(barehub.hub_id)
     barehub.host = hub.host(barehub.hub_id)
@@ -26,39 +27,32 @@ def tmp_cloud():
 @pytest.fixture
 def live_cloud():
     config.setStatePath() # reset to default
+    from cozify import cloud
     return cloud
 
 @pytest.fixture
 def id():
-    return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
+    return 'deadbeef-aaaa-bbbb-cccc-fixtureddddd'
 
-@pytest.fixture
-def tmphub():
-    with tmp_hub() as hub:
-        yield hub
-
-@pytest.fixture
-def id():
-    return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
+@pytest.fixture()
+def tmp_hub():
+    with Tmp_hub() as hub_obj:
+        print('Tmp hub state for testing:')
+        config.dump_state()
+        yield hub_obj
 
 @pytest.fixture
 def devices():
     return dev
 
-@pytest.fixture
-def livehub(request):
+@pytest.fixture()
+def live_hub():
     config.setStatePath() # default config assumed to be live
+    print('Live hub state for testing:')
     config.dump_state() # dump state so it's visible in failed test output
-    if hasattr(request, 'param'): # can be specified to toggle use of ping
-        autoremote = request.param
-    else:
-        autoremote = True
-    if autoremote:
-        logging.debug('Livehub setup checking if connection valid.')
-        assert hub.ping()
-    else:
-        logging.debug('Livehub setup skipped ping.')
-    return hub
+    from cozify import hub
+    yield hub
+    hub.remote = False # reset remote state at teardown
 
 class Tmp_cloud():
     """Creates a temporary cloud state with test data.
@@ -75,6 +69,7 @@ class Tmp_cloud():
         self.iso_yesterday = self.yesterday.isoformat().split(".")[0]
     def __enter__(self):
         config.setStatePath(self.configpath)
+        from cozify import cloud
         cloud._setAttr('email', self.email)
         cloud._setAttr('remotetoken', self.token)
         cloud._setAttr('last_refresh', self.iso_yesterday)
@@ -86,11 +81,11 @@ class Tmp_cloud():
             logging.error("%s, %s, %s" % (exc_type, exc_value, traceback))
             return False
 
-class tmp_hub():
+class Tmp_hub():
     """Creates a temporary hub section (with test data) in a tmp_cloud
     """
     def __init__(self):
-        self.id = 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
+        self.id = 'deadbeef-aaaa-bbbb-cccc-tmphubdddddd'
         self.name = 'HubbyMcHubFace'
         self.host = '127.0.0.1'
         self.section = 'Hubs.{0}'.format(self.id)
