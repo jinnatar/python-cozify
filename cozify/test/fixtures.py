@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, pytest, tempfile, datetime
+import os, pytest, tempfile, datetime, logging
 
 from cozify import conftest, config, hub, cloud
 
@@ -51,10 +51,10 @@ def livehub(request):
     config.dump_state() # dump state so it's visible in failed test output
     autoremote = getattr(request.module, "autoremote", True) # enable skipping ping
     if autoremote:
-        log.debug('Livehub setup checking if connection valid.')
+        logging.debug('Livehub setup checking if connection valid.')
         assert hub.ping()
     else:
-        log.debug('Livehub setup skipped ping.')
+        logging.debug('Livehub setup skipped ping.')
     return hub
 
 class Tmp_cloud():
@@ -80,7 +80,7 @@ class Tmp_cloud():
         os.remove(self.configpath)
 
         if exc_type is not None:
-            debug.logger.error("%s, %s, %s" % (exc_type, exc_value, traceback))
+            logging.error("%s, %s, %s" % (exc_type, exc_value, traceback))
             return False
 
 class tmp_hub():
@@ -104,7 +104,7 @@ class tmp_hub():
         return self
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is not None:
-            debug.logger.error("%s, %s, %s" % (exc_type, exc_value, traceback))
+            logging.error("%s, %s, %s" % (exc_type, exc_value, traceback))
             return False
         config.state.remove_section(self.section)
 
