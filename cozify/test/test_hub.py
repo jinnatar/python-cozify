@@ -19,6 +19,11 @@ def test_tz(livehub):
         cloud_token=config.state['Cloud']['remotetoken']
         ))
 
+@pytest.mark.live
+def test_tz_naive(livehub):
+    autoremote = False # skip hub.ping() which does remote autodetect
+    assert hub.tz()
+
 def test_hub_id_to_name(tmphub):
     assert hub.name(tmphub.id) == tmphub.name
 
@@ -27,7 +32,7 @@ def test_hub_name_to_id(tmphub):
 
 @pytest.mark.live
 def test_multisensor(livehub):
-    data = hub.getDevices()
+    data = hub.devices()
     print(multisensor.getMultisensorData(data))
 
 def test_hub_get_id(tmphub):
