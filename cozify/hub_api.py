@@ -32,7 +32,9 @@ def get(call, hub_token_header=True, base=apiPath, **kwargs):
     """
     response = None
     headers = None
-    if kwargs['remote'] and kwargs['cloud_token']:
+    if kwargs['remote']:
+        if 'cloud_token' not in kwargs:
+            raise AttributeError('Asked to do remote call but no cloud_token provided.')
         response = cloud_api.remote(apicall=base + call, **kwargs)
     else:
         if hub_token_header:
