@@ -9,6 +9,7 @@ import requests, json, logging
 from cozify import cloud_api
 
 from .Error import APIError
+from requests.exceptions import RequestException
 
 apiPath = '/cc/1.8'
 
@@ -37,16 +38,22 @@ def get(call, hub_token_header=True, base=apiPath, **kwargs):
             raise AttributeError('Asked to do remote call but no cloud_token provided.')
         response = cloud_api.remote(apicall=base + call, **kwargs)
     else:
-        if hub_token_header:
-            headers = _headers(kwargs['hub_token'])
-        response = requests.get(_getBase(host=kwargs['host'], api=base) + call, headers=headers)
-
-    if response.status_code == 200:
-        return response.json()
-    elif response.status_code == 410:
-        raise APIError(response.status_code, 'API version outdated. Update python-cozify. %s - %s - %s' % (response.reason, response.url, response.text))
-    else:
-        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
+        if kwargs['host']:
+            if hub_token_header:
+                headers = _headers(kwargs['hub_token'])
+            try:
+                response = requests.get(_getBase(host=kwargs['host'], api=base) + call, headers=headers)
+            except RequestException as e:
+                raise APIError('connection failure', 'issues connection to \'{0}\': {1}'.format(kwargs['host'], e))
+            else:
+                if response.status_code == 200:
+                    return response.json()
+                elif response.status_code == 410:
+                    raise APIError(response.status_code, 'API version outdated. Update python-cozify. %s - %s - %s' % (response.reason, response.url, response.text))
+                else:
+                    raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
+        else:
+            raise AttributeError('Local call but no hostname was provided. Either set keyword remote or host.')
 
 def put(call, payload, hub_token_header=True, base=apiPath, **kwargs):
     """PUT method for calling hub API.
