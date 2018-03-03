@@ -10,7 +10,7 @@ def test_hub(live_cloud, live_hub):
     hub_id = live_hub.default()
     assert hub_api.hub(
             hub_id = hub_id,
-            host = live_hub.host,
+            host = live_hub.host(hub_id),
             remote = live_hub.remote,
             cloud_token = live_cloud.token(),
             hub_token = live_hub.token(hub_id)
