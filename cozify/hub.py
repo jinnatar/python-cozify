@@ -94,7 +94,7 @@ def toggle(device_id, **kwargs):
     current_state = dev_state['isOn']
     new_state = _clean_state(dev_state)
     new_state['isOn'] = not current_state # reverse state
-    
+
     command = {
             "type": "CMD_DEVICE",
             "id": device_id,
@@ -268,39 +268,29 @@ def token(hub_id, new_token=None):
         _setAttr(hub_id, 'hubtoken', new_token)
     return _getAttr(hub_id, 'hubtoken')
 
-def ping(hub_id=None, hub_name=None, **kwargs):
+def ping(**kwargs):
     """Perform a cheap API call to trigger any potential APIError and return boolean for success/failure. For optional kwargs see cozify.hub_api.get()
 
     Args:
-        hub_id(str): Hub to ping or default if None. Defaults to None.
-        hub_name(str): Hub to ping or default if None. Defaults to None.
+        **hub_id(str): Hub to ping or default if neither id or name set.
+        **hub_name(str): Hub to ping by name.
 
     Returns:
         bool: True for a valid and working hub authentication state.
     """
-
-    if hub_name and not hub_id:
-        hub_id = getHubId(hub_name)
-
-    if not hub_id and not hub_name:
-        hub_id = default()
+    _fill_kwargs(kwargs)
     try:
-        config_name = 'Hubs.' + hub_id
-        hub_token = _getAttr(hub_id, 'hubtoken')
-        hub_host = _getAttr(hub_id, 'host')
-        cloud_token = config.state['Cloud']['remotetoken']
-
         # if we don't have a stored host then we assume the hub is remote
-        global remote
-        if not remote and autoremote and not hub_host:
+        if not kwargs['remote'] and autoremote and not kwargs['host']: # TODO(artanicus): I'm not sure if the last condition makes sense
+            global remote
             remote = True
+            kwargs['remote'] = True
             logging.debug('Ping determined hub is remote and flipped state to remote.')
-
-        timezone = tz(hub_id)
+        timezone = tz(**kwargs)
         logging.debug('Ping performed with tz call, response: {0}'.format(timezone))
     except APIError as e:
         if e.status_code == 401:
-            logging.debug(e)
+            logging.warn(e)
             return False
         else:
             raise
@@ -308,26 +298,15 @@ def ping(hub_id=None, hub_name=None, **kwargs):
         return True
 
 
-def tz(hub_id=None, **kwargs):
-    """Get timezone of given hub or default hub if no id is specified. For kwargs see cozify.hub_api.get()
+def tz(**kwargs):
+    """Get timezone of given hub or default hub if no id is specified. For more optional kwargs see cozify.hub_api.get()
 
     Args:
-    hub_id(str): Hub to query, by default the default hub is used.
+    **hub_id(str): Hub to query, by default the default hub is used.
 
     Returns:
         str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
-    from . import cloud
+    _fill_kwargs(kwargs)
 
-    if not hub_id:
-        hub_id = default()
-
-    ip = host(hub_id)
-    hub_token = token(hub_id)
-    cloud_token = cloud.token()
-
-    # if remote state not already set in the parameters, include it
-    if remote not in kwargs:
-        kwargs['remote'] = remote
-
-    return hub_api.tz(host=ip, hub_token=hub_token, cloud_token=cloud_token, **kwargs)
+    return hub_api.tz(**kwargs)
