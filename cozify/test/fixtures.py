@@ -51,7 +51,10 @@ def livehub(request):
     config.dump_state() # dump state so it's visible in failed test output
     autoremote = getattr(request.module, "autoremote", True) # enable skipping ping
     if autoremote:
+        log.debug('Livehub setup checking if connection valid.')
         assert hub.ping()
+    else:
+        log.debug('Livehub setup skipped ping.')
     return hub
 
 class Tmp_cloud():
