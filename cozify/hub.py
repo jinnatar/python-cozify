@@ -134,6 +134,8 @@ def _fill_kwargs(kwargs):
     """
     if 'remote' not in kwargs:
         kwargs['remote'] = remote
+    if 'autoremote' not in kwargs:
+        kwargs['autoremote'] = autoremote
     if 'hub_id' not in kwargs:
         kwargs['hub_id'] = _get_id(**kwargs)
     if 'hub_token' not in kwargs:
@@ -280,8 +282,8 @@ def ping(**kwargs):
     """
     _fill_kwargs(kwargs)
     try:
-        # if we don't have a stored host then we assume the hub is remote
-        if not kwargs['remote'] and autoremote and not kwargs['host']: # TODO(artanicus): I'm not sure if the last condition makes sense
+        # if we don't have a stored host then we assume the hub is remote TODO(artanicus): need a second test as well so a failed call will attempt to flip
+        if not kwargs['remote'] and kwargs['autoremote'] and not kwargs['host']: # TODO(artanicus): I'm not sure if the last condition makes sense
             global remote
             remote = True
             kwargs['remote'] = True
