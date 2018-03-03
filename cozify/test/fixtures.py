@@ -7,7 +7,7 @@ from cozify import conftest, config, hub, cloud
 from . import fixtures_devices as dev
 
 @pytest.fixture
-def default_hub(scope='module'):
+def default_hub():
     barehub = lambda:0
     config.setStatePath() # reset to default config
     config.dump_state()
@@ -19,37 +19,39 @@ def default_hub(scope='module'):
     return barehub
 
 @pytest.fixture
-def tmp_cloud(scope='module'):
+def tmp_cloud():
     with Tmp_cloud() as cloud:
         yield cloud
 
 @pytest.fixture
-def live_cloud(scope='module'):
+def live_cloud():
     config.setStatePath() # reset to default
     return cloud
 
 @pytest.fixture
-def id(scope='module'):
+def id():
     return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
 
 @pytest.fixture
-def tmphub(scope='module'):
+def tmphub():
     with tmp_hub() as hub:
         yield hub
 
 @pytest.fixture
-def id(scope='module'):
+def id():
     return 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
 
 @pytest.fixture
-def devices(scope='module'):
+def devices():
     return dev
 
 @pytest.fixture
-def livehub(scope='module'):
+def livehub(request):
     config.setStatePath() # default config assumed to be live
     config.dump_state() # dump state so it's visible in failed test output
-    assert hub.ping()
+    autoremote = getattr(request.module, "autoremote", True) # enable skipping ping
+    if autoremote:
+        assert hub.ping()
     return hub
 
 class Tmp_cloud():
