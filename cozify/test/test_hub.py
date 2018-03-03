@@ -7,21 +7,8 @@ from cozify import hub, hub_api, config, multisensor
 from cozify.test import debug
 
 @pytest.mark.live
+@pytest.mark.parametrize('livehub', [[True, False]]) # also test skipping hub.ping() which does remote autodetect
 def test_tz(livehub):
-    assert hub.tz()
-
-    # hand craft data needed for low-level api call hub_api.tz
-    hubSection = 'Hubs.' + config.state['Hubs']['default']
-    print(hub_api.tz(
-        host=config.state[hubSection]['host'],
-        hub_token=config.state[hubSection]['hubtoken'],
-        remote=hub.remote,
-        cloud_token=config.state['Cloud']['remotetoken']
-        ))
-
-@pytest.mark.live
-def test_tz_naive(livehub):
-    autoremote = False # skip hub.ping() which does remote autodetect
     assert hub.tz()
 
 def test_hub_id_to_name(tmphub):
