@@ -63,9 +63,9 @@ def dump_state():
     """Print out current state file to stdout. Long values are truncated since this is only for visualization.
     """
     for section in state.sections():
-        print('[{0:.10}]'.format(section))
+        print('[{!s:.10}]'.format(section))
         for option in state.options(section):
-            print('  {0:<13.13} = {1:>10.100}'.format(option, state[section][option]))
+            print('  {!s:<13.13} = {!s:>10.100}'.format(option, state[section][option]))
 
 def _iso_now():
     """Helper to return isoformat datetime stamp that's more compatible than the default.
