@@ -79,7 +79,7 @@ class Tmp_cloud():
             return False
 
 class tmp_hub():
-    """Creates a temporary hub section (with test data) in the current live state.
+    """Creates a temporary hub section (with test data) in a tmp_cloud
     """
     def __init__(self):
         self.id = 'deadbeef-aaaa-bbbb-cccc-dddddddddddd'
@@ -88,12 +88,14 @@ class tmp_hub():
         self.section = 'Hubs.{0}'.format(self.id)
         self.token = 'eyJkb20iOiJ1ayIsImFsZyI6IkhTNTEyIiwidHlwIjoiSldUIn0.eyJyb2xlIjo4LCJpYXQiOjE1MTI5ODg5NjksImV4cCI6MTUxNTQwODc2OSwidXNlcl9pZCI6ImRlYWRiZWVmLWFhYWEtYmJiYi1jY2NjLWRkZGRkZGRkZGRkZCIsImtpZCI6ImRlYWRiZWVmLWRkZGQtY2NjYy1iYmJiLWFhYWFhYWFhYWFhYSIsImlzcyI6IkNsb3VkIn0.QVKKYyfTJPks_BXeKs23uvslkcGGQnBTKodA-UGjgHg' # valid but useless jwt token.
     def __enter__(self):
-        config.setStatePath() # reset to default
+        self.cloud = Tmp_cloud() # this also initializes temporary state
         config.state.add_section(self.section)
         config.state[self.section]['hubname'] = self.name
         config.state[self.section]['host'] = self.host
         config.state[self.section]['hubtoken'] = self.token
         config.state['Hubs']['default'] = self.id
+        print('Temporary state:')
+        config.dump_state()
         return self
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is not None:
