@@ -1,10 +1,14 @@
 #!/usr/bin/env python3                                                                                                                                         
 from cozify import hub
-import pprint
+import pprint, sys
 
-def main():
-    sensors = hub.devices(capability=hub.capability.TEMPERATURE)
-    pprint.pprint(sensors)
+from cozify.test import debug
+
+def main(device):
+    hub.toggle(device)
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        main(sys.argv[1])
+    else:
+        sys.exit(1)

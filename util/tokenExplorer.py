@@ -8,7 +8,7 @@ def main(statepath):
     config.setStatePath(statepath)
 
     cloud_token = cloud.token()
-    hub_id = hub.getDefaultHub()
+    hub_id = hub.default()
     hub_token = hub.token(hub_id)
 
     pp = pprint.PrettyPrinter(indent=2)

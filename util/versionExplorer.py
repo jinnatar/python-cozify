@@ -5,7 +5,7 @@ from cozify import hub, hub_api
 from cozify.Error import APIError
 
 def main(start=hub_api.apiPath):
-    id = hub.getDefaultHub()
+    id = hub.default()
     host = hub.host(id)
     token = hub.token(id)
     api = start

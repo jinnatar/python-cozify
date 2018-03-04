@@ -27,14 +27,15 @@ Basic usage
 -----------
 These are merely some simple examples, for the full documentation see: `http://python-cozify.readthedocs.io/en/latest/`
 
-read devices, extract multisensor data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+read devices by capability, print temperature data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
-    from cozify import hub, multisensor
-    devices = hub.getDevices()
-    print(multisensor.getMultisensorData(devices))
+    from cozify import hub
+    devices = hub.devices(capabilities=hub.capability.TEMPERATURE)
+    for id, dev in devices.items():
+      print('{0}: {1}C'.format(dev['name'], dev['state']['temperature']))
 
 only authenticate
 ~~~~~~~~~~~~~~~~~
@@ -56,6 +57,24 @@ authenticate with a non-default state storage
     cloud.authenticate()
     # authentication and other useful data is now stored in the defined location instead of ~/.config/python-cozify/python-cozify.cfg
     # you could also use the environment variable XDG_CONFIG_HOME to override where config files are stored
+
+On Capabilities
+---------------
+The most practical way to "find" devices for operating on is currently to filter the devices list by their capabilties. The
+most up to date list of recognized capabilities can be seen at `cozify/hub.py <cozify/hub.py#L21>`_
+
+If the capability you need is not yet supported, open a bug to get it added. One way to compare your live hub device's capabilities
+to those implemented is running the util/capabilities_list.py tool. It will list implemented and gathered capabilities from your live environment.
+To get all of your previously unknown capabilities implemented, just copy-paste the full output of the utility into a new bug.
+
+In short capabilities are tags assigned to devices by Cozify that mostly guarantee the data related to that capability will be in the same format and structure.
+For example the capabilities based example code in this document filters all the devices that claim to support temperature and reads their name and temperature state.
+Multiple capabilities can be given in a filter by providing a list of capabilities. By default any capability in the list can match (OR filter) but it can be flipped to AND mode
+where every capability must be present on a device for it to qualify. For example, if you only want multi-sensors that support both temperature and humidity monitoring you could define a filter as:
+
+.. code:: python
+
+    devices = hub.devices(capabilities=[ hub.capability.TEMPERATURE, hub.capability.HUMIDITY ], and_filter=True)
 
 Keeping authentication valid
 ----------------------------
@@ -86,6 +105,33 @@ And the expiry duration can be altered (also when calling cloud.ping()):
     # or
     cloud.ping(autorefresh=True, expiry=datetime.timedelta(days=20))
 
+Working Remotely
+----------------
+By default queries to the hub are attempted via local LAN. Also by default "remoteness" autodetection is on and thus
+if it is determined during cloud.authentication() or a hub.ping() call that you seem to not be in the same network, the state is flipped.
+Both the remote state and autodetection can be overriden in most if not all funcions by the boolean keyword arguments 'remote' and 'autoremote'. They can also be queried or permanently changed by the hub.remote() and hub.autoremote() functions.
+
+Using Multiple Hubs
+-------------------
+Everything has been designed to support multiple hubs registered to the same Cozify Cloud account. All hub operations can be targeted by setting the keyword argument 'hub_id' or 'hub_name'. The developers do not as of yet have access to multiple hubs so proper testing of multi functionality has not been performed. If you run into trouble, please open bugs so things can be improved.
+
+The remote state of hubs is kept separately so there should be no issues calling your home hub locally but operating on a summer cottage hub remotely at the same time.
+
+Enconding Pitfalls
+------------------
+The hub provides data encoded as a utf-8 json string. Python-cozify transforms this into a Python dictionary
+where string values are kept as unicode strings. Normally this isn't an issue, as long as your system supports utf-8.
+If not, you will run into trouble printing for example device names with non-ascii characters:
+
+    UnicodeEncodeError: 'ascii' codec can't encode character '\xe4' in position 34: ordinal not in range(128)
+
+The solution is to change your system locale to support utf-8. How this is done is however system dependant.
+As a first test try temporarily overriding your locale:
+
+.. code:: bash
+
+    LC_ALL='en_US.utf8' python3 program.py
+
 Sample projects
 ---------------
 
@@ -98,7 +144,7 @@ Development
 -----------
 To develop python-cozify clone the devel branch and submit pull requests against the devel branch.
 New releases are cut from the devel branch as needed.
-    
+
 Tests
 ~~~~~
 pytest is used for unit tests. Test coverage is still quite spotty and under active development.
