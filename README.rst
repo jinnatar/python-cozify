@@ -105,6 +105,18 @@ And the expiry duration can be altered (also when calling cloud.ping()):
     # or
     cloud.ping(autorefresh=True, expiry=datetime.timedelta(days=20))
 
+Working Remotely
+----------------
+By default queries to the hub are attempted via local LAN. Also by default "remoteness" autodetection is on and thus
+if it is determined during cloud.authentication() or a hub.ping() call that you seem to not be in the same network, the state is flipped.
+Both the remote state and autodetection can be overriden in most if not all funcions by the boolean keyword arguments 'remote' and 'autoremote'. They can also be queried or permanently changed by the hub.remote() and hub.autoremote() functions.
+
+Using Multiple Hubs
+-------------------
+Everything has been designed to support multiple hubs registered to the same Cozify Cloud account. All hub operations can be targeted by setting the keyword argument 'hub_id' or 'hub_name'. The developers do not as of yet have access to multiple hubs so proper testing of multi functionality has not been performed. If you run into trouble, please open bugs so things can be improved.
+
+The remote state of hubs is kept separately so there should be no issues calling your home hub locally but operating on a summer cottage hub remotely at the same time.
+
 Enconding Pitfalls
 ------------------
 The hub provides data encoded as a utf-8 json string. Python-cozify transforms this into a Python dictionary
