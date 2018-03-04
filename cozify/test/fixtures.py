@@ -16,7 +16,7 @@ def default_hub():
     barehub.name = hub.name(barehub.hub_id)
     barehub.host = hub.host(barehub.hub_id)
     barehub.token = hub.token(barehub.hub_id)
-    barehub.remote = hub.remote
+    barehub.remote = hub.remote(barehub_hub_id)
     return barehub
 
 @pytest.fixture
@@ -26,9 +26,11 @@ def tmp_cloud():
 
 @pytest.fixture
 def live_cloud():
-    config.setStatePath() # reset to default
+    configfile, configpath = tempfile.mkstemp()
+    config.setStatePath(configpath, copy_current=True)
     from cozify import cloud
-    return cloud
+    yield cloud
+    config.setStatePath()
 
 @pytest.fixture
 def id():
@@ -52,7 +54,6 @@ def live_hub():
     config.dump_state() # dump state so it's visible in failed test output
     from cozify import hub
     yield hub
-    hub.remote = False # reset remote state at teardown
 
 class Tmp_cloud():
     """Creates a temporary cloud state with test data.
@@ -67,12 +68,12 @@ class Tmp_cloud():
         self.iso_now = self.now.isoformat().split(".")[0]
         self.yesterday = self.now - datetime.timedelta(days=1)
         self.iso_yesterday = self.yesterday.isoformat().split(".")[0]
-    def __enter__(self):
         config.setStatePath(self.configpath)
         from cozify import cloud
         cloud._setAttr('email', self.email)
         cloud._setAttr('remotetoken', self.token)
         cloud._setAttr('last_refresh', self.iso_yesterday)
+    def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_value, traceback):
         os.remove(self.configpath)
@@ -90,21 +91,16 @@ class Tmp_hub():
         self.host = '127.0.0.1'
         self.section = 'Hubs.{0}'.format(self.id)
         self.token = 'eyJkb20iOiJ1ayIsImFsZyI6IkhTNTEyIiwidHlwIjoiSldUIn0.eyJyb2xlIjo4LCJpYXQiOjE1MTI5ODg5NjksImV4cCI6MTUxNTQwODc2OSwidXNlcl9pZCI6ImRlYWRiZWVmLWFhYWEtYmJiYi1jY2NjLWRkZGRkZGRkZGRkZCIsImtpZCI6ImRlYWRiZWVmLWRkZGQtY2NjYy1iYmJiLWFhYWFhYWFhYWFhYSIsImlzcyI6IkNsb3VkIn0.QVKKYyfTJPks_BXeKs23uvslkcGGQnBTKodA-UGjgHg' # valid but useless jwt token.
-    def __enter__(self):
         self.cloud = Tmp_cloud() # this also initializes temporary state
         config.state.add_section(self.section)
         config.state[self.section]['hubname'] = self.name
         config.state[self.section]['host'] = self.host
         config.state[self.section]['hubtoken'] = self.token
         config.state['Hubs']['default'] = self.id
-        print('Temporary state:')
-        config.dump_state()
+    def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type is not None:
-            logging.error("%s, %s, %s" % (exc_type, exc_value, traceback))
-            return False
-        config.state.remove_section(self.section)
+        config.setStatePath()
 
     def devices(self):
         return dev.device_ids, dev.devices

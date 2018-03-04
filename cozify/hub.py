@@ -1,8 +1,6 @@
 """Module for handling highlevel Cozify Hub operations.
 
 Attributes:
-    remote(bool): Selector to treat a hub as being outside the LAN, i.e. calls will be routed via the Cozify Cloud remote call system. Defaults to False.
-    autoremote(bool): Selector to autodetect hub LAN presence and flip to remote mode if needed. Defaults to True.
     capability(capability): Enum of known device capabilities. Alphabetically sorted, numeric value not guaranteed to stay constant between versions if new capabilities are added.
 
 """
@@ -14,9 +12,6 @@ from enum import Enum
 
 
 from .Error import APIError
-
-remote = False
-autoremote = True
 
 capability = Enum('capability', 'ALERT BASS BATTERY_U BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT CONTROL_LIGHT CONTROL_POWER DEVICE DIMMER_CONTROL GENERATE_ALERT HUMIDITY IDENTIFY LOUDNESS MOISTURE MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS PUSH_NOTIFICATION REMOTE_CONTROL SEEK SMOKE STOP TEMPERATURE TRANSITION TREBLE TWILIGHT USER_PRESENCE VOLUME')
 
@@ -127,17 +122,15 @@ def _fill_kwargs(kwargs):
     """Check that common items are present in kwargs and fill them if not.
 
     Args:
-    kwargs(dict): kwargs dictionary to fill.
+    kwargs(dict): kwargs dictionary to fill. Operated on directly.
 
-    Returns:
-        dict: Replacement kwargs dictionary with basic values filled.
     """
-    if 'remote' not in kwargs:
-        kwargs['remote'] = remote
-    if 'autoremote' not in kwargs:
-        kwargs['autoremote'] = autoremote
     if 'hub_id' not in kwargs:
         kwargs['hub_id'] = _get_id(**kwargs)
+    if 'remote' not in kwargs:
+        kwargs['remote'] = remote(kwargs['hub_id'])
+    if 'autoremote' not in kwargs:
+        kwargs['autoremote'] = True
     if 'hub_token' not in kwargs:
         kwargs['hub_token'] = token(kwargs['hub_id'])
     if 'cloud_token' not in kwargs:
@@ -198,21 +191,30 @@ def getHubId(hub_name):
                 return section[5:] # cut out "Hubs."
     return None
 
-def _getAttr(hub_id, attr):
-    """Get hub state attributes by attr name.
+def _getAttr(hub_id, attr, default=None, boolean=False):
+    """Get hub state attributes by attr name. Optionally set a default value if attribute not found.
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
         attr(str): Name of hub attribute to retrieve
+        default: Optional default value to set for unset attributes. If no default is provided these raise an AttributeError.
+        boolean: Retrieve and return value as a boolean instead of string. Defaults to False.
     Returns:
         str: Value of attribute or exception on failure.
     """
     section = 'Hubs.' + hub_id
-    if section in config.state and attr in config.state[section]:
-        return config.state[section][attr]
+    if section in config.state:
+        if attr not in config.state[section]:
+            if default is not None:
+                _setAttr(hub_id, attr, default)
+            else:
+                raise AttributeError('Attribute {0} not set for hub {1}'.format(attr, hub_id))
+        if boolean:
+            return config.state.getboolean(section, attr)
+        else:
+            return config.state[section][attr]
     else:
-        logging.warning('Hub id "{0}" not found in state or attribute {1} not set for hub.'.format(hub_id, attr))
-        raise AttributeError
+        raise AttributeError("Hub id '{0}' not found in state.".format(hub_id))
 
 def _setAttr(hub_id, attr, value, commit=True):
     """Set hub state attributes by hub_id and attr name
@@ -223,6 +225,9 @@ def _setAttr(hub_id, attr, value, commit=True):
         value(str): Value to store
         commit(bool): True to commit state after set. Defaults to True.
     """
+    if isinstance(value, bool):
+        value = str(value)
+
     section = 'Hubs.' + hub_id
     if section in config.state:
         if attr not in config.state[section]:
@@ -270,6 +275,32 @@ def token(hub_id, new_token=None):
         _setAttr(hub_id, 'hubtoken', new_token)
     return _getAttr(hub_id, 'hubtoken')
 
+def remote(hub_id, new_state=None):
+    """Get remote status of matching hub_id or set a new value for it.
+
+    Args:
+        hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
+
+    Returns:
+        bool: True for a hub considered remote.
+    """
+    if new_state:
+        _setAttr(hub_id, 'remote', new_state)
+    return _getAttr(hub_id, 'remote', default=False, boolean=True)
+
+def autoremote(hub_id, new_state=None):
+    """Get autoremote status of matching hub_id or set a new value for it.
+
+    Args:
+        hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
+
+    Returns:
+        bool: True for a hub with autoremote enabled.
+    """
+    if new_state:
+        _setAttr(hub_id, 'autoremote', new_state)
+    return _getAttr(hub_id, 'autoremote', default=True, boolean=True)
+
 def ping(**kwargs):
     """Perform a cheap API call to trigger any potential APIError and return boolean for success/failure. For optional kwargs see cozify.hub_api.get()
 
@@ -282,10 +313,8 @@ def ping(**kwargs):
     """
     _fill_kwargs(kwargs)
     try:
-        # if we don't have a stored host then we assume the hub is remote TODO(artanicus): need a second test as well so a failed call will attempt to flip
-        if not kwargs['remote'] and kwargs['autoremote'] and not kwargs['host']: # TODO(artanicus): I'm not sure if the last condition makes sense
-            global remote
-            remote = True
+        if not kwargs['remote'] and kwargs['autoremote'] and not kwargs['host']: # flip state if no host known
+            remote(kwargs['hub_id'], True)
             kwargs['remote'] = True
             logging.debug('Ping determined hub is remote and flipped state to remote.')
         timezone = tz(**kwargs)

@@ -48,16 +48,20 @@ def stateWrite(tmpstate=None):
     with open(state_file, 'w') as cf:
         tmpstate.write(cf)
 
-def setStatePath(filepath=_initXDG()):
+def setStatePath(filepath=_initXDG(), copy_current=False):
     """Set state storage path. Useful for example for testing without affecting your normal state. Call with no arguments to reset back to autoconfigured location.
 
     Args:
         filepath(str): file path to use as new storage location. Defaults to XDG defined path.
+        copy_current(bool): Instead of initializing target file, dump previous state into it.
     """
     global state_file
     global state
     state_file = filepath
-    state = _initState(state_file)
+    if copy_current:
+        stateWrite()
+    else:
+        state = _initState(state_file)
 
 def dump_state():
     """Print out current state file to stdout. Long values are truncated since this is only for visualization.

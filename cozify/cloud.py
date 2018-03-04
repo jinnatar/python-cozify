@@ -86,9 +86,9 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 logging.info('No local Hubs detected, attempting authentication via Cozify Cloud.')
                 hub_info = hub_api.hub(remote=True, cloud_token=cloud_token, hub_token=hub_token)
                 # if the hub wants autoremote we flip the state
-                if hub.autoremote and not hub.remote:
+                if hub.autoremote(hub_id) and not hub.remote(hub_id):
                     logging.info('[autoremote] Flipping hub remote status from local to remote.')
-                    hub.remote = True
+                    hub.remote(hub_id, True)
             else:
                 # localHubs is valid so a hub is in the lan. A mixed environment cannot yet be detected.
                 # cloud_api.lan_ip cannot provide a map as to which ip is which hub. Thus we actually need to determine the right one.
@@ -97,9 +97,9 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 hub_ip = localHubs[0]
                 hub_info = hub_api.hub(host=hub_ip, remote=False)
                 # if the hub wants autoremote we flip the state
-                if hub.autoremote and hub.remote:
+                if hub.autoremote(hub_id) and hub.remote(hub_id):
                     logging.info('[autoremote] Flipping hub remote status from remote to local.')
-                    hub.remote = False
+                    hub.remote(hub_id, False)
 
             hub_name = hub_info['name']
             if hub_id in hubkeys:

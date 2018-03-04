@@ -39,9 +39,9 @@ def test_cloud_refresh_expiry_not_over(tmp_cloud):
 ## integration tests for remote
 
 @pytest.mark.live
-def test_cloud_remote_match(live_cloud):
+def test_cloud_remote_match(live_cloud, live_hub):
     config.dump_state()
-    local_tz = hub.tz()
-    remote_tz = hub.tz(remote=True)
+    local_tz = live_hub.tz()
+    remote_tz = live_hub.tz(remote=True)
 
     assert local_tz == remote_tz
