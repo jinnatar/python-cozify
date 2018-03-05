@@ -72,7 +72,7 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
     else: # no filtering
         return devs
 
-def toggle(device_id, **kwargs):
+def device_toggle(device_id, **kwargs):
     """Toggle power state of any device capable of it such as lamps. Eligibility is determined by the capability ON_OFF.
 
     Args:
@@ -89,11 +89,44 @@ def toggle(device_id, **kwargs):
     current_state = dev_state['isOn']
     new_state = _clean_state(dev_state)
     new_state['isOn'] = not current_state # reverse state
+    request_type = 'CMD_DEVICE'
 
     command = {
-            "type": "CMD_DEVICE",
+            "type": request_type,
             "id": device_id,
             "state": new_state
+            }
+    hub_api.devices_command(command, **kwargs)
+
+def device_on(device_id, **kwargs):
+    """Turn on a device that is capable of turning on. Eligibility is determined by the capability ON_OFF.
+    """
+    _fill_kwargs(kwargs)
+
+    # Get list of devices known to support toggle and find the device.
+    devs = devices(capabilities=capability.ON_OFF, **kwargs)
+    dev_state = devs[device_id]['state']
+    request_type = 'CMD_DEVICE_ON'
+
+    command = {
+            "type": request_type,
+            "id": device_id,
+            }
+    hub_api.devices_command(command, **kwargs)
+
+def device_off(device_id, **kwargs):
+    """Turn off a device that is capable of turning off. Eligibility is determined by the capability ON_OFF.
+    """
+    _fill_kwargs(kwargs)
+
+    # Get list of devices known to support toggle and find the device.
+    devs = devices(capabilities=capability.ON_OFF, **kwargs)
+    dev_state = devs[device_id]['state']
+    request_type = 'CMD_DEVICE_OFF'
+
+    command = {
+            "type": request_type,
+            "id": device_id,
             }
     hub_api.devices_command(command, **kwargs)
 
