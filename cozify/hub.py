@@ -141,7 +141,7 @@ def _get_id(**kwargs):
         return kwargs['hubId']
     if 'hub_name' in kwargs or 'hubName' in kwargs:
         if 'hub_name' in kwargs:
-            return getHubId(kwargs['hub_name'])
+            return hub_id(kwargs['hub_name'])
         return getHubId(kwargs['hubName'])
     return default()
 
