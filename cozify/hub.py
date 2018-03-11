@@ -114,12 +114,13 @@ def device_off(device_id, **kwargs):
     else:
         raise AttributeError('Device not found or not eligible for action.')
 
-def light_temperature(device_id, temperature=2700, **kwargs):
+def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
     """Set temperature of a light.
 
     Args:
         device_id(str): ID of the device to operate on.
-        temperature(float): Temperature in Kelvins. If outside the operating range of the device the extreme value is used.
+        temperature(float): Temperature in Kelvins. If outside the operating range of the device the extreme value is used. Defaults to 2700K.
+        transition(int): Transition length in milliseconds. Defaults to instant.
     """
     _fill_kwargs(kwargs)
     state = {} # will be populated by _is_eligible
@@ -137,6 +138,7 @@ def light_temperature(device_id, temperature=2700, **kwargs):
         state = _clean_state(state)
         state['colorMode'] = 'ct'
         state['temperature'] = temperature
+        state['transitionMsec'] = transition
         hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
     else:
         raise AttributeError('Device not found or not eligible for action.')
