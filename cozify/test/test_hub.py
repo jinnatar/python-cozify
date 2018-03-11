@@ -19,7 +19,7 @@ def test_hub_id_to_name(tmp_hub):
     assert hub.name(tmp_hub.id) == tmp_hub.name
 
 def test_hub_name_to_id(tmp_hub):
-    assert hub.getHubId(tmp_hub.name) == tmp_hub.id
+    assert hub.hub_id(tmp_hub.name) == tmp_hub.id
 
 @pytest.mark.live
 def test_multisensor(live_hub):

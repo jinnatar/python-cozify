@@ -202,21 +202,34 @@ def default():
         return config.state['Hubs']['default']
 
 def getHubId(hub_name):
+    """Deprecated, use hub_id(). Return id of hub by it's name.
+
+    Args:
+        hub_name(str): Name of hub to query. The name is given when registering a hub to an account.
+        str: hub_id on success, raises an attributeerror on failure.
+
+    Returns:
+        str: Hub id or raises
+    """
+    logging.warn('hub.getHubId is deprecated and will be removed soon. Use hub.hub_id()')
+    return hub_id(hub_name)
+
+def hub_id(hub_name):
     """Get hub id by it's name.
 
     Args:
         hub_name(str): Name of hub to query. The name is given when registering a hub to an account.
 
     Returns:
-        str: Hub id or None if the hub wasn't found.
+        str: hub_id on success, raises an attributeerror on failure.
     """
 
     for section in config.state.sections():
         if section.startswith("Hubs."):
-            logging.debug('Found hub {0}'.format(section))
+            logging.debug('Found hub: {0}'.format(section))
             if config.state[section]['hubname'] == hub_name:
                 return section[5:] # cut out "Hubs."
-    return None
+    raise AttributeError('Hub not found: {0}'.format(hub_name))
 
 def _getAttr(hub_id, attr, default=None, boolean=False):
     """Get hub state attributes by attr name. Optionally set a default value if attribute not found.
