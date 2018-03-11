@@ -119,12 +119,21 @@ def light_temperature(device_id, temperature=2700, **kwargs):
 
     Args:
         device_id(str): ID of the device to operate on.
-        temperature(str): Temperature in Kelvins.
+        temperature(float): Temperature in Kelvins. If outside the operating range of the device the extreme value is used.
     """
     _fill_kwargs(kwargs)
     state = {} # will be populated by _is_eligible
     if _is_eligible(device_id, capability.COLOR_TEMP, state=state, **kwargs):
-        logging.debug('dirty state: {0}'.format(state))
+        # Make sure temperature is within bounds [state.minTemperature, state.maxTemperature]
+        minimum = state['minTemperature']
+        maximum = state['maxTemperature']
+        if temperature < minimum:
+            logging.warn('Device does not support temperature {0}K, using minimum instead: {1}'.format(temperature, minimum))
+            temperature = minimum
+        elif temperature > maximum:
+            logging.warn('Device does not support temperature {0}K, using maximum instead: {1}'.format(temperature, maximum))
+            temperature = maximum
+
         state = _clean_state(state)
         state['colorMode'] = 'ct'
         state['temperature'] = temperature
