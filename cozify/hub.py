@@ -62,7 +62,6 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
     devs = hub_api.devices(**kwargs)
     if capabilities:
         if isinstance(capabilities, capability): # single capability given
-            logging.debug("single capability {0}".format(capabilities.name))
             return { key : value for key, value in devs.items() if capabilities.name in value['capabilities']['values'] }
         else: # multi-filter
             if and_filter:
