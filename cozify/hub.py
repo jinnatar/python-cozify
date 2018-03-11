@@ -92,6 +92,9 @@ def device_toggle(device_id, **kwargs):
 
 def device_on(device_id, **kwargs):
     """Turn on a device that is capable of turning on. Eligibility is determined by the capability ON_OFF.
+
+    Args:
+        device_id(str): ID of the device to operate on.
     """
     _fill_kwargs(kwargs)
     if _is_eligible(device_id, capability.ON_OFF, **kwargs):
@@ -101,6 +104,9 @@ def device_on(device_id, **kwargs):
 
 def device_off(device_id, **kwargs):
     """Turn off a device that is capable of turning off. Eligibility is determined by the capability ON_OFF.
+
+    Args:
+        device_id(str): ID of the device to operate on.
     """
     _fill_kwargs(kwargs)
     if _is_eligible(device_id, capability.ON_OFF, **kwargs):
@@ -108,17 +114,40 @@ def device_off(device_id, **kwargs):
     else:
         raise AttributeError('Device not found or not eligible for action.')
 
-def _is_eligible(device_id, capability_filter, **kwargs):
+def light_temperature(device_id, temperature=2700, **kwargs):
+    """Set temperature of a light.
+
+    Args:
+        device_id(str): ID of the device to operate on.
+        temperature(str): Temperature in Kelvins.
+    """
+    _fill_kwargs(kwargs)
+    state = {} # will be populated by _is_eligible
+    if _is_eligible(device_id, capability.COLOR_TEMP, state=state, **kwargs):
+        logging.debug('dirty state: {0}'.format(state))
+        state = _clean_state(state)
+        state['colorMode'] = 'ct'
+        state['temperature'] = temperature
+        hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
+    else:
+        raise AttributeError('Device not found or not eligible for action.')
+
+def _is_eligible(device_id, capability_filter, devs=None, state=None, **kwargs):
     """Check if device matches a AND devices filter.
 
     Args:
         device_id(str): ID of the device to check.
-        filter(): Single hub.capability or a list of them to match against.
+        filter(hub.capability): Single hub.capability or a list of them to match against.
+        devs(dict): Optional devices dictionary to use. If not defined, will be retrieved live.
+        state(dict): Optional state dictionary, will be populated with state of checked device if device is eligible.
     Returns:
         bool: True if filter matches.
     """
-    devs = devices(capabilities=capability_filter, **kwargs)
+    if devs is None: # only retrieve if we didn't get them
+        devs = devices(capabilities=capability_filter, **kwargs)
     if device_id in devs:
+        state.update(devs[device_id]['state'])
+        logging.debug('Implicitly returning state: {0}'.format(state))
         return True
     else:
         return False
