@@ -5,7 +5,7 @@ import pprint, sys
 from cozify.test import debug
 
 def main(device):
-    hub.toggle(device)
+    hub.device_on(device)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

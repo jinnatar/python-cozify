@@ -5,21 +5,21 @@ from cozify import hub, hub_api
 from cozify.Error import APIError
 
 def main(start=hub_api.apiPath):
-    id = hub.default()
-    host = hub.host(id)
-    token = hub.token(id)
-    api = start
+    hub_id = hub.default()
+    host = hub.host(hub_id)
+    token = hub.token(hub_id)
+    api_ver = start
+    base = hub_api._getBase(host)
 
-    print('Testing against {0}, starting from {1}'.format(id, hub_api._getBase(host, api=start)))
+    print('Testing against {0}, starting from {1}{2}'.format(hub_id, base, start))
 
     while True:
-        base = hub_api._getBase(host, api=api)
-        if not ping(base, token):
-            print('Fail: {0}'.format(api))
+        if not ping(base + api_ver, token):
+            print('Fail: {0}'.format(api_ver))
         else:
-            print('Works: {0}'.format(api))
+            print('Works: {0}'.format(api_ver))
             break
-        api = increment(api)
+        api_ver = increment(api_ver)
 
 
 def increment(apipath):

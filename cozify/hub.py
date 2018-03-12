@@ -6,6 +6,7 @@ Attributes:
 """
 
 import logging
+import math
 from . import config
 from . import hub_api
 from enum import Enum
@@ -13,7 +14,7 @@ from enum import Enum
 
 from .Error import APIError
 
-capability = Enum('capability', 'ALERT BASS BATTERY_U BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT CONTROL_LIGHT CONTROL_POWER DEVICE DIMMER_CONTROL GENERATE_ALERT HUMIDITY IDENTIFY LOUDNESS MOISTURE MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS PUSH_NOTIFICATION REMOTE_CONTROL SEEK SMOKE STOP TEMPERATURE TRANSITION TREBLE TWILIGHT USER_PRESENCE VOLUME')
+capability = Enum('capability', 'ALERT BASS BATTERY_U BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT CONTROL_LIGHT CONTROL_POWER DEVICE DIMMER_CONTROL GENERATE_ALERT HUMIDITY IDENTIFY LOUDNESS LUX MOISTURE MOTION MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS PUSH_NOTIFICATION REMOTE_CONTROL SEEK SMOKE STOP TEMPERATURE TRANSITION TREBLE TWILIGHT USER_PRESENCE VOLUME')
 
 def getDevices(**kwargs):
     """Deprecated, will be removed in v0.3. Get up to date full devices data set as a dict.
@@ -62,7 +63,6 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
     devs = hub_api.devices(**kwargs)
     if capabilities:
         if isinstance(capabilities, capability): # single capability given
-            logging.debug("single capability {0}".format(capabilities.name))
             return { key : value for key, value in devs.items() if capabilities.name in value['capabilities']['values'] }
         else: # multi-filter
             if and_filter:
@@ -72,11 +72,11 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
     else: # no filtering
         return devs
 
-def toggle(device_id, **kwargs):
+def device_toggle(device_id, **kwargs):
     """Toggle power state of any device capable of it such as lamps. Eligibility is determined by the capability ON_OFF.
 
     Args:
-        device_id: ID of the device to toggle.
+        device_id(str): ID of the device to toggle.
         **hub_id(str): optional id of hub to operate on. A specified hub_id takes presedence over a hub_name or default Hub.
         **hub_name(str): optional name of hub to operate on.
         **remote(bool): Remote or local query.
@@ -86,16 +86,131 @@ def toggle(device_id, **kwargs):
     # Get list of devices known to support toggle and find the device and it's state.
     devs = devices(capabilities=capability.ON_OFF, **kwargs)
     dev_state = devs[device_id]['state']
-    current_state = dev_state['isOn']
+    current_power = dev_state['isOn']
     new_state = _clean_state(dev_state)
-    new_state['isOn'] = not current_state # reverse state
+    new_state['isOn'] = not current_power # reverse power state
+    hub_api.devices_command_state(device_id=device_id, state=new_state, **kwargs)
 
-    command = {
-            "type": "CMD_DEVICE",
-            "id": device_id,
-            "state": new_state
-            }
-    hub_api.devices_command(command, **kwargs)
+def device_on(device_id, **kwargs):
+    """Turn on a device that is capable of turning on. Eligibility is determined by the capability ON_OFF.
+
+    Args:
+        device_id(str): ID of the device to operate on.
+    """
+    _fill_kwargs(kwargs)
+    if _is_eligible(device_id, capability.ON_OFF, **kwargs):
+        hub_api.devices_command_on(device_id, **kwargs)
+    else:
+        raise AttributeError('Device not found or not eligible for action.')
+
+def device_off(device_id, **kwargs):
+    """Turn off a device that is capable of turning off. Eligibility is determined by the capability ON_OFF.
+
+    Args:
+        device_id(str): ID of the device to operate on.
+    """
+    _fill_kwargs(kwargs)
+    if _is_eligible(device_id, capability.ON_OFF, **kwargs):
+        hub_api.devices_command_off(device_id, **kwargs)
+    else:
+        raise AttributeError('Device not found or not eligible for action.')
+
+def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
+    """Set temperature of a light.
+
+    Args:
+        device_id(str): ID of the device to operate on.
+        temperature(float): Temperature in Kelvins. If outside the operating range of the device the extreme value is used. Defaults to 2700K.
+        transition(int): Transition length in milliseconds. Defaults to instant.
+    """
+    _fill_kwargs(kwargs)
+    state = {} # will be populated by _is_eligible
+    if _is_eligible(device_id, capability.COLOR_TEMP, state=state, **kwargs):
+        # Make sure temperature is within bounds [state.minTemperature, state.maxTemperature]
+        minimum = state['minTemperature']
+        maximum = state['maxTemperature']
+        if temperature < minimum:
+            logging.warn('Device does not support temperature {0}K, using minimum instead: {1}'.format(temperature, minimum))
+            temperature = minimum
+        elif temperature > maximum:
+            logging.warn('Device does not support temperature {0}K, using maximum instead: {1}'.format(temperature, maximum))
+            temperature = maximum
+
+        state = _clean_state(state)
+        state['colorMode'] = 'ct'
+        state['temperature'] = temperature
+        state['transitionMsec'] = transition
+        hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
+    else:
+        raise AttributeError('Device not found or not eligible for action.')
+
+def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
+    """Set color (hue & saturation) of a light.
+
+    Args:
+        device_id(str): ID of the device to operate on.
+        hue(float): Hue in the range of [0, Pi*2]. If outside the range an AttributeError is raised.
+        saturation(float): Saturation in the range of [0, 1]. If outside the range an AttributeError is raised. Defaults to 1.0 (full saturation.)
+        transition(int): Transition length in milliseconds. Defaults to instant.
+    """
+    _fill_kwargs(kwargs)
+    state = {} # will be populated by _is_eligible
+    if _is_eligible(device_id, capability.COLOR_HS, state=state, **kwargs):
+        # Make sure hue & saturation are within bounds
+        if hue < 0 or hue > math.pi * 2:
+            raise AttributeError('Hue out of bounds [0, pi*2]: {0}'.format(hue))
+        elif saturation < 0 or saturation > 1.0:
+            raise AttributeError('Saturation out of bounds [0, 1.0]: {0}'.format(saturation))
+
+        state = _clean_state(state)
+        state['colorMode'] = 'hs'
+        state['hue'] = hue
+        state['saturation'] = saturation
+        hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
+    else:
+        raise AttributeError('Device not found or not eligible for action.')
+
+def light_brightness(device_id, brightness, transition=0, **kwargs):
+    """Set brightness of a light.
+
+    Args:
+        device_id(str): ID of the device to operate on.
+        brightness(float): Brightness in the range of [0, 1]. If outside the range an AttributeError is raised.
+        transition(int): Transition length in milliseconds. Defaults to instant.
+    """
+    _fill_kwargs(kwargs)
+    state = {} # will be populated by _is_eligible
+    if _is_eligible(device_id, capability.BRIGHTNESS, state=state, **kwargs):
+        # Make sure hue & saturation are within bounds
+        if brightness < 0 or brightness > 1.0:
+            raise AttributeError('Brightness out of bounds [0, 1.0]: {0}'.format(brightness))
+
+        state = _clean_state(state)
+        state['brightness'] = brightness
+        hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
+    else:
+        raise AttributeError('Device not found or not eligible for action.')
+
+def _is_eligible(device_id, capability_filter, devs=None, state=None, **kwargs):
+    """Check if device matches a AND devices filter.
+
+    Args:
+        device_id(str): ID of the device to check.
+        filter(hub.capability): Single hub.capability or a list of them to match against.
+        devs(dict): Optional devices dictionary to use. If not defined, will be retrieved live.
+        state(dict): Optional state dictionary, will be populated with state of checked device if device is eligible.
+    Returns:
+        bool: True if filter matches.
+    """
+    if devs is None: # only retrieve if we didn't get them
+        devs = devices(capabilities=capability_filter, **kwargs)
+    if device_id in devs:
+        state.update(devs[device_id]['state'])
+        logging.debug('Implicitly returning state: {0}'.format(state))
+        return True
+    else:
+        return False
+
 
 def _get_id(**kwargs):
     """Get a hub_id from various sources, meant so that you can just throw kwargs at it and get a valid id.
@@ -114,7 +229,7 @@ def _get_id(**kwargs):
         return kwargs['hubId']
     if 'hub_name' in kwargs or 'hubName' in kwargs:
         if 'hub_name' in kwargs:
-            return getHubId(kwargs['hub_name'])
+            return hub_id(kwargs['hub_name'])
         return getHubId(kwargs['hubName'])
     return default()
 
@@ -175,21 +290,34 @@ def default():
         return config.state['Hubs']['default']
 
 def getHubId(hub_name):
+    """Deprecated, use hub_id(). Return id of hub by it's name.
+
+    Args:
+        hub_name(str): Name of hub to query. The name is given when registering a hub to an account.
+        str: hub_id on success, raises an attributeerror on failure.
+
+    Returns:
+        str: Hub id or raises
+    """
+    logging.warn('hub.getHubId is deprecated and will be removed soon. Use hub.hub_id()')
+    return hub_id(hub_name)
+
+def hub_id(hub_name):
     """Get hub id by it's name.
 
     Args:
         hub_name(str): Name of hub to query. The name is given when registering a hub to an account.
 
     Returns:
-        str: Hub id or None if the hub wasn't found.
+        str: hub_id on success, raises an attributeerror on failure.
     """
 
     for section in config.state.sections():
         if section.startswith("Hubs."):
-            logging.debug('Found hub {0}'.format(section))
+            logging.debug('Found hub: {0}'.format(section))
             if config.state[section]['hubname'] == hub_name:
                 return section[5:] # cut out "Hubs."
-    return None
+    raise AttributeError('Hub not found: {0}'.format(hub_name))
 
 def _getAttr(hub_id, attr, default=None, boolean=False):
     """Get hub state attributes by attr name. Optionally set a default value if attribute not found.
