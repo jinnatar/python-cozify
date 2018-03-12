@@ -145,7 +145,7 @@ def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
         raise AttributeError('Device not found or not eligible for action.')
 
 def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
-    """Set temperature of a light.
+    """Set color (hue & saturation) of a light.
 
     Args:
         device_id(str): ID of the device to operate on.
@@ -171,7 +171,7 @@ def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
         raise AttributeError('Device not found or not eligible for action.')
 
 def light_brightness(device_id, brightness, transition=0, **kwargs):
-    """Set temperature of a light.
+    """Set brightness of a light.
 
     Args:
         device_id(str): ID of the device to operate on.
