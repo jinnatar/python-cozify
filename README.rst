@@ -147,9 +147,9 @@ New releases are cut from the devel branch as needed.
 
 Tests
 ~~~~~
-pytest is used for unit tests. Test coverage is still quite spotty and under active development.
-Certain tests are marked as "live" tests and require an active authentication state and a real hub to query against.
-Live tests are non-destructive.
+pytest is used for unit tests.
+Certain tests are marked as "live" tests and require an active authentication state and a real hub to query against. Live tests are non-destructive.
+Some tests are marked as "destructive" and will cause changes such as a light being turned on or tokens getting invalidated on purpose.
 
 During development you can run the test suite right from the source directory:
 
@@ -158,14 +158,14 @@ During development you can run the test suite right from the source directory:
     pytest -v cozify/
     # or include the live tests as well:
     pytest -v cozify/ --live
+    # or for the brave, also run destructive tests (also implies --live):
+    pytest -v cozify/ --destructive
 
 To run the test suite on an already installed python-cozify:
 
 .. code:: bash
 
     pytest -v --pyargs cozify
-    # or including live tests:
-    pytest -v --pyargs cozify --live
 
 
 Roadmap, aka. Current Limitations
