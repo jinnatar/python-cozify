@@ -53,3 +53,7 @@ def test_hub_devices_filter_and(tmp_hub):
     out = hub.devices(hub_id=tmp_hub.id, and_filter=True, capabilities=[hub.capability.COLOR_HS, hub.capability.COLOR_TEMP], mock_devices=devs)
     assert all(i in out for i in [ ids['lamp_osram'], ids['strip_osram'] ])
     assert len(out) == 2
+
+@pytest.mark.destructive
+def test_hub_ping_autorefresh(live_hub):
+    pass
