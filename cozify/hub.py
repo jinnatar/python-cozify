@@ -429,18 +429,19 @@ def autoremote(hub_id, new_state=None):
         _setAttr(hub_id, 'autoremote', new_state)
     return _getAttr(hub_id, 'autoremote', default=True, boolean=True)
 
-def ping(**kwargs):
+def ping(autorefresh=True, **kwargs):
     """Perform a cheap API call to trigger any potential APIError and return boolean for success/failure. For optional kwargs see cozify.hub_api.get()
 
     Args:
+        autorefresh(bool): Wether to perform a autorefresh after an initially failed ping. If successful, will still return True. Defaults to True.
         **hub_id(str): Hub to ping or default if neither id or name set.
         **hub_name(str): Hub to ping by name.
 
     Returns:
         bool: True for a valid and working hub authentication state.
     """
-    _fill_kwargs(kwargs)
     try:
+        _fill_kwargs(kwargs) # this can raise an APIError if hub_token has expired
         if not kwargs['remote'] and kwargs['autoremote'] and not kwargs['host']: # flip state if no host known
             remote(kwargs['hub_id'], True)
             kwargs['remote'] = True
@@ -449,7 +450,11 @@ def ping(**kwargs):
         logging.debug('Ping performed with tz call, response: {0}'.format(timezone))
     except APIError as e:
         if e.status_code == 401:
-            logging.warn(e)
+            from cozify import cloud
+            logging.warn('Hub token has expired, hub.ping() attempting to renew it.')
+            logging.debug('Original APIError was: {0}'.format(e))
+            if cloud.authenticate(trustHub=False): # if this fails we let it fail.
+                return True
             return False
         else:
             raise
