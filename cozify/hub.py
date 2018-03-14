@@ -450,11 +450,13 @@ def ping(autorefresh=True, **kwargs):
         logging.debug('Ping performed with tz call, response: {0}'.format(timezone))
     except APIError as e:
         if e.status_code == 401:
-            from cozify import cloud
-            logging.warn('Hub token has expired, hub.ping() attempting to renew it.')
-            logging.debug('Original APIError was: {0}'.format(e))
-            if cloud.authenticate(trustHub=False): # if this fails we let it fail.
-                return True
+            if autorefresh:
+                from cozify import cloud
+                logging.warn('Hub token has expired, hub.ping() attempting to renew it.')
+                logging.debug('Original APIError was: {0}'.format(e))
+                if cloud.authenticate(trustHub=False): # if this fails we let it fail.
+                    return True
+            logging.warn(e)
             return False
         else:
             raise

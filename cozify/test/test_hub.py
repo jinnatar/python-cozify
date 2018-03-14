@@ -58,4 +58,5 @@ def test_hub_devices_filter_and(tmp_hub):
 def test_hub_ping_autorefresh(live_hub):
     hub_id = live_hub.default()
     live_hub.token(hub_id=hub_id, new_token='destroyed-on-purpose-by-destructive-test')
-    assert hub,ping(autorenew=True)
+    assert not hub.ping(autorefresh=False)
+    assert hub.ping(autorefresh=True)
