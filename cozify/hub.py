@@ -5,7 +5,7 @@ Attributes:
 
 """
 
-import logging
+from absl import logging
 import math
 from . import config
 from . import hub_api
@@ -284,7 +284,7 @@ def default():
     """
 
     if 'default' not in config.state['Hubs']:
-        logging.critical('Default hub not known, you should run cozify.authenticate()')
+        logging.fatal('Default hub not known, you should run cozify.authenticate()')
         raise AttributeError
     else:
         return config.state['Hubs']['default']

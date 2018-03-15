@@ -1,7 +1,8 @@
 """Module for handling Cozify Cloud highlevel operations.
 """
 
-import logging, datetime
+from absl import logging
+import datetime
 
 from . import config
 from . import hub_api
@@ -50,7 +51,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
         otp = _getotp()
         if not otp:
             message = "OTP unavailable, authentication cannot succeed. This may happen if running non-interactively (closed stdin)."
-            logging.critical(message)
+            logging.fatal(message)
             raise AuthenticationError(message)
 
         try:
@@ -72,7 +73,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
         # TODO(artanicus): unknown what will happen if there is a local hub but another one remote. Needs testing by someone with multiple hubs. Issue #7
         hubkeys = cloud_api.hubkeys(cloud_token) # get all registered hubs and their keys from the cloud.
         if not hubkeys:
-            logging.critical('You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.')
+            logging.fatal('You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.')
 
         # evaluate all returned Hubs and store them
         logging.debug('Listing all hubs returned by cloud hubkeys query:')
