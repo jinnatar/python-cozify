@@ -101,7 +101,7 @@ def device_on(device_id, **kwargs):
     if _is_eligible(device_id, capability.ON_OFF, **kwargs):
         hub_api.devices_command_on(device_id, **kwargs)
     else:
-        raise AttributeError('Device not found or not eligible for action.')
+        raise ValueError('Device not found or not eligible for action.')
 
 def device_off(device_id, **kwargs):
     """Turn off a device that is capable of turning off. Eligibility is determined by the capability ON_OFF.
@@ -113,7 +113,7 @@ def device_off(device_id, **kwargs):
     if _is_eligible(device_id, capability.ON_OFF, **kwargs):
         hub_api.devices_command_off(device_id, **kwargs)
     else:
-        raise AttributeError('Device not found or not eligible for action.')
+        raise ValueError('Device not found or not eligible for action.')
 
 def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
     """Set temperature of a light.
@@ -142,15 +142,15 @@ def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
         state['transitionMsec'] = transition
         hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
     else:
-        raise AttributeError('Device not found or not eligible for action.')
+        raise ValueError('Device not found or not eligible for action.')
 
 def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
     """Set color (hue & saturation) of a light.
 
     Args:
         device_id(str): ID of the device to operate on.
-        hue(float): Hue in the range of [0, Pi*2]. If outside the range an AttributeError is raised.
-        saturation(float): Saturation in the range of [0, 1]. If outside the range an AttributeError is raised. Defaults to 1.0 (full saturation.)
+        hue(float): Hue in the range of [0, Pi*2]. If outside the range a ValueError is raised.
+        saturation(float): Saturation in the range of [0, 1]. If outside the range a ValueError is raised. Defaults to 1.0 (full saturation.)
         transition(int): Transition length in milliseconds. Defaults to instant.
     """
     _fill_kwargs(kwargs)
@@ -158,9 +158,9 @@ def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
     if _is_eligible(device_id, capability.COLOR_HS, state=state, **kwargs):
         # Make sure hue & saturation are within bounds
         if hue < 0 or hue > math.pi * 2:
-            raise AttributeError('Hue out of bounds [0, pi*2]: {0}'.format(hue))
+            raise ValueError('Hue out of bounds [0, pi*2]: {0}'.format(hue))
         elif saturation < 0 or saturation > 1.0:
-            raise AttributeError('Saturation out of bounds [0, 1.0]: {0}'.format(saturation))
+            raise ValueError('Saturation out of bounds [0, 1.0]: {0}'.format(saturation))
 
         state = _clean_state(state)
         state['colorMode'] = 'hs'
@@ -168,14 +168,14 @@ def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
         state['saturation'] = saturation
         hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
     else:
-        raise AttributeError('Device not found or not eligible for action.')
+        raise ValueError('Device not found or not eligible for action.')
 
 def light_brightness(device_id, brightness, transition=0, **kwargs):
     """Set brightness of a light.
 
     Args:
         device_id(str): ID of the device to operate on.
-        brightness(float): Brightness in the range of [0, 1]. If outside the range an AttributeError is raised.
+        brightness(float): Brightness in the range of [0, 1]. If outside the range a ValueError is raised.
         transition(int): Transition length in milliseconds. Defaults to instant.
     """
     _fill_kwargs(kwargs)
@@ -183,13 +183,13 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
     if _is_eligible(device_id, capability.BRIGHTNESS, state=state, **kwargs):
         # Make sure hue & saturation are within bounds
         if brightness < 0 or brightness > 1.0:
-            raise AttributeError('Brightness out of bounds [0, 1.0]: {0}'.format(brightness))
+            raise ValueError('Brightness out of bounds [0, 1.0]: {0}'.format(brightness))
 
         state = _clean_state(state)
         state['brightness'] = brightness
         hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
     else:
-        raise AttributeError('Device not found or not eligible for action.')
+        raise ValueError('Device not found or not eligible for action.')
 
 def _is_eligible(device_id, capability_filter, devs=None, state=None, **kwargs):
     """Check if device matches a AND devices filter.
