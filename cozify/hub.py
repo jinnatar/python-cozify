@@ -449,7 +449,7 @@ def ping(autorefresh=True, **kwargs):
         timezone = tz(**kwargs)
         logging.debug('Ping performed with tz call, response: {0}'.format(timezone))
     except APIError as e:
-        if e.status_code == 401:
+        if e.status_code == 401 or e.status_code == 403:
             if autorefresh:
                 from cozify import cloud
                 logging.warn('Hub token has expired, hub.ping() attempting to renew it.')

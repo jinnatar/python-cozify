@@ -258,7 +258,7 @@ def _need_hub_token(trust=True):
         logging.debug("We don't have a valid hubtoken or it's not trusted.")
         return True
     else: # if we have a token, we need to test if the API is callable
-        ping = hub.ping()
+        ping = hub.ping(autorefresh=False) # avoid compliating things by disabling autorefresh on failure.
         logging.debug("Testing hub.ping() for hub_token validity: {0}".format(ping))
         return not ping
 
