@@ -98,7 +98,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 hub_ip = localHubs[0]
                 hub_info = hub_api.hub(host=hub_ip, remote=False)
                 # if the hub wants autoremote we flip the state
-                if hub.autoremote(hub_id) and hub.remote(hub_id):
+                if hub.exists(hub_id) and hub.autoremote(hub_id) and hub.remote(hub_id):
                     logging.info('[autoremote] Flipping hub remote status from remote to local.')
                     hub.remote(hub_id, False)
 

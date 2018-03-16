@@ -319,6 +319,17 @@ def hub_id(hub_name):
                 return section[5:] # cut out "Hubs."
     raise AttributeError('Hub not found: {0}'.format(hub_name))
 
+def exists(hub_id):
+    """Check for existance of hub in local state.
+
+    Args:
+        hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
+    """
+    if 'Hubs.{0}'.format(hub_id) in config.state:
+        return True
+    else:
+        return False
+
 def _getAttr(hub_id, attr, default=None, boolean=False):
     """Get hub state attributes by attr name. Optionally set a default value if attribute not found.
 
