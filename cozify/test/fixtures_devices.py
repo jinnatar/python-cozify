@@ -165,5 +165,7 @@ device_ids = {
         'lamp_osram': lamp_osram['id'],
         'strip_osram': strip_osram['id'],
         'plafond_osram': plafond_osram['id'],
-        'twilight_nexa': twilight_nexa['id']
+        'twilight_nexa': twilight_nexa['id'],
+        'reachable': plafond_osram['id'],
+        'not-reachable': lamp_osram['id']
         }

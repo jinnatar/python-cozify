@@ -98,7 +98,7 @@ def device_on(device_id, **kwargs):
         device_id(str): ID of the device to operate on.
     """
     _fill_kwargs(kwargs)
-    if _is_eligible(device_id, capability.ON_OFF, **kwargs):
+    if device_eligible(device_id, capability.ON_OFF, **kwargs):
         hub_api.devices_command_on(device_id, **kwargs)
     else:
         raise ValueError('Device not found or not eligible for action.')
@@ -110,10 +110,18 @@ def device_off(device_id, **kwargs):
         device_id(str): ID of the device to operate on.
     """
     _fill_kwargs(kwargs)
-    if _is_eligible(device_id, capability.ON_OFF, **kwargs):
+    if device_eligible(device_id, capability.ON_OFF, **kwargs):
         hub_api.devices_command_off(device_id, **kwargs)
     else:
         raise ValueError('Device not found or not eligible for action.')
+
+def device_reachable(device_id, **kwargs):
+    _fill_kwargs(kwargs)
+    state = {}
+    if device_exists(device_id, state=state, **kwargs):
+        return state['reachable']
+    else:
+        raise ValueError('Device not found: {}'.format(device_id))
 
 def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
     """Set temperature of a light.
@@ -124,8 +132,8 @@ def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
         transition(int): Transition length in milliseconds. Defaults to instant.
     """
     _fill_kwargs(kwargs)
-    state = {} # will be populated by _is_eligible
-    if _is_eligible(device_id, capability.COLOR_TEMP, state=state, **kwargs):
+    state = {} # will be populated by device_eligible
+    if device_eligible(device_id, capability.COLOR_TEMP, state=state, **kwargs):
         # Make sure temperature is within bounds [state.minTemperature, state.maxTemperature]
         minimum = state['minTemperature']
         maximum = state['maxTemperature']
@@ -154,8 +162,8 @@ def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
         transition(int): Transition length in milliseconds. Defaults to instant.
     """
     _fill_kwargs(kwargs)
-    state = {} # will be populated by _is_eligible
-    if _is_eligible(device_id, capability.COLOR_HS, state=state, **kwargs):
+    state = {} # will be populated by device_eligible
+    if device_eligible(device_id, capability.COLOR_HS, state=state, **kwargs):
         # Make sure hue & saturation are within bounds
         if hue < 0 or hue > math.pi * 2:
             raise ValueError('Hue out of bounds [0, pi*2]: {0}'.format(hue))
@@ -179,8 +187,8 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
         transition(int): Transition length in milliseconds. Defaults to instant.
     """
     _fill_kwargs(kwargs)
-    state = {} # will be populated by _is_eligible
-    if _is_eligible(device_id, capability.BRIGHTNESS, state=state, **kwargs):
+    state = {} # will be populated by device_eligible
+    if device_eligible(device_id, capability.BRIGHTNESS, state=state, **kwargs):
         # Make sure hue & saturation are within bounds
         if brightness < 0 or brightness > 1.0:
             raise ValueError('Brightness out of bounds [0, 1.0]: {0}'.format(brightness))
@@ -191,12 +199,12 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
     else:
         raise ValueError('Device not found or not eligible for action.')
 
-def _is_eligible(device_id, capability_filter, devs=None, state=None, **kwargs):
+def device_eligible(device_id, capability_filter, devs=None, state=None, **kwargs):
     """Check if device matches a AND devices filter.
 
     Args:
         device_id(str): ID of the device to check.
-        filter(hub.capability): Single hub.capability or a list of them to match against.
+        capability_filter(hub.capability): Single hub.capability or a list of them to match against.
         devs(dict): Optional devices dictionary to use. If not defined, will be retrieved live.
         state(dict): Optional state dictionary, will be populated with state of checked device if device is eligible.
     Returns:
@@ -205,12 +213,32 @@ def _is_eligible(device_id, capability_filter, devs=None, state=None, **kwargs):
     if devs is None: # only retrieve if we didn't get them
         devs = devices(capabilities=capability_filter, **kwargs)
     if device_id in devs:
-        state.update(devs[device_id]['state'])
-        logging.debug('Implicitly returning state: {0}'.format(state))
+        if state is not None:
+            state.update(devs[device_id]['state'])
+            logging.debug('Implicitly returning state: {0}'.format(state))
         return True
     else:
         return False
 
+def device_exists(device_id, devs=None, state=None, **kwargs):
+    """Check if device exists.
+
+    Args:
+        device_id(str): ID of the device to check.
+        devs(dict): Optional devices dictionary to use. If not defined, will be retrieved live.
+        state(dict): Optional state dictionary, will be populated with state of checked device if device is eligible.
+    Returns:
+        bool: True if filter matches.
+    """
+    if devs is None: # only retrieve if we didn't get them
+        devs = devices(**kwargs)
+    if device_id in devs:
+        if state is not None:
+            state.update(devs[device_id]['state'])
+            logging.debug('Implicitly returning state: {0}'.format(state))
+        return True
+    else:
+        return False
 
 def _get_id(**kwargs):
     """Get a hub_id from various sources, meant so that you can just throw kwargs at it and get a valid id.
