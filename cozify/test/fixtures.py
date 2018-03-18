@@ -31,6 +31,7 @@ def live_cloud():
     from cozify import cloud
     yield cloud
     config.setStatePath()
+    os.remove(configpath)
 
 @pytest.fixture
 def id():
