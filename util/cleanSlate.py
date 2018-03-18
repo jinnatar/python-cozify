@@ -8,7 +8,7 @@ def main():
     
     assert cloud.authenticate()
     config.dump_state()
-    print(hub.tz(hub.default()))
+    print(hub.tz())
     os.remove(tmp)
 
 if __name__ == "__main__":
