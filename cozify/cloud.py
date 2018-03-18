@@ -87,7 +87,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 logging.info('No local Hubs detected, attempting authentication via Cozify Cloud.')
                 hub_info = hub_api.hub(remote=True, cloud_token=cloud_token, hub_token=hub_token)
                 # if the hub wants autoremote we flip the state
-                if hub.autoremote(hub_id) and not hub.remote(hub_id):
+                if if hub.exists(hub_id) and hub.autoremote(hub_id) and not hub.remote(hub_id):
                     logging.info('[autoremote] Flipping hub remote status from local to remote.')
                     hub.remote(hub_id, True)
             else:
