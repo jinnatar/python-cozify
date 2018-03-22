@@ -81,8 +81,6 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             hub_info = None
             hub_ip = None
 
-            remote = None
-            autoremote = None
             if not hub.exists(hub_id):
                 autoremote = True
             else:
