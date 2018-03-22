@@ -76,20 +76,25 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             logging.fatal('You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.')
 
         # evaluate all returned Hubs and store them
-        logging.debug('Listing all hubs returned by cloud hubkeys query:')
         for hub_id, hub_token in hubkeys.items():
             logging.debug('hub: {0} token: {1}'.format(hub_id, hub_token))
             hub_info = None
             hub_ip = None
 
+            remote = None
+            autoremote = None
+            if not hub.exists(hub_id):
+                autoremote = True
+            else:
+                autoremote = hub.autoremote(hub_id=hub_id)
             # if we're remote, we didn't get a valid ip
             if not localHubs:
-                logging.info('No local Hubs detected, attempting authentication via Cozify Cloud.')
+                logging.info('No local Hubs detected, changing to remote mode.')
                 hub_info = hub_api.hub(remote=True, cloud_token=cloud_token, hub_token=hub_token)
-                # if the hub wants autoremote we flip the state
-                if hub.exists(hub_id) and hub.autoremote(hub_id) and not hub.remote(hub_id):
+                # if the hub wants autoremote we flip the state. If this is the first time the hub is seen, act as if autoremote=True, remote=False
+                if not hub.exists(hub_id) or (hub.autoremote(hub_id) and not hub.remote(hub_id)):
                     logging.info('[autoremote] Flipping hub remote status from local to remote.')
-                    hub.remote(hub_id, True)
+                    remote = True
             else:
                 # localHubs is valid so a hub is in the lan. A mixed environment cannot yet be detected.
                 # cloud_api.lan_ip cannot provide a map as to which ip is which hub. Thus we actually need to determine the right one.
@@ -97,10 +102,10 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 logging.debug('data structure: {0}'.format(localHubs))
                 hub_ip = localHubs[0]
                 hub_info = hub_api.hub(host=hub_ip, remote=False)
-                # if the hub wants autoremote we flip the state
-                if hub.exists(hub_id) and hub.autoremote(hub_id) and hub.remote(hub_id):
+                # if the hub wants autoremote we flip the state. If this is the first time the hub is seen, act as if autoremote=True, remote=False
+                if not hub.exists(hub_id) or (hub.autoremote(hub_id) and hub.remote(hub_id)):
                     logging.info('[autoremote] Flipping hub remote status from remote to local.')
-                    hub.remote(hub_id, False)
+                    remote = False
 
             hub_name = hub_info['name']
             if hub_id in hubkeys:
@@ -122,6 +127,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             hub._setAttr(hub_id, 'host', hub_ip, commit=False)
             hub._setAttr(hub_id, 'hubName', hub_name, commit=False)
             hub.token(hub_id, hub_token)
+            hub.remote(hub_id, remote)
     return True
 
 def resetState():
