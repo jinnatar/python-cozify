@@ -1,6 +1,8 @@
 python-cozify
 =============
 
+|docs|
+
 Unofficial Python3 API bindings for the (unpublished) Cozify API.
 Includes high-level helpers for easier use of the APIs,
 for example an automatic authentication flow, and low-level 1:1 API functions.
@@ -174,3 +176,8 @@ Roadmap, aka. Current Limitations
 -  Authentication flow has been improved quite a bit but it would benefit a lot from real-world feedback.
 -  For now there are only read calls. Next up is implementing ~all hub calls at the raw level and then wrapping them for ease of use. If there's something you want to use sooner than later file an issue so it can get prioritized!
 -  Device model is non-existant and the old implementations are bad and deprecated. Active work ongoing to filter by capability at a low level first, then perhaps a more object oriented model on top of that.
+
+
+.. |docs| image:: https://readthedocs.org/projects/python-cozify/badge/?version=latest
+    :target: http://python-cozify.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
