@@ -2,6 +2,6 @@
 """Set high log level
 """
 
-import logging
+from absl import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.set_verbosity(logging.DEBUG)

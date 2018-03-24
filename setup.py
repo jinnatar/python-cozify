@@ -30,7 +30,7 @@ setup(name='cozify',
         license = 'MIT',
         packages = ['cozify'],
 	tests_require=['pytest'],
-	install_requires=['requests'],
+	install_requires=['requests', 'absl-py'],
         cmdclass={'test': PyTest},
         classifiers = [
             "Development Status :: 3 - Alpha",

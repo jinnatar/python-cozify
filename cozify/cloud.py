@@ -1,7 +1,8 @@
 """Module for handling Cozify Cloud highlevel operations.
 """
 
-import logging, datetime
+from absl import logging
+import datetime
 
 from . import config
 from . import hub_api
@@ -50,7 +51,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
         otp = _getotp()
         if not otp:
             message = "OTP unavailable, authentication cannot succeed. This may happen if running non-interactively (closed stdin)."
-            logging.critical(message)
+            logging.fatal(message)
             raise AuthenticationError(message)
 
         try:
@@ -72,23 +73,26 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
         # TODO(artanicus): unknown what will happen if there is a local hub but another one remote. Needs testing by someone with multiple hubs. Issue #7
         hubkeys = cloud_api.hubkeys(cloud_token) # get all registered hubs and their keys from the cloud.
         if not hubkeys:
-            logging.critical('You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.')
+            logging.fatal('You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.')
 
         # evaluate all returned Hubs and store them
-        logging.debug('Listing all hubs returned by cloud hubkeys query:')
         for hub_id, hub_token in hubkeys.items():
             logging.debug('hub: {0} token: {1}'.format(hub_id, hub_token))
             hub_info = None
             hub_ip = None
 
+            if not hub.exists(hub_id):
+                autoremote = True
+            else:
+                autoremote = hub.autoremote(hub_id=hub_id)
             # if we're remote, we didn't get a valid ip
             if not localHubs:
-                logging.info('No local Hubs detected, attempting authentication via Cozify Cloud.')
+                logging.info('No local Hubs detected, changing to remote mode.')
                 hub_info = hub_api.hub(remote=True, cloud_token=cloud_token, hub_token=hub_token)
-                # if the hub wants autoremote we flip the state
-                if hub.autoremote(hub_id) and not hub.remote(hub_id):
+                # if the hub wants autoremote we flip the state. If this is the first time the hub is seen, act as if autoremote=True, remote=False
+                if not hub.exists(hub_id) or (hub.autoremote(hub_id) and not hub.remote(hub_id)):
                     logging.info('[autoremote] Flipping hub remote status from local to remote.')
-                    hub.remote(hub_id, True)
+                    remote = True
             else:
                 # localHubs is valid so a hub is in the lan. A mixed environment cannot yet be detected.
                 # cloud_api.lan_ip cannot provide a map as to which ip is which hub. Thus we actually need to determine the right one.
@@ -96,10 +100,10 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 logging.debug('data structure: {0}'.format(localHubs))
                 hub_ip = localHubs[0]
                 hub_info = hub_api.hub(host=hub_ip, remote=False)
-                # if the hub wants autoremote we flip the state
-                if hub.autoremote(hub_id) and hub.remote(hub_id):
+                # if the hub wants autoremote we flip the state. If this is the first time the hub is seen, act as if autoremote=True, remote=False
+                if not hub.exists(hub_id) or (hub.autoremote(hub_id) and hub.remote(hub_id)):
                     logging.info('[autoremote] Flipping hub remote status from remote to local.')
-                    hub.remote(hub_id, False)
+                    remote = False
 
             hub_name = hub_info['name']
             if hub_id in hubkeys:
@@ -121,6 +125,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             hub._setAttr(hub_id, 'host', hub_ip, commit=False)
             hub._setAttr(hub_id, 'hubName', hub_name, commit=False)
             hub.token(hub_id, hub_token)
+            hub.remote(hub_id, remote)
     return True
 
 def resetState():
@@ -258,7 +263,7 @@ def _need_hub_token(trust=True):
         logging.debug("We don't have a valid hubtoken or it's not trusted.")
         return True
     else: # if we have a token, we need to test if the API is callable
-        ping = hub.ping()
+        ping = hub.ping(autorefresh=False) # avoid compliating things by disabling autorefresh on failure.
         logging.debug("Testing hub.ping() for hub_token validity: {0}".format(ping))
         return not ping
 

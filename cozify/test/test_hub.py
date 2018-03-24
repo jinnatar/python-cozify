@@ -53,3 +53,25 @@ def test_hub_devices_filter_and(tmp_hub):
     out = hub.devices(hub_id=tmp_hub.id, and_filter=True, capabilities=[hub.capability.COLOR_HS, hub.capability.COLOR_TEMP], mock_devices=devs)
     assert all(i in out for i in [ ids['lamp_osram'], ids['strip_osram'] ])
     assert len(out) == 2
+
+@pytest.mark.destructive
+def test_hub_ping_autorefresh(live_hub):
+    hub_id = live_hub.default()
+    live_hub.token(hub_id=hub_id, new_token='destroyed-on-purpose-by-destructive-test')
+    assert not live_hub.ping(autorefresh=False)
+    assert live_hub.ping(autorefresh=True)
+
+def test_hub_device_eligible(tmp_hub):
+    ids, devs = tmp_hub.devices()
+    assert hub.device_eligible(ids['lamp_osram'], hub.capability.COLOR_TEMP, mock_devices=devs)
+    assert not hub.device_eligible(ids['twilight_nexa'], hub.capability.COLOR_TEMP, mock_devices=devs)
+
+def test_hub_device_reachable(tmp_hub):
+    ids, devs = tmp_hub.devices()
+    assert hub.device_reachable(ids['reachable'], mock_devices=devs)
+    assert not hub.device_reachable(ids['not-reachable'], mock_devices=devs)
+
+def test_hub_device_exists(tmp_hub):
+    ids, devs = tmp_hub.devices()
+    assert hub.device_exists(ids['reachable'], mock_devices=devs)
+    assert not hub.device_exists('dead-beef', mock_devices=devs)
