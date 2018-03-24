@@ -249,7 +249,7 @@ def tz(**kwargs):
     """Get timezone of given hub or default hub if no id is specified. For more optional kwargs see cozify.hub_api.get()
 
     Args:
-    **hub_id(str): Hub to query, by default the default hub is used.
+        **hub_id(str): Hub to query, by default the default hub is used.
 
     Returns:
         str: Timezone of the hub, for example: 'Europe/Helsinki'
