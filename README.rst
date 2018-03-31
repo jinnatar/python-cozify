@@ -12,15 +12,24 @@ for example an automatic authentication flow, and low-level 1:1 API functions.
 Installation
 ------------
 
+Python3.4 is the current minimum supported version of Python.
+For example Ubuntu 14.04 LTS is still barely supported in theory but not explicitly tested for.
+
 The recommended way is to install from PyPi:
 
-.. code:: bash
+.. code:: console
 
        sudo -H pip3 install cozify
 
+To benefit from new features you'll need to update the library (pip does not auto-update):
+
+.. code:: console
+
+       sudo -H pip3 install -U cozify
+
 or clone the master branch of this repo (master stays at current release) and:
 
-.. code:: bash
+.. code:: console
 
        sudo python3 setup.py install
 
@@ -132,7 +141,7 @@ If not, you will run into trouble printing for example device names with non-asc
 The solution is to change your system locale to support utf-8. How this is done is however system dependant.
 As a first test try temporarily overriding your locale:
 
-.. code:: bash
+.. code:: console
 
     LC_ALL='en_US.utf8' python3 program.py
 
@@ -157,7 +166,7 @@ Some tests are marked as "destructive" and will cause changes such as a light be
 
 During development you can run the test suite right from the source directory:
 
-.. code:: bash
+.. code:: console
 
     pytest -v cozify/
     # or include the live tests as well:
@@ -167,7 +176,7 @@ During development you can run the test suite right from the source directory:
 
 To run the test suite on an already installed python-cozify:
 
-.. code:: bash
+.. code:: console
 
     pytest -v --pyargs cozify
 
