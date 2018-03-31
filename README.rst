@@ -1,7 +1,7 @@
 python-cozify
 =============
 
-|docs|
+|docs| |ci|
 
 Unofficial Python3 API bindings for the (unpublished) Cozify API.
 Includes high-level helpers for easier use of the APIs,
@@ -181,3 +181,6 @@ Roadmap, aka. Current Limitations
 .. |docs| image:: https://readthedocs.org/projects/python-cozify/badge/?version=latest
     :target: http://python-cozify.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
+
+.. |ci| image:: https://travis-ci.org/Artanicus/python-cozify.svg?branch=master
+    :target: https://travis-ci.org/Artanicus/python-cozify
