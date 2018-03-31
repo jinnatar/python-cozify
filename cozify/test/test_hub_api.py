@@ -3,6 +3,8 @@ import pytest
 
 from cozify import conftest
 from cozify import cloud, hub, hub_api, config
+from cozify.test import debug
+from cozify.test.fixtures import *
 
 @pytest.mark.live
 def test_hub(live_cloud, live_hub):

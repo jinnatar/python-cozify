@@ -5,6 +5,7 @@ from cozify import conftest
 
 from cozify import hub, hub_api, config, multisensor
 from cozify.test import debug
+from cozify.test.fixtures import *
 
 @pytest.mark.live
 def test_tz(live_hub):

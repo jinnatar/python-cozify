@@ -6,6 +6,7 @@ from cozify import conftest
 
 from cozify import cloud, config, hub
 from cozify.test import debug
+from cozify.test.fixtures import *
 
 ## basic cloud.authenticate() tests
 
