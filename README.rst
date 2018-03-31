@@ -7,6 +7,8 @@ Unofficial Python3 API bindings for the (unpublished) Cozify API.
 Includes high-level helpers for easier use of the APIs,
 for example an automatic authentication flow, and low-level 1:1 API functions.
 
+.. contents:: :local:
+
 Installation
 ------------
 
