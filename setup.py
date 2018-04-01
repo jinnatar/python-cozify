@@ -1,24 +1,10 @@
-from distutils.core import setup
-from setuptools.command.test import test as TestCommand
+from setuptools import setup
 
 import sys
 import cozify
 
 with open('README.rst') as file:
         long_description = file.read()
-
-class PyTest(TestCommand):
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        import pytest
-        errcode = pytest.main(self.test_args)
-        sys.exit(errcode)
-
-
 
 setup(name='cozify',
         version = cozify.__version__,
@@ -29,9 +15,9 @@ setup(name='cozify',
         long_description = long_description,
         license = 'MIT',
         packages = ['cozify'],
+	setup_requires=['pytest-runner'],
 	tests_require=['pytest'],
 	install_requires=['requests', 'absl-py'],
-        cmdclass={'test': PyTest},
         classifiers = [
             "Development Status :: 3 - Alpha",
             "Topic :: Utilities",

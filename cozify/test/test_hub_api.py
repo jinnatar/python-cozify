@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import pytest
 
-from cozify import conftest
 from cozify import cloud, hub, hub_api, config
 from cozify.test import debug
 from cozify.test.fixtures import *
