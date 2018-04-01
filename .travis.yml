@@ -6,3 +6,9 @@ python:
 cache: pip
 script:
   - pytest
+
+install:
+  - pip install --quiet python-coveralls
+
+after_success:
+  - coveralls
