@@ -9,6 +9,7 @@ import configparser
 import os
 import datetime
 
+
 def _initXDG():
     """Initialize config path per XDG basedir-spec and resolve the final location of state file storage.
 
@@ -35,6 +36,7 @@ def _initXDG():
     state_file = "%s/python-cozify.cfg" % config_dir
     return state_file
 
+
 def stateWrite(tmpstate=None):
     """Write current state to file storage.
 
@@ -47,6 +49,7 @@ def stateWrite(tmpstate=None):
         tmpstate = state
     with open(state_file, 'w') as cf:
         tmpstate.write(cf)
+
 
 def setStatePath(filepath=_initXDG(), copy_current=False):
     """Set state storage path. Useful for example for testing without affecting your normal state. Call with no arguments to reset back to autoconfigured location.
@@ -63,6 +66,7 @@ def setStatePath(filepath=_initXDG(), copy_current=False):
     else:
         state = _initState(state_file)
 
+
 def dump_state():
     """Print out current state file to stdout. Long values are truncated since this is only for visualization.
     """
@@ -70,6 +74,7 @@ def dump_state():
         print('[{!s:.10}]'.format(section))
         for option in state.options(section):
             print('  {!s:<13.13} = {!s:>10.100}'.format(option, state[section][option]))
+
 
 def _iso_now():
     """Helper to return isoformat datetime stamp that's more compatible than the default.
@@ -80,6 +85,7 @@ def _iso_now():
     """
 
     return datetime.datetime.now().isoformat().split(".")[0]
+
 
 def _initState(state_file):
     """Initialize state on cold start. Any stored state is read in or a new basic state is initialized.
@@ -95,16 +101,17 @@ def _initState(state_file):
         cf = open(state_file, 'r')
     except IOError:
         cf = open(state_file, 'w+')
-        os.chmod(state_file, 0o600) # set to user readwrite only to protect tokens
+        os.chmod(state_file, 0o600)  # set to user readwrite only to protect tokens
     else:
         state.read_file(cf)
 
     # make sure config is in roughly a valid state
-    for key in [ 'Cloud', 'Hubs' ]:
+    for key in ['Cloud', 'Hubs']:
         if key not in state:
             state[key] = {}
     stateWrite(state)
     return state
+
 
 state_file = _initXDG()
 state = _initState(state_file)

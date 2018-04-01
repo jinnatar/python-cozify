@@ -13,9 +13,13 @@ from enum import Enum
 
 from .Error import APIError
 
-capability = Enum('capability', 'ALERT BASS BATTERY_U BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT CONTROL_LIGHT CONTROL_POWER DEVICE DIMMER_CONTROL GENERATE_ALERT HUMIDITY IDENTIFY LOUDNESS LUX MOISTURE MOTION MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS PUSH_NOTIFICATION REMOTE_CONTROL SEEK SMOKE STOP TEMPERATURE TRANSITION TREBLE TWILIGHT USER_PRESENCE VOLUME')
+capability = Enum(
+    'capability',
+    'ALERT BASS BATTERY_U BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT CONTROL_LIGHT CONTROL_POWER DEVICE DIMMER_CONTROL GENERATE_ALERT HUMIDITY IDENTIFY LOUDNESS LUX MOISTURE MOTION MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS PUSH_NOTIFICATION REMOTE_CONTROL SEEK SMOKE STOP TEMPERATURE TRANSITION TREBLE TWILIGHT USER_PRESENCE VOLUME'
+)
 
 ### Device data ###
+
 
 def devices(*, capabilities=None, and_filter=False, **kwargs):
     """Get up to date full devices data set as a dict. Optionally can be filtered to only include certain devices.
@@ -36,15 +40,28 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
     _fill_kwargs(kwargs)
     devs = hub_api.devices(**kwargs)
     if capabilities:
-        if isinstance(capabilities, capability): # single capability given
-            return { key : value for key, value in devs.items() if capabilities.name in value['capabilities']['values'] }
-        else: # multi-filter
+        if isinstance(capabilities, capability):  # single capability given
+            return {
+                key: value
+                for key, value in devs.items()
+                if capabilities.name in value['capabilities']['values']
+            }
+        else:  # multi-filter
             if and_filter:
-                return { key : value for key, value in devs.items() if all(c.name in value['capabilities']['values'] for c in capabilities) }
-            else: # or_filter
-                return { key : value for key, value in devs.items() if any(c.name in value['capabilities']['values'] for c in capabilities) }
-    else: # no filtering
+                return {
+                    key: value
+                    for key, value in devs.items()
+                    if all(c.name in value['capabilities']['values'] for c in capabilities)
+                }
+            else:  # or_filter
+                return {
+                    key: value
+                    for key, value in devs.items()
+                    if any(c.name in value['capabilities']['values'] for c in capabilities)
+                }
+    else:  # no filtering
         return devs
+
 
 def device_reachable(device_id, **kwargs):
     _fill_kwargs(kwargs)
@@ -53,6 +70,7 @@ def device_reachable(device_id, **kwargs):
         return state['reachable']
     else:
         raise ValueError('Device not found: {}'.format(device_id))
+
 
 def device_exists(device_id, devs=None, state=None, **kwargs):
     """Check if device exists.
@@ -64,7 +82,7 @@ def device_exists(device_id, devs=None, state=None, **kwargs):
     Returns:
         bool: True if filter matches.
     """
-    if devs is None: # only retrieve if we didn't get them
+    if devs is None:  # only retrieve if we didn't get them
         devs = devices(**kwargs)
     if device_id in devs:
         if state is not None:
@@ -73,6 +91,7 @@ def device_exists(device_id, devs=None, state=None, **kwargs):
         return True
     else:
         return False
+
 
 def device_eligible(device_id, capability_filter, devs=None, state=None, **kwargs):
     """Check if device matches a AND devices filter.
@@ -85,7 +104,7 @@ def device_eligible(device_id, capability_filter, devs=None, state=None, **kwarg
     Returns:
         bool: True if filter matches.
     """
-    if devs is None: # only retrieve if we didn't get them
+    if devs is None:  # only retrieve if we didn't get them
         devs = devices(capabilities=capability_filter, **kwargs)
     if device_id in devs:
         if state is not None:
@@ -95,7 +114,9 @@ def device_eligible(device_id, capability_filter, devs=None, state=None, **kwarg
     else:
         return False
 
+
 ### Device control ###
+
 
 def device_toggle(device_id, **kwargs):
     """Toggle power state of any device capable of it such as lamps. Eligibility is determined by the capability ON_OFF.
@@ -113,8 +134,9 @@ def device_toggle(device_id, **kwargs):
     dev_state = devs[device_id]['state']
     current_power = dev_state['isOn']
     new_state = _clean_state(dev_state)
-    new_state['isOn'] = not current_power # reverse power state
+    new_state['isOn'] = not current_power  # reverse power state
     hub_api.devices_command_state(device_id=device_id, state=new_state, **kwargs)
+
 
 def device_on(device_id, **kwargs):
     """Turn on a device that is capable of turning on. Eligibility is determined by the capability ON_OFF.
@@ -128,6 +150,7 @@ def device_on(device_id, **kwargs):
     else:
         raise ValueError('Device not found or not eligible for action.')
 
+
 def device_off(device_id, **kwargs):
     """Turn off a device that is capable of turning off. Eligibility is determined by the capability ON_OFF.
 
@@ -140,6 +163,7 @@ def device_off(device_id, **kwargs):
     else:
         raise ValueError('Device not found or not eligible for action.')
 
+
 def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
     """Set temperature of a light.
 
@@ -149,16 +173,20 @@ def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
         transition(int): Transition length in milliseconds. Defaults to instant.
     """
     _fill_kwargs(kwargs)
-    state = {} # will be populated by device_eligible
+    state = {}  # will be populated by device_eligible
     if device_eligible(device_id, capability.COLOR_TEMP, state=state, **kwargs):
         # Make sure temperature is within bounds [state.minTemperature, state.maxTemperature]
         minimum = state['minTemperature']
         maximum = state['maxTemperature']
         if temperature < minimum:
-            logging.warn('Device does not support temperature {0}K, using minimum instead: {1}'.format(temperature, minimum))
+            logging.warn(
+                'Device does not support temperature {0}K, using minimum instead: {1}'.format(
+                    temperature, minimum))
             temperature = minimum
         elif temperature > maximum:
-            logging.warn('Device does not support temperature {0}K, using maximum instead: {1}'.format(temperature, maximum))
+            logging.warn(
+                'Device does not support temperature {0}K, using maximum instead: {1}'.format(
+                    temperature, maximum))
             temperature = maximum
 
         state = _clean_state(state)
@@ -168,6 +196,7 @@ def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
         hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
     else:
         raise ValueError('Device not found or not eligible for action.')
+
 
 def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
     """Set color (hue & saturation) of a light.
@@ -179,7 +208,7 @@ def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
         transition(int): Transition length in milliseconds. Defaults to instant.
     """
     _fill_kwargs(kwargs)
-    state = {} # will be populated by device_eligible
+    state = {}  # will be populated by device_eligible
     if device_eligible(device_id, capability.COLOR_HS, state=state, **kwargs):
         # Make sure hue & saturation are within bounds
         if hue < 0 or hue > math.pi * 2:
@@ -195,6 +224,7 @@ def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
     else:
         raise ValueError('Device not found or not eligible for action.')
 
+
 def light_brightness(device_id, brightness, transition=0, **kwargs):
     """Set brightness of a light.
 
@@ -204,7 +234,7 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
         transition(int): Transition length in milliseconds. Defaults to instant.
     """
     _fill_kwargs(kwargs)
-    state = {} # will be populated by device_eligible
+    state = {}  # will be populated by device_eligible
     if device_eligible(device_id, capability.BRIGHTNESS, state=state, **kwargs):
         # Make sure hue & saturation are within bounds
         if brightness < 0 or brightness > 1.0:
@@ -216,7 +246,9 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
     else:
         raise ValueError('Device not found or not eligible for action.')
 
+
 ### Hub modifiers ###
+
 
 def remote(hub_id, new_state=None):
     """Get remote status of matching hub_id or set a new value for it.
@@ -231,6 +263,7 @@ def remote(hub_id, new_state=None):
         _setAttr(hub_id, 'remote', new_state)
     return _getAttr(hub_id, 'remote', default=False, boolean=True)
 
+
 def autoremote(hub_id, new_state=None):
     """Get autoremote status of matching hub_id or set a new value for it.
 
@@ -243,6 +276,7 @@ def autoremote(hub_id, new_state=None):
     if new_state:
         _setAttr(hub_id, 'autoremote', new_state)
     return _getAttr(hub_id, 'autoremote', default=True, boolean=True)
+
 
 ### Hub info ###
 def tz(**kwargs):
@@ -258,6 +292,7 @@ def tz(**kwargs):
 
     return hub_api.tz(**kwargs)
 
+
 def ping(autorefresh=True, **kwargs):
     """Perform a cheap API call to trigger any potential APIError and return boolean for success/failure. For optional kwargs see cozify.hub_api.get()
 
@@ -270,8 +305,8 @@ def ping(autorefresh=True, **kwargs):
         bool: True for a valid and working hub authentication state.
     """
     try:
-        _fill_kwargs(kwargs) # this can raise an APIError if hub_token has expired
-        if not kwargs['remote'] and kwargs['autoremote'] and not kwargs['host']: # flip state if no host known
+        _fill_kwargs(kwargs)  # this can raise an APIError if hub_token has expired
+        if not kwargs['remote'] and kwargs['autoremote'] and not kwargs['host']:  # flip state if no host known
             remote(kwargs['hub_id'], True)
             kwargs['remote'] = True
             logging.debug('Ping determined hub is remote and flipped state to remote.')
@@ -283,7 +318,7 @@ def ping(autorefresh=True, **kwargs):
                 from cozify import cloud
                 logging.warn('Hub token has expired, hub.ping() attempting to renew it.')
                 logging.debug('Original APIError was: {0}'.format(e))
-                if cloud.authenticate(trustHub=False): # if this fails we let it fail.
+                if cloud.authenticate(trustHub=False):  # if this fails we let it fail.
                     return True
             logging.warn(e)
             return False
@@ -291,6 +326,7 @@ def ping(autorefresh=True, **kwargs):
             raise
     else:
         return True
+
 
 def name(hub_id):
     """Get hub name by it's id.
@@ -303,6 +339,7 @@ def name(hub_id):
     """
     return _getAttr(hub_id, 'hubname')
 
+
 def host(hub_id):
     """Get hostname of matching hub_id
 
@@ -313,6 +350,7 @@ def host(hub_id):
         str: ip address of matching hub. Be aware that this may be empty if the hub is only known remotely and will still give you an ip address even if the hub is currently remote and an ip address was previously locally known.
     """
     return _getAttr(hub_id, 'host')
+
 
 def token(hub_id, new_token=None):
     """Get hub_token of matching hub_id or set a new value for it.
@@ -326,6 +364,7 @@ def token(hub_id, new_token=None):
     if new_token:
         _setAttr(hub_id, 'hubtoken', new_token)
     return _getAttr(hub_id, 'hubtoken')
+
 
 def hub_id(hub_name):
     """Get hub id by it's name.
@@ -341,8 +380,9 @@ def hub_id(hub_name):
         if section.startswith("Hubs."):
             logging.debug('Found hub: {0}'.format(section))
             if config.state[section]['hubname'] == hub_name:
-                return section[5:] # cut out "Hubs."
+                return section[5:]  # cut out "Hubs."
     raise AttributeError('Hub not found: {0}'.format(hub_name))
+
 
 def exists(hub_id):
     """Check for existance of hub in local state.
@@ -354,6 +394,7 @@ def exists(hub_id):
         return True
     else:
         return False
+
 
 def default():
     """Return id of default Hub.
@@ -367,7 +408,9 @@ def default():
     else:
         return config.state['Hubs']['default']
 
+
 ### Internals ###
+
 
 def _getAttr(hub_id, attr, default=None, boolean=False):
     """Get hub state attributes by attr name. Optionally set a default value if attribute not found.
@@ -394,6 +437,7 @@ def _getAttr(hub_id, attr, default=None, boolean=False):
     else:
         raise AttributeError("Hub id '{0}' not found in state.".format(hub_id))
 
+
 def _setAttr(hub_id, attr, value, commit=True):
     """Set hub state attributes by hub_id and attr name
 
@@ -409,13 +453,16 @@ def _setAttr(hub_id, attr, value, commit=True):
     section = 'Hubs.' + hub_id
     if section in config.state:
         if attr not in config.state[section]:
-            logging.info("Attribute {0} was not already in {1} state, new attribute created.".format(attr, section))
+            logging.info(
+                "Attribute {0} was not already in {1} state, new attribute created.".format(
+                    attr, section))
         config.state[section][attr] = value
         if commit:
             config.stateWrite()
     else:
         logging.warning('Section {0} not found in state.'.format(section))
         raise AttributeError
+
 
 def _get_id(**kwargs):
     """Get a hub_id from various sources, meant so that you can just throw kwargs at it and get a valid id.
@@ -438,6 +485,7 @@ def _get_id(**kwargs):
         return getHubId(kwargs['hubName'])
     return default()
 
+
 def _fill_kwargs(kwargs):
     """Check that common items are present in kwargs and fill them if not.
 
@@ -459,6 +507,7 @@ def _fill_kwargs(kwargs):
     if 'host' not in kwargs:
         kwargs['host'] = host(kwargs['hub_id'])
 
+
 def _clean_state(state):
     """Return purged state of values so only wanted values can be modified.
 
@@ -467,15 +516,17 @@ def _clean_state(state):
     """
     out = {}
     for k, v in state.items():
-        if isinstance(v, dict): # recurse nested dicts
+        if isinstance(v, dict):  # recurse nested dicts
             out[k] = _clean_state(v)
-        elif k == "type": # type values are kept
+        elif k == "type":  # type values are kept
             out[k] = v
-        else: # null out the rest
+        else:  # null out the rest
             out[k] = None
     return out
 
+
 ### Deprecated functions, will be removed in v0.3. Until then they'll merely cause a logging WARN to be emitted.
+
 
 def getDevices(**kwargs):
     """Deprecated, will be removed in v0.3. Get up to date full devices data set as a dict.
@@ -492,7 +543,8 @@ def getDevices(**kwargs):
 
     """
     from . import cloud
-    cloud.authenticate() # the old version of getDevices did more than it was supposed to, including making sure there was a valid connection
+    cloud.authenticate(
+    )  # the old version of getDevices did more than it was supposed to, including making sure there was a valid connection
 
     hub_id = _get_id(**kwargs)
     hub_token = token(hub_id)
@@ -504,11 +556,13 @@ def getDevices(**kwargs):
 
     return devices(**kwargs)
 
+
 def getDefaultHub():
     """Deprecated, use default(). Return id of default Hub.
     """
     logging.warn('hub.getDefaultHub is deprecated and will be removed soon. Use hub.default()')
     return default()
+
 
 def getHubId(hub_name):
     """Deprecated, use hub_id(). Return id of hub by it's name.

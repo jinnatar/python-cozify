@@ -17,6 +17,7 @@ class APIError(Exception):
     def __str__(self):
         return 'API error, %s: %s' % (self.status_code, self.message)
 
+
 class AuthenticationError(Exception):
     """Error raised for nonrecoverable authentication failures.
 

@@ -13,8 +13,10 @@ from requests.exceptions import RequestException
 
 apiPath = '/cc/1.8'
 
+
 def _getBase(host, port=8893):
     return 'http://{0}:{1}'.format(host, port)
+
 
 def get(call, hub_token_header=True, base=apiPath, **kwargs):
     """GET method for calling hub API.
@@ -28,11 +30,12 @@ def get(call, hub_token_header=True, base=apiPath, **kwargs):
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
-    return _call(method=requests.get,
-            call='{0}{1}'.format(base, call),
-            hub_token_header=hub_token_header,
-            **kwargs
-            )
+    return _call(
+        method=requests.get,
+        call='{0}{1}'.format(base, call),
+        hub_token_header=hub_token_header,
+        **kwargs)
+
 
 def put(call, payload, hub_token_header=True, base=apiPath, **kwargs):
     """PUT method for calling hub API. For rest of kwargs parameters see get()
@@ -43,12 +46,13 @@ def put(call, payload, hub_token_header=True, base=apiPath, **kwargs):
         hub_token_header(bool): Set to False to omit hub_token usage in call headers.
         base(str): Base path to call from API instead of global apiPath. Defaults to apiPath.
     """
-    return _call(method=requests.put,
-            call='{0}{1}'.format(base, call),
-            hub_token_header=hub_token_header,
-            payload=payload,
-            **kwargs
-            )
+    return _call(
+        method=requests.put,
+        call='{0}{1}'.format(base, call),
+        hub_token_header=hub_token_header,
+        payload=payload,
+        **kwargs)
+
 
 def _call(*, call, method, hub_token_header, payload=None, **kwargs):
     """Backend for get & put
@@ -66,26 +70,32 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
     if payload is not None:
         headers['content-type'] = 'application/json'
 
-    if kwargs['remote']: # remote call
+    if kwargs['remote']:  # remote call
         if 'cloud_token' not in kwargs:
             raise AttributeError('Asked to do remote call but no cloud_token provided.')
         logging.debug('_call routing to cloud.remote()')
         response = cloud_api.remote(apicall=call, payload=payload, **kwargs)
-    else: # local call
+    else:  # local call
         if not kwargs['host']:
-            raise AttributeError('Local call but no hostname was provided. Either set keyword remote or host.')
+            raise AttributeError(
+                'Local call but no hostname was provided. Either set keyword remote or host.')
         try:
             response = method(_getBase(host=kwargs['host']) + call, headers=headers, data=payload)
         except RequestException as e:
-            raise APIError('connection failure', 'issues connection to \'{0}\': {1}'.format(kwargs['host'], e))
+            raise APIError('connection failure', 'issues connection to \'{0}\': {1}'.format(
+                kwargs['host'], e))
 
     # evaluate response, wether it was remote or local
     if response.status_code == 200:
         return response.json()
     elif response.status_code == 410:
-        raise APIError(response.status_code, 'API version outdated. Update python-cozify. %s - %s - %s' % (response.reason, response.url, response.text))
+        raise APIError(response.status_code,
+                       'API version outdated. Update python-cozify. %s - %s - %s' %
+                       (response.reason, response.url, response.text))
     else:
-        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url, response.text))
+        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url,
+                                                               response.text))
+
 
 def hub(**kwargs):
     """1:1 implementation of /hub API call. For kwargs see cozify.hub_api.get()
@@ -95,6 +105,7 @@ def hub(**kwargs):
     """
     return get('hub', base='/', hub_token_header=False, **kwargs)
 
+
 def tz(**kwargs):
     """1:1 implementation of /hub/tz API call. For kwargs see cozify.hub_api.get()
 
@@ -102,6 +113,7 @@ def tz(**kwargs):
         str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
     return get('/hub/tz', **kwargs)
+
 
 def devices(**kwargs):
     """1:1 implementation of /devices API call. For remaining kwargs see cozify.hub_api.get()
@@ -117,6 +129,7 @@ def devices(**kwargs):
 
     return get('/devices', **kwargs)
 
+
 def devices_command(command, **kwargs):
     """1:1 implementation of /devices/command. For kwargs see cozify.hub_api.put()
 
@@ -130,6 +143,7 @@ def devices_command(command, **kwargs):
     logging.debug('command json to send: {0}'.format(command))
     return put('/devices/command', command, **kwargs)
 
+
 def devices_command_generic(*, device_id, command=None, request_type, **kwargs):
     """Command helper for CMD type of actions.
     No checks are made wether the device supports the command or not. For kwargs see cozify.hub_api.put()
@@ -142,11 +156,9 @@ def devices_command_generic(*, device_id, command=None, request_type, **kwargs):
         str: What ever the API replied or raises an APIError on failure.
     """
     if command is None:
-        command = [{
-                "id": device_id,
-                "type": request_type
-                }]
+        command = [{"id": device_id, "type": request_type}]
     return devices_command(command, **kwargs)
+
 
 def devices_command_state(*, device_id, state, **kwargs):
     """Command helper for CMD type of actions.
@@ -158,12 +170,9 @@ def devices_command_state(*, device_id, state, **kwargs):
     Returns:
         str: What ever the API replied or raises an APIError on failure.
     """
-    command = [{
-            "id": device_id,
-            "type": 'CMD_DEVICE',
-            "state": state
-            }]
+    command = [{"id": device_id, "type": 'CMD_DEVICE', "state": state}]
     return devices_command(command, **kwargs)
+
 
 def devices_command_on(device_id, **kwargs):
     """Command helper for CMD_DEVICE_ON.
@@ -174,6 +183,7 @@ def devices_command_on(device_id, **kwargs):
         str: What ever the API replied or raises an APIError on failure.
     """
     return devices_command_generic(device_id=device_id, request_type='CMD_DEVICE_ON', **kwargs)
+
 
 def devices_command_off(device_id, **kwargs):
     """Command helper for CMD_DEVICE_OFF.

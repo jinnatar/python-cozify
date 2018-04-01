@@ -10,6 +10,7 @@ from . import cloud_api
 
 from .Error import APIError, AuthenticationError
 
+
 def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
     """Authenticate with the Cozify Cloud and Hub.
 
@@ -37,14 +38,14 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
     from . import hub
 
     if not _isAttr('email'):
-         _setAttr('email', _getEmail())
+        _setAttr('email', _getEmail())
     email = _getAttr('email')
 
     if _need_cloud_token(trustCloud):
         try:
             cloud_api.requestlogin(email)
         except APIError:
-            resetState() # a bogus email will shaft all future attempts, better to reset
+            resetState()  # a bogus email will shaft all future attempts, better to reset
             raise
 
         # get OTP from user, not stored anywhere since they have a very short lifetime
@@ -69,11 +70,14 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
         cloud_token = _getAttr('remoteToken')
 
     if _need_hub_token(trustHub):
-        localHubs = cloud_api.lan_ip() # will only work if we're local to the Hub, otherwise None
+        localHubs = cloud_api.lan_ip()  # will only work if we're local to the Hub, otherwise None
         # TODO(artanicus): unknown what will happen if there is a local hub but another one remote. Needs testing by someone with multiple hubs. Issue #7
-        hubkeys = cloud_api.hubkeys(cloud_token) # get all registered hubs and their keys from the cloud.
+        hubkeys = cloud_api.hubkeys(
+            cloud_token)  # get all registered hubs and their keys from the cloud.
         if not hubkeys:
-            logging.fatal('You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.')
+            logging.fatal(
+                'You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.'
+            )
 
         # evaluate all returned Hubs and store them
         for hub_id, hub_token in hubkeys.items():
@@ -109,7 +113,8 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             if hub_id in hubkeys:
                 hub_token = hubkeys[hub_id]
             else:
-                logging.error('The hub "{0}" is not linked to the given account: "{1}"'.format(hub_name, _getAttr('email')))
+                logging.error('The hub "{0}" is not linked to the given account: "{1}"'.format(
+                    hub_name, _getAttr('email')))
                 resetState()
                 return False
 
@@ -128,6 +133,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             hub.remote(hub_id, remote)
     return True
 
+
 def resetState():
     """Reset stored cloud state.
 
@@ -137,6 +143,7 @@ def resetState():
 
     config.state['Cloud'] = {}
     config.stateWrite()
+
 
 def ping(autorefresh=True, expiry=None):
     """Test cloud token validity. On success will also trigger a refresh if it's needed by the current key expiry.
@@ -151,7 +158,7 @@ def ping(autorefresh=True, expiry=None):
     """
 
     try:
-        cloud_api.hubkeys(token()) # TODO(artanicus): see if there's a cheaper API call
+        cloud_api.hubkeys(token())  # TODO(artanicus): see if there's a cheaper API call
     except APIError as e:
         if e.status_code == 401:
             return False
@@ -163,6 +170,7 @@ def ping(autorefresh=True, expiry=None):
         else:
             refresh()
         return True
+
 
 def refresh(force=False, expiry=datetime.timedelta(days=1)):
     """Renew current cloud token and store new token in state.
@@ -193,7 +201,9 @@ def refresh(force=False, expiry=datetime.timedelta(days=1)):
 
             return True
     else:
-        logging.debug("Not refreshing token, it's not old enough yet. Limit is: {0})".format(expiry))
+        logging.debug(
+            "Not refreshing token, it's not old enough yet. Limit is: {0})".format(expiry))
+
 
 def _need_refresh(force, expiry):
     """Evaluate if refresh timer is already over or if forcing is valid.
@@ -210,13 +220,13 @@ def _need_refresh(force, expiry):
 
     try:
         last_refresh_str = _getAttr('last_refresh')
-    except AttributeError: # not stored in state yet, e.g. first refresh
+    except AttributeError:  # not stored in state yet, e.g. first refresh
         logging.info("Last cloud token refresh unknown, will force refresh.")
         force = True
     else:
         try:
             last_refresh = datetime.datetime.strptime(last_refresh_str, "%Y-%m-%dT%H:%M:%S")
-        except AttributeError: # not readable as a timestamp
+        except AttributeError:  # not readable as a timestamp
             logging.error("Last cloud token refresh timestamp invalid, will force refresh.")
             force = True
 
@@ -224,6 +234,7 @@ def _need_refresh(force, expiry):
 
     if force or last_refresh + expiry < now:
         return True
+
 
 def _need_cloud_token(trust=True):
     """Validate current remote token and decide if we'll request it during authentication.
@@ -239,9 +250,10 @@ def _need_cloud_token(trust=True):
     if trust and 'remoteToken' in config.state['Cloud']:
         if config.state['Cloud']['remoteToken'] is None:
             return True
-        else: # perform more expensive check
+        else:  # perform more expensive check
             return not ping()
     return True
+
 
 def _need_hub_token(trust=True):
     """Validate current hub token and decide if we'll request it during authentication.
@@ -259,22 +271,28 @@ def _need_hub_token(trust=True):
         return True
 
     # First do quick checks, i.e. do we even have a token already
-    if 'default' not in config.state['Hubs'] or 'hubtoken' not in config.state['Hubs.' + config.state['Hubs']['default']]:
+    if 'default' not in config.state['Hubs'] or 'hubtoken' not in config.state['Hubs.' +
+                                                                               config.state['Hubs']
+                                                                               ['default']]:
         logging.debug("We don't have a valid hubtoken or it's not trusted.")
         return True
-    else: # if we have a token, we need to test if the API is callable
-        ping = hub.ping(autorefresh=False) # avoid compliating things by disabling autorefresh on failure.
+    else:  # if we have a token, we need to test if the API is callable
+        ping = hub.ping(
+            autorefresh=False)  # avoid compliating things by disabling autorefresh on failure.
         logging.debug("Testing hub.ping() for hub_token validity: {0}".format(ping))
         return not ping
+
 
 def _getotp():
     try:
         return input('OTP from your email: ')
-    except EOFError: # if running non-interactive or ^d
+    except EOFError:  # if running non-interactive or ^d
         return None
+
 
 def _getEmail():
     return input('Enter your Cozify account email address: ')
+
 
 def _getAttr(attr):
     """Get cloud state attributes by attr name
@@ -291,6 +309,7 @@ def _getAttr(attr):
         logging.warning('Cloud attribute {0} not found in state.'.format(attr))
         raise AttributeError
 
+
 def _setAttr(attr, value, commit=True):
     """Set cloud state attributes by attr name
 
@@ -302,13 +321,16 @@ def _setAttr(attr, value, commit=True):
     section = 'Cloud'
     if section in config.state:
         if attr not in config.state[section]:
-            logging.info("Attribute {0} was not already in {1} state, new attribute created.".format(attr, section))
+            logging.info(
+                "Attribute {0} was not already in {1} state, new attribute created.".format(
+                    attr, section))
         config.state[section][attr] = value
         if commit:
             config.stateWrite()
     else:
         logging.warning('Section {0} not found in state.'.format(section))
         raise AttributeError
+
 
 def _isAttr(attr):
     """Check validity of attribute by attr name.
@@ -317,6 +339,7 @@ def _isAttr(attr):
         bool: True if attribute exists
     """
     return attr in config.state['Cloud'] and config.state['Cloud'][attr]
+
 
 def token(new_token=None):
     """Get currently used cloud_token or set a new one.
@@ -327,6 +350,7 @@ def token(new_token=None):
     if new_token:
         _setAttr('remotetoken', new_token)
     return _getAttr('remotetoken')
+
 
 def email(new_email=None):
     """Get currently used cloud account email or set a new one.

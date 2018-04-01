@@ -9,7 +9,8 @@ import json, requests
 
 from .Error import APIError, AuthenticationError
 
-cloudBase='https://cloud2.cozify.fi/ui/0.2/'
+cloudBase = 'https://cloud2.cozify.fi/ui/0.2/'
+
 
 def requestlogin(email):
     """Raw Cloud API call, request OTP to be sent to account email address.
@@ -18,10 +19,11 @@ def requestlogin(email):
         email(str): Email address connected to Cozify account.
     """
 
-    payload = { 'email': email }
+    payload = {'email': email}
     response = requests.post(cloudBase + 'user/requestlogin', params=payload)
     if response.status_code is not 200:
         raise APIError(response.status_code, response.text)
+
 
 def emaillogin(email, otp):
     """Raw Cloud API call, request cloud token with email address & OTP.
@@ -34,16 +36,14 @@ def emaillogin(email, otp):
         str: cloud token
     """
 
-    payload = {
-            'email': email,
-            'password': otp
-    }
+    payload = {'email': email, 'password': otp}
 
     response = requests.post(cloudBase + 'user/emaillogin', params=payload)
     if response.status_code == 200:
         return response.text
     else:
         raise APIError(response.status_code, response.text)
+
 
 def lan_ip():
     """1:1 implementation of hub/lan_ip
@@ -60,6 +60,7 @@ def lan_ip():
     else:
         raise APIError(response.status_code, response.text)
 
+
 def hubkeys(cloud_token):
     """1:1 implementation of user/hubkeys
 
@@ -69,14 +70,13 @@ def hubkeys(cloud_token):
     Returns:
         dict: Map of hub_id: hub_token pairs.
     """
-    headers = {
-            'Authorization': cloud_token
-    }
+    headers = {'Authorization': cloud_token}
     response = requests.get(cloudBase + 'user/hubkeys', headers=headers)
     if response.status_code == 200:
         return json.loads(response.text)
     else:
         raise APIError(response.status_code, response.text)
+
 
 def refreshsession(cloud_token):
     """1:1 implementation of user/refreshsession
@@ -87,14 +87,13 @@ def refreshsession(cloud_token):
     Returns:
         str: New cloud remote authentication token. Not automatically stored into state.
     """
-    headers = {
-            'Authorization': cloud_token
-    }
+    headers = {'Authorization': cloud_token}
     response = requests.get(cloudBase + 'user/refreshsession', headers=headers)
     if response.status_code == 200:
         return response.text
     else:
         raise APIError(response.status_code, response.text)
+
 
 def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):
     """1:1 implementation of 'hub/remote'
@@ -109,10 +108,7 @@ def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):
         requests.response: Requests response object.
     """
 
-    headers = {
-            'Authorization': cloud_token,
-            'X-Hub-Key': hub_token
-    }
+    headers = {'Authorization': cloud_token, 'X-Hub-Key': hub_token}
     if payload:
         response = requests.put(cloudBase + 'hub/remote' + apicall, headers=headers, data=payload)
     else:
