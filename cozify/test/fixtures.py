@@ -2,7 +2,7 @@
 
 import os, pytest, tempfile, datetime, logging
 
-from cozify import conftest, config
+from cozify import config
 
 from . import fixtures_devices as dev
 
