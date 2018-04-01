@@ -4,6 +4,7 @@ import jwt
 
 from cozify import hub, cloud, config
 
+
 def main(statepath):
     config.setStatePath(statepath)
 
@@ -15,6 +16,7 @@ def main(statepath):
     for token in cloud_token, hub_token:
         claims = jwt.decode(token, verify=False)
         pp.pprint(claims)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

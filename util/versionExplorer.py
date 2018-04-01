@@ -4,6 +4,7 @@ import requests
 from cozify import hub, hub_api
 from cozify.Error import APIError
 
+
 def main(start=hub_api.apiPath):
     hub_id = hub.default()
     host = hub.host(hub_id)
@@ -28,14 +29,16 @@ def increment(apipath):
 
     return '{0}/{1}/{2}'.format(base, section, next_version)
 
+
 def ping(base, hub_token):
-    headers = { 'Authorization': hub_token }
+    headers = {'Authorization': hub_token}
     call = '/hub/tz'
     response = requests.get(base + call, headers=headers)
     if response.status_code == 200:
         return True
     else:
         return False
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
