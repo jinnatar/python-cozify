@@ -168,18 +168,19 @@ During development you can run the test suite right from the source directory:
 
 .. code:: console
 
-    pytest -v cozify/
+    pytest
     # or include the live tests as well:
-    pytest -v cozify/ --live
+    pytest --live
     # or for the brave, also run destructive tests (also implies --live):
-    pytest -v cozify/ --destructive
+    pytest--destructive
 
 To run the test suite on an already installed python-cozify:
 
 .. code:: console
 
-    pytest -v --pyargs cozify
+    pytest --pyargs cozify
 
+Unfortunately there doesn't seem to be a way to pass the --live argument in this case without first entering the system directory where the module was installed.
 
 Roadmap, aka. Current Limitations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

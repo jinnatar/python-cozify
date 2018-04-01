@@ -2,8 +2,6 @@
 
 import os, pytest, tempfile, datetime
 
-from cozify import conftest
-
 from cozify import cloud, config, hub
 from cozify.test import debug
 from cozify.test.fixtures import *
