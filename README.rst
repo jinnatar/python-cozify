@@ -1,7 +1,7 @@
 python-cozify
 =============
 
-|docs| |ci|
+|docs| |ci| |coverage|
 
 Unofficial Python3 API bindings for the (unpublished) Cozify API.
 Includes high-level helpers for easier use of the APIs,
@@ -195,3 +195,6 @@ Roadmap, aka. Current Limitations
 
 .. |ci| image:: https://travis-ci.org/Artanicus/python-cozify.svg?branch=master
     :target: https://travis-ci.org/Artanicus/python-cozify
+
+.. |coverage| image:: https://coveralls.io/repos/github/Artanicus/python-cozify/badge.svg?branch=master
+    :target: https://coveralls.io/github/Artanicus/python-cozify?branch=master
