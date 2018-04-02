@@ -251,29 +251,31 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
 
 
 def remote(hub_id, new_state=None):
-    """Get remote status of matching hub_id or set a new value for it.
+    """Get remote status of matching hub_id or set a new value for it. Always returns current state at the end.
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
+        new_state(bool): New remoteness state to set for hub. True means remote. Defaults to None when only the current value will be returned.
 
     Returns:
         bool: True for a hub considered remote.
     """
-    if new_state:
+    if new_state is not None:
         _setAttr(hub_id, 'remote', new_state)
     return _getAttr(hub_id, 'remote', default=False, boolean=True)
 
 
 def autoremote(hub_id, new_state=None):
-    """Get autoremote status of matching hub_id or set a new value for it.
+    """Get autoremote status of matching hub_id or set a new value for it. Always returns current state at the end.
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
+        new_state(bool): New autoremoteness state to set for hub. True means remote will be automanaged. Defaults to None when only the current value will be returned.
 
     Returns:
         bool: True for a hub with autoremote enabled.
     """
-    if new_state:
+    if new_state is not None:
         _setAttr(hub_id, 'autoremote', new_state)
     return _getAttr(hub_id, 'autoremote', default=True, boolean=True)
 

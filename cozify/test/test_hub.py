@@ -18,6 +18,20 @@ def test_hub_remote_naive(live_hub):
     assert hub.tz()
 
 
+def test_hub_remote_set(tmp_hub):
+    assert hub.remote(tmp_hub.id, True) == True
+    assert hub.remote(tmp_hub.id) == True
+    assert hub.remote(tmp_hub.id, False) == False
+    assert hub.remote(tmp_hub.id) == False
+
+
+def test_hub_autoremote_set(tmp_hub):
+    assert hub.autoremote(tmp_hub.id, True) == True
+    assert hub.autoremote(tmp_hub.id) == True
+    assert hub.autoremote(tmp_hub.id, False) == False
+    assert hub.autoremote(tmp_hub.id) == False
+
+
 def test_hub_id_to_name(tmp_hub):
     assert hub.name(tmp_hub.id) == tmp_hub.name
 
