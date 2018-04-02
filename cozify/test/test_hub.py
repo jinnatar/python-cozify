@@ -4,6 +4,7 @@ import pytest
 from cozify import hub, hub_api, config, multisensor
 from cozify.test import debug
 from cozify.test.fixtures import *
+from cozify.Error import APIError
 
 
 @pytest.mark.live
@@ -75,8 +76,12 @@ def test_hub_devices_filter_and(tmp_hub):
 def test_hub_ping_autorefresh(live_hub):
     hub_id = live_hub.default()
     live_hub.token(hub_id=hub_id, new_token='destroyed-on-purpose-by-destructive-test')
+
     assert not live_hub.ping(autorefresh=False)
+    with pytest.raises(APIError):
+        hub.tz()
     assert live_hub.ping(autorefresh=True)
+    assert False
 
 
 def test_hub_device_eligible(tmp_hub):
