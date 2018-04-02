@@ -7,13 +7,13 @@ from cozify.test.fixtures import *
 
 
 @pytest.mark.live
-def test_tz(live_hub):
+def test_hub_tz(live_hub):
     assert hub.ping()
     assert hub.tz()
 
 
 @pytest.mark.live
-def test_remote_naive(live_hub):
+def test_hub_remote_naive(live_hub):
     assert hub.tz()
 
 
