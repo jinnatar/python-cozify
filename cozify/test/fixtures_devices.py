@@ -166,6 +166,21 @@ plafond_osram = {
     'zones': []
 }
 
+state_clean = {
+    'brightness': None,
+    'colorMode': None,
+    'hue': None,
+    'isOn': None,
+    'lastSeen': None,
+    'maxTemperature': None,
+    'minTemperature': None,
+    'reachable': None,
+    'saturation': None,
+    'temperature': None,
+    'transitionMsec': None,
+    'type': 'STATE_LIGHT'
+}
+
 devices = {
     lamp_ikea['id']: lamp_ikea,
     lamp_osram['id']: lamp_osram,
@@ -183,3 +198,5 @@ device_ids = {
     'reachable': plafond_osram['id'],
     'not-reachable': lamp_osram['id']
 }
+
+states = {'dirty': lamp_ikea['state'], 'clean': state_clean}

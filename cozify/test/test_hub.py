@@ -121,3 +121,8 @@ def test_hub_fill_kwargs():
     for key in ['hub_id', 'remote', 'autoremote', 'hub_token', 'cloud_token', 'host']:
         assert key in kwargs
         assert kwargs[key] is not None
+
+
+def test_hub_clean_state(tmp_hub):
+    states = tmp_hub.states()
+    assert states['clean'] == hub._clean_state(states['dirty'])

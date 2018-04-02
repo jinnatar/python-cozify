@@ -96,3 +96,6 @@ class Tmp_hub():
 
     def devices(self):
         return dev.device_ids, dev.devices
+
+    def states(self):
+        return dev.states
