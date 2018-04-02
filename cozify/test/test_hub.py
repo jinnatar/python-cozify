@@ -81,7 +81,6 @@ def test_hub_ping_autorefresh(live_hub):
     with pytest.raises(APIError):
         hub.tz()
     assert live_hub.ping(autorefresh=True)
-    assert False
 
 
 def test_hub_device_eligible(tmp_hub):
