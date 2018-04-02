@@ -8,20 +8,6 @@ from . import fixtures_devices as dev
 
 
 @pytest.fixture
-def default_hub():
-    barehub = lambda: 0
-    config.setStatePath()  # reset to default config
-    config.dump_state()
-    from cozify import hub
-    barehub.hub_id = hub.default()
-    barehub.name = hub.name(barehub.hub_id)
-    barehub.host = hub.host(barehub.hub_id)
-    barehub.token = hub.token(barehub.hub_id)
-    barehub.remote = hub.remote(barehub_hub_id)
-    return barehub
-
-
-@pytest.fixture
 def tmp_cloud():
     with Tmp_cloud() as cloud:
         yield cloud
