@@ -23,22 +23,12 @@ def live_cloud():
     os.remove(configpath)
 
 
-@pytest.fixture
-def id():
-    return 'deadbeef-aaaa-bbbb-cccc-fixtureddddd'
-
-
 @pytest.fixture()
 def tmp_hub():
     with Tmp_hub() as hub_obj:
         print('Tmp hub state for testing:')
         config.dump_state()
         yield hub_obj
-
-
-@pytest.fixture
-def devices():
-    return dev
 
 
 @pytest.fixture()
