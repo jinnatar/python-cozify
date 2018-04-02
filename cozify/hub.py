@@ -174,20 +174,12 @@ def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
     """
     _fill_kwargs(kwargs)
     state = {}  # will be populated by device_eligible
-    if device_eligible(device_id, capability.COLOR_TEMP, state=state, **kwargs):
-        # Make sure temperature is within bounds [state.minTemperature, state.maxTemperature]
-        minimum = state['minTemperature']
-        maximum = state['maxTemperature']
-        if temperature < minimum:
-            logging.warn(
-                'Device does not support temperature {0}K, using minimum instead: {1}'.format(
-                    temperature, minimum))
-            temperature = minimum
-        elif temperature > maximum:
-            logging.warn(
-                'Device does not support temperature {0}K, using maximum instead: {1}'.format(
-                    temperature, maximum))
-            temperature = maximum
+    if device_eligible(
+            device_id, capability.COLOR_TEMP, state=state, **kwargs) and _in_range(
+                temperature,
+                low=state['minTemperature'],
+                high=state['maxTemperature'],
+                description='Temperature'):
 
         state = _clean_state(state)
         state['colorMode'] = 'ct'
@@ -209,12 +201,10 @@ def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
     """
     _fill_kwargs(kwargs)
     state = {}  # will be populated by device_eligible
-    if device_eligible(device_id, capability.COLOR_HS, state=state, **kwargs):
-        # Make sure hue & saturation are within bounds
-        if hue < 0 or hue > math.pi * 2:
-            raise ValueError('Hue out of bounds [0, pi*2]: {0}'.format(hue))
-        elif saturation < 0 or saturation > 1.0:
-            raise ValueError('Saturation out of bounds [0, 1.0]: {0}'.format(saturation))
+    if device_eligible(
+            device_id, capability.COLOR_HS, state=state, **kwargs) and _in_range(
+                hue, low=0.0, high=math.pi * 2, description='Hue') and _in_range(
+                    saturation, low=0.0, high=1.0, description='Saturation'):
 
         state = _clean_state(state)
         state['colorMode'] = 'hs'
@@ -235,10 +225,9 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
     """
     _fill_kwargs(kwargs)
     state = {}  # will be populated by device_eligible
-    if device_eligible(device_id, capability.BRIGHTNESS, state=state, **kwargs):
-        # Make sure hue & saturation are within bounds
-        if brightness < 0 or brightness > 1.0:
-            raise ValueError('Brightness out of bounds [0, 1.0]: {0}'.format(brightness))
+    if device_eligible(
+            device_id, capability.BRIGHTNESS, state=state, **kwargs) and _in_range(
+                brightness, low=0.0, high=1.0, description='Brightness'):
 
         state = _clean_state(state)
         state['brightness'] = brightness
