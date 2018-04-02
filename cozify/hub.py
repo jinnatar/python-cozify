@@ -482,7 +482,7 @@ def _get_id(**kwargs):
     if 'hub_name' in kwargs or 'hubName' in kwargs:
         if 'hub_name' in kwargs:
             return hub_id(kwargs['hub_name'])
-        return getHubId(kwargs['hubName'])
+        return hub_id(kwargs['hubName'])
     return default()
 
 
@@ -528,7 +528,7 @@ def _clean_state(state):
 ### Deprecated functions, will be removed in v0.3. Until then they'll merely cause a logging WARN to be emitted.
 
 
-def getDevices(**kwargs):
+def getDevices(**kwargs):  # pragma: no cover
     """Deprecated, will be removed in v0.3. Get up to date full devices data set as a dict.
 
     Args:
@@ -557,14 +557,14 @@ def getDevices(**kwargs):
     return devices(**kwargs)
 
 
-def getDefaultHub():
+def getDefaultHub():  # pragma: no cover
     """Deprecated, use default(). Return id of default Hub.
     """
     logging.warn('hub.getDefaultHub is deprecated and will be removed soon. Use hub.default()')
     return default()
 
 
-def getHubId(hub_name):
+def getHubId(hub_name):  # pragma: no cover
     """Deprecated, use hub_id(). Return id of hub by it's name.
 
     Args:

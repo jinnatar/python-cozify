@@ -4,7 +4,7 @@ from . import config
 
 
 # expects Cozify devices type json data
-def getMultisensorData(data):
+def getMultisensorData(data):  # pragma: no cover
     """Deprecated, will be removed in v0.3
     """
     out = []
