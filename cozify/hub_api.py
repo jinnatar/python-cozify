@@ -81,7 +81,7 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
                 'Local call but no hostname was provided. Either set keyword remote or host.')
         try:
             response = method(_getBase(host=kwargs['host']) + call, headers=headers, data=payload)
-        except RequestException as e:
+        except RequestException as e:  # pragma: no cover
             raise APIError('connection failure', 'issues connection to \'{0}\': {1}'.format(
                 kwargs['host'], e))
 
@@ -91,7 +91,7 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
     elif response.status_code == 410:
         raise APIError(response.status_code,
                        'API version outdated. Update python-cozify. %s - %s - %s' %
-                       (response.reason, response.url, response.text))
+                       (response.reason, response.url, response.text))  # pragma: no cover
     else:
         raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url,
                                                                response.text))

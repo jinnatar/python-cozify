@@ -12,7 +12,7 @@ from .Error import APIError, AuthenticationError
 cloudBase = 'https://cloud2.cozify.fi/ui/0.2/'
 
 
-def requestlogin(email):
+def requestlogin(email):  # pragma: no cover
     """Raw Cloud API call, request OTP to be sent to account email address.
 
     Args:
@@ -25,7 +25,7 @@ def requestlogin(email):
         raise APIError(response.status_code, response.text)
 
 
-def emaillogin(email, otp):
+def emaillogin(email, otp):  # pragma: no cover
     """Raw Cloud API call, request cloud token with email address & OTP.
 
     Args:
@@ -45,7 +45,7 @@ def emaillogin(email, otp):
         raise APIError(response.status_code, response.text)
 
 
-def lan_ip():
+def lan_ip():  # pragma: no cover
     """1:1 implementation of hub/lan_ip
 
     This call will fail with an APIError if the requesting source address is not the same as that of the hub, i.e. if they're not in the same NAT network.
@@ -61,7 +61,7 @@ def lan_ip():
         raise APIError(response.status_code, response.text)
 
 
-def hubkeys(cloud_token):
+def hubkeys(cloud_token):  # pragma: no cover
     """1:1 implementation of user/hubkeys
 
     Args:
@@ -78,7 +78,7 @@ def hubkeys(cloud_token):
         raise APIError(response.status_code, response.text)
 
 
-def refreshsession(cloud_token):
+def refreshsession(cloud_token):  # pragma: no cover
     """1:1 implementation of user/refreshsession
 
     Args:
@@ -95,7 +95,7 @@ def refreshsession(cloud_token):
         raise APIError(response.status_code, response.text)
 
 
-def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):
+def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):  # pragma: no cover
     """1:1 implementation of 'hub/remote'
 
     Args:
