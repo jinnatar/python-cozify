@@ -50,11 +50,6 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
 
         # get OTP from user, not stored anywhere since they have a very short lifetime
         otp = _getotp()
-        if not otp:
-            message = "OTP unavailable, authentication cannot succeed. This may happen if running non-interactively (closed stdin)."
-            logging.fatal(message)
-            raise AuthenticationError(message)
-
         try:
             cloud_token = cloud_api.emaillogin(email, otp)
         except APIError:
@@ -286,8 +281,9 @@ def _need_hub_token(trust=True):
 def _getotp():
     try:
         return input('OTP from your email: ')
-    except EOFError:  # if running non-interactive or ^d
-        return None
+    except (EOFError, IOError):  # if running non-interactive or ^d
+        message = "OTP unavailable, authentication cannot succeed. This may happen if running non-interactively (closed stdin)."
+        raise AuthenticationError(message)
 
 
 def _getEmail():

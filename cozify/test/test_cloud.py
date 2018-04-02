@@ -5,18 +5,24 @@ import os, pytest, tempfile, datetime
 from cozify import cloud, config, hub
 from cozify.test import debug
 from cozify.test.fixtures import *
+from cozify.Error import AuthenticationError
 
 ## basic cloud.authenticate() tests
 
 
 @pytest.mark.live
-def test_auth_cloud():
+def test_cloud_authenticate():
     assert cloud.authenticate()
 
 
 @pytest.mark.live
-def test_auth_hub():
+def test_cloud_authenticate_hub():
     assert cloud.authenticate(trustHub=False)
+
+
+def test_cloud_noninteractive_otp():
+    with pytest.raises(AuthenticationError):
+        cloud._getotp()
 
 
 ## cloud.refresh() logic tests
