@@ -21,7 +21,7 @@ def test_cloud_authenticate_hub():
 
 
 def test_cloud_noninteractive_otp():
-    with pytest.raises(AuthenticationError):
+    with pytest.raises(AuthenticationError) as e_info:
         cloud._getotp()
 
 
