@@ -11,4 +11,5 @@ exclude_lines =
     __repr__
     __getitem__
     raise RuntimeError
-    def test_
+    raise AttributeError
+    logging.fatal
