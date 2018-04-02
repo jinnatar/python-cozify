@@ -1,3 +1,7 @@
+[run]
+source = cozify
+omit = */test/*
+
 [report]
 exclude_lines =
     pragma: no cover
@@ -7,3 +11,4 @@ exclude_lines =
     __repr__
     __getitem__
     raise RuntimeError
+    def test_
