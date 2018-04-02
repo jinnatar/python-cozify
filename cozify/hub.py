@@ -529,12 +529,16 @@ def _clean_state(state):
 
 def _in_range(value, low, high, description='undefined'):
     """Check that the value is in the given range, raise an error if not.
+    None is always considered a valid value.
+
+    Returns:
+        bool: True if value in range. Otherwise a ValueError is raised.
     """
-    if value is None:
-        return  # None is fine, it'll just get ignored
-    if value < low or value > high:
+    if value is not None and (value < low or value > high):
         raise ValueError('Value({3}) \'{0}\' is out of bounds: [{1}, {2}]'.format(
             value, low, high, description))
+    else:
+        return True
 
 
 ### Deprecated functions, will be removed in v0.3. Until then they'll merely cause a logging WARN to be emitted.

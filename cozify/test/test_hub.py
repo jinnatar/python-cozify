@@ -140,3 +140,14 @@ def test_hub_fill_kwargs():
 def test_hub_clean_state(tmp_hub):
     states = tmp_hub.states()
     assert states['clean'] == hub._clean_state(states['dirty'])
+
+
+def test_hub_in_range():
+    assert hub._in_range(0.5, low=0.0, high=1.0)
+    assert hub._in_range(0.0, low=0.0, high=1.0)
+    assert hub._in_range(1.0, low=0.0, high=1.0)
+    assert hub._in_range(None, low=0.0, high=1.0)
+    with pytest.raises(ValueError):
+        hub._in_range(1.5, low=0.0, high=1.0)
+    with pytest.raises(ValueError):
+        hub._in_range(-0.5, low=0.0, high=1.0)
