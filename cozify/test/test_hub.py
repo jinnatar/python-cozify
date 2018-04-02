@@ -112,3 +112,12 @@ def test_hub_device_exists(tmp_hub):
     ids, devs = tmp_hub.devices()
     assert hub.device_exists(ids['reachable'], mock_devices=devs)
     assert not hub.device_exists('dead-beef', mock_devices=devs)
+
+
+@pytest.mark.live
+def test_hub_fill_kwargs():
+    kwargs = {}
+    hub._fill_kwargs(kwargs)
+    for key in ['hub_id', 'remote', 'autoremote', 'hub_token', 'cloud_token', 'host']:
+        assert key in kwargs
+        assert kwargs[key] is not None
