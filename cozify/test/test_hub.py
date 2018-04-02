@@ -90,10 +90,22 @@ def test_hub_device_eligible(tmp_hub):
         ids['twilight_nexa'], hub.capability.COLOR_TEMP, mock_devices=devs)
 
 
+def test_hub_device_implicit_state(tmp_hub):
+    ids, devs = tmp_hub.devices()
+    state = {}
+    hub.device_eligible(
+        ids['lamp_osram'], hub.capability.COLOR_TEMP, mock_devices=devs, state=state)
+    assert 'temperature' in state
+    hub.device_exists(ids['twilight_nexa'], mock_devices=devs, state=state)
+    assert 'twilight' in state
+
+
 def test_hub_device_reachable(tmp_hub):
     ids, devs = tmp_hub.devices()
     assert hub.device_reachable(ids['reachable'], mock_devices=devs)
     assert not hub.device_reachable(ids['not-reachable'], mock_devices=devs)
+    with pytest.raises(ValueError):
+        hub.device_reachable('dead-beef', mock_devices=devs)
 
 
 def test_hub_device_exists(tmp_hub):

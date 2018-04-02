@@ -78,7 +78,7 @@ def device_exists(device_id, devs=None, state=None, **kwargs):
     Args:
         device_id(str): ID of the device to check.
         devs(dict): Optional devices dictionary to use. If not defined, will be retrieved live.
-        state(dict): Optional state dictionary, will be populated with state of checked device if device is eligible.
+        state(dict): Optional state dictionary, will be updated with state of checked device if device is eligible. Previous data in the dict is preserved unless it's overwritten by new values.
     Returns:
         bool: True if filter matches.
     """
@@ -100,7 +100,7 @@ def device_eligible(device_id, capability_filter, devs=None, state=None, **kwarg
         device_id(str): ID of the device to check.
         capability_filter(hub.capability): Single hub.capability or a list of them to match against.
         devs(dict): Optional devices dictionary to use. If not defined, will be retrieved live.
-        state(dict): Optional state dictionary, will be populated with state of checked device if device is eligible.
+        state(dict): Optional state dictionary, will be updated with state of checked device if device is eligible. Previous data in the dict is preserved unless it's overwritten by new values.
     Returns:
         bool: True if filter matches.
     """
