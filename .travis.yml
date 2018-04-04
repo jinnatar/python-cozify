@@ -5,11 +5,11 @@ python:
   - "3.6"
 cache: pip
 script:
-  - coverage run setup.py test --live
+  - coverage run setup.py test --addopts --live
 
 before_install:
-  - mkdir -p ${DEST}
-  - curl -u ${KEY} ${HOST}/${FILE} > ${DEST}/${FILE}
+  - mkdir -p $DEST
+  - curl -u $KEY $HOST/$FILE > $DEST/$FILE
 
 install:
   - pip install --quiet -r requirements.txt -r test_requirements.txt
