@@ -8,8 +8,8 @@ script:
   - coverage run setup.py test --addopts --live
 
 before_install:
-  - mkdir -p $DEST
-  - curl -u $KEY $HOST/$FILE > $DEST/$FILE
+  - mkdir -p $HOME/$DEST
+  - curl -u $KEY $HOST/$FILE > $HOME/$DEST/$FILE
 
 install:
   - pip install --quiet -r requirements.txt -r test_requirements.txt
