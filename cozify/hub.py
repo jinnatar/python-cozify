@@ -297,14 +297,16 @@ def ping(autorefresh=True, **kwargs):
     """
     try:
         _fill_kwargs(kwargs)  # this can raise an APIError if hub_token has expired
-        if not kwargs['remote'] and kwargs['autoremote'] and not kwargs['host']:  # flip state if no host known
+        # Detect remote-ness and flip state if needed
+        if not kwargs['remote'] and kwargs['autoremote'] and not kwargs['host']:
             remote(kwargs['hub_id'], True)
             kwargs['remote'] = True
             logging.debug('Ping determined hub is remote and flipped state to remote.')
+        # We could still be remote but just have host set. If so, tz will fail.
         timezone = tz(**kwargs)
         logging.debug('Ping performed with tz call, response: {0}'.format(timezone))
     except APIError as e:
-        if e.status_code == 401 or e.status_code == 403:
+        if e.status_code == 401 or e.status_code == 403 or e.status_code == 'connection failure':
             if autorefresh:
                 from cozify import cloud
                 logging.warn('Hub token has expired, hub.ping() attempting to renew it.')
