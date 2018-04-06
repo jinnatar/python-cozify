@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pytest
 
-from cozify import hub, hub_api, config, multisensor
+from cozify import hub, multisensor
 from cozify.test import debug
 from cozify.test.fixtures import *
 from cozify.Error import APIError
