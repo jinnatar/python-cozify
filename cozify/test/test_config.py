@@ -9,13 +9,10 @@ from cozify.test.fixtures import tmp_hub
 
 def test_config_XDG(tmp_hub):
     assert config._initXDG()
-    config.dump_state()
 
 
-def test_config_XDG_env():
+def test_config_XDG_env(tmp_hub):
     with tempfile.TemporaryDirectory() as td:
         os.environ["XDG_CONFIG_HOME"] = td
-        print('Overriden config: {0}, config.state_file: {1}'.format(td, config.state_file))
-        assert config._initXDG()
+        config.setStatePath(config._initXDG())
         assert td in config.state_file
-        config.dump_state()
