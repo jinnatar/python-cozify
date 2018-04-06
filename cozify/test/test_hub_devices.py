@@ -70,3 +70,13 @@ def test_hub_device_exists(tmp_hub):
 @pytest.mark.destructive
 def test_hub_device_toggle(live_hub, offline_device):
     live_hub.device_toggle(offline_device)
+
+
+@pytest.mark.destructive
+def test_hub_device_on(live_hub, offline_device):
+    live_hub.device_on(offline_device)
+
+
+@pytest.mark.destructive
+def test_hub_device_off(live_hub, offline_device):
+    live_hub.device_off(offline_device)
