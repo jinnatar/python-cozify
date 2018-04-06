@@ -133,8 +133,8 @@ def test_hub_fill_kwargs():
     kwargs = {}
     hub._fill_kwargs(kwargs)
     for key in ['hub_id', 'remote', 'autoremote', 'hub_token', 'cloud_token', 'host']:
-        assert key in kwargs
-        assert kwargs[key] is not None
+        assert key in kwargs, 'key {0} did not get set.'.format(key)
+        assert kwargs[key] is not None, 'key {0} was set to None'.format(key)
 
 
 def test_hub_clean_state(tmp_hub):
