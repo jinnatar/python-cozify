@@ -37,11 +37,11 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
 
     from . import hub
 
-    if not _isAttr('email'):
+    if not _isAttr('email'):  # pragma: no cover
         _setAttr('email', _getEmail())
     email = _getAttr('email')
 
-    if _need_cloud_token(trustCloud):
+    if _need_cloud_token(trustCloud):  # pragma: no cover
         try:
             cloud_api.requestlogin(email)
         except APIError:
@@ -96,7 +96,6 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 # localHubs is valid so a hub is in the lan. A mixed environment cannot yet be detected.
                 # cloud_api.lan_ip cannot provide a map as to which ip is which hub. Thus we actually need to determine the right one.
                 # TODO(artanicus): Need to truly test how multihub works before implementing ip to hub resolution. See issue #7
-                logging.debug('data structure: {0}'.format(localHubs))
                 hub_ip = localHubs[0]
                 hub_info = hub_api.hub(host=hub_ip, remote=False)
                 # if the hub wants autoremote we flip the state. If this is the first time the hub is seen, act as if autoremote=True, remote=False
@@ -107,7 +106,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             hub_name = hub_info['name']
             if hub_id in hubkeys:
                 hub_token = hubkeys[hub_id]
-            else:
+            else:  # pragma: no cover
                 logging.error('The hub "{0}" is not linked to the given account: "{1}"'.format(
                     hub_name, _getAttr('email')))
                 resetState()
@@ -154,15 +153,15 @@ def ping(autorefresh=True, expiry=None):
 
     try:
         cloud_api.hubkeys(token())  # TODO(artanicus): see if there's a cheaper API call
-    except APIError as e:
+    except APIError as e:  # pragma: no cover
         if e.status_code == 401:
             return False
         else:
             raise
     else:
-        if expiry:
+        if expiry:  # pragma: no cover
             refresh(expiry=expiry)
-        else:
+        else:  # let refresh use it's default expiry
             refresh()
         return True
 
@@ -183,7 +182,7 @@ def refresh(force=False, expiry=datetime.timedelta(days=1)):
     if _need_refresh(force, expiry):
         try:
             cloud_token = cloud_api.refreshsession(token())
-        except APIError as e:
+        except APIError as e:  # pragma: no cover
             if e.status_code == 401:
                 # too late, our token is already dead
                 return False
@@ -221,7 +220,7 @@ def _need_refresh(force, expiry):
     else:
         try:
             last_refresh = datetime.datetime.strptime(last_refresh_str, "%Y-%m-%dT%H:%M:%S")
-        except AttributeError:  # not readable as a timestamp
+        except ValueError:  # not readable as a timestamp
             logging.error("Last cloud token refresh timestamp invalid, will force refresh.")
             force = True
 
@@ -243,7 +242,7 @@ def _need_cloud_token(trust=True):
 
     # check if we've got a cloud_token before doing expensive checks
     if trust and 'remoteToken' in config.state['Cloud']:
-        if config.state['Cloud']['remoteToken'] is None:
+        if config.state['Cloud']['remoteToken'] is None:  # pragma: no cover
             return True
         else:  # perform more expensive check
             return not ping()
@@ -286,7 +285,7 @@ def _getotp():
         raise AuthenticationError(message)
 
 
-def _getEmail():
+def _getEmail():  # pragma: no cover
     return input('Enter your Cozify account email address: ')
 
 
@@ -323,7 +322,7 @@ def _setAttr(attr, value, commit=True):
         config.state[section][attr] = value
         if commit:
             config.stateWrite()
-    else:
+    else:  # pragma: no cover
         logging.warning('Section {0} not found in state.'.format(section))
         raise AttributeError
 
@@ -348,7 +347,7 @@ def token(new_token=None):
     return _getAttr('remotetoken')
 
 
-def email(new_email=None):
+def email(new_email=None):  # pragma: no cover
     """Get currently used cloud account email or set a new one.
 
     Returns:
