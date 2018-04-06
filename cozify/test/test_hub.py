@@ -129,12 +129,13 @@ def test_hub_device_exists(tmp_hub):
 
 
 @pytest.mark.live
-def test_hub_fill_kwargs():
+def test_hub_fill_kwargs(live_hub):
     kwargs = {}
     hub._fill_kwargs(kwargs)
     for key in ['hub_id', 'remote', 'autoremote', 'hub_token', 'cloud_token', 'host']:
         assert key in kwargs, 'key {0} did not get set.'.format(key)
-        assert kwargs[key] is not None, 'key {0} was set to None'.format(key)
+        if key != 'host' or (key == 'host' and not live_hub.remote(hub.default())):
+            assert kwargs[key] is not None, 'key {0} was set to None'.format(key)
 
 
 def test_hub_clean_state(tmp_hub):

@@ -496,6 +496,7 @@ def _fill_kwargs(kwargs):
         from . import cloud
         kwargs['cloud_token'] = cloud.token()
     if 'host' not in kwargs:
+        # This may end up being None if we're remote
         kwargs['host'] = host(kwargs['hub_id'])
 
 
