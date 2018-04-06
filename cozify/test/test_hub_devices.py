@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import pytest
 
-from cozify import hub, hub_api, config
+from cozify import hub
 from cozify.test import debug
-from cozify.test.fixtures import *
+from cozify.test.fixtures import live_hub, tmp_hub, offline_device
 from cozify.Error import APIError
 
 
@@ -65,3 +65,8 @@ def test_hub_device_exists(tmp_hub):
     ids, devs = tmp_hub.devices()
     assert hub.device_exists(ids['reachable'], mock_devices=devs)
     assert not hub.device_exists('dead-beef', mock_devices=devs)
+
+
+@pytest.mark.destructive
+def test_hub_device_toggle(live_hub, offline_device):
+    live_hub.device_toggle(offline_device)

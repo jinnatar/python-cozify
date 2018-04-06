@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import os, pytest, tempfile, datetime, logging
+import os, pytest, tempfile, datetime
 
-from cozify import config
+from absl import logging
+from cozify import config, hub
 
 from . import fixtures_devices as dev
 
@@ -38,6 +39,14 @@ def live_hub():
     config.dump_state()  # dump state so it's visible in failed test output
     from cozify import hub
     yield hub
+
+
+@pytest.fixture()
+def offline_device():
+    for i, d in hub.devices(capabilities=hub.capability.COLOR_HS).items():
+        if not d['state']['reachable']:
+            return i
+    logging.fatal('Cannot run device tests, no offline COLOR_HS device to test against.')
 
 
 class Tmp_cloud():
