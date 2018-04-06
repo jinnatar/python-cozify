@@ -43,10 +43,19 @@ def live_hub():
 
 @pytest.fixture()
 def offline_device():
+    dev = None
+    store = None
     for i, d in hub.devices(capabilities=hub.capability.COLOR_HS).items():
         if not d['state']['reachable']:
-            return i
-    logging.fatal('Cannot run device tests, no offline COLOR_HS device to test against.')
+            dev = i
+            # store state so it can be restored after tests
+            store = d['state']
+            break
+    if dev is None:
+        logging.fatal('Cannot run device tests, no offline COLOR_HS device to test against.')
+
+    yield dev
+    hub.device_state_replace(dev, store)
 
 
 class Tmp_cloud():

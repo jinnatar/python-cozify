@@ -138,6 +138,27 @@ def device_toggle(device_id, **kwargs):
     hub_api.devices_command_state(device_id=device_id, state=new_state, **kwargs)
 
 
+def device_state_replace(device_id, state, **kwargs):
+    """Replace the entire state of a device with the provided state. Useful for example for returning to a stored state.
+
+    Args:
+        device_id(str): ID of the device to toggle.
+        state(dict): State dictionary to push out.
+        **hub_id(str): optional id of hub to operate on. A specified hub_id takes presedence over a hub_name or default Hub.
+        **hub_name(str): optional name of hub to operate on.
+        **remote(bool): Remote or local query.
+    """
+    _fill_kwargs(kwargs)
+
+    if device_exists(device_id, **kwargs):
+        # blank out fields that don't make sense to set
+        for key in ['lastSeen', 'reachable']:
+            state.pop(key, None)
+        hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
+    else:
+        raise AttributeError('device {0} does not exist.'.format(device_id))
+
+
 def device_on(device_id, **kwargs):
     """Turn on a device that is capable of turning on. Eligibility is determined by the capability ON_OFF.
 
