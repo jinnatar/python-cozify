@@ -28,7 +28,7 @@ after_success:
   - coveralls
 
 before_deploy:
-  - echo "[gist]\ntoken:\ $GIST" > $HOME/.gist
+  - echo "[gist]\ntoken:$GIST" > $HOME/.gist
 
 deploy:
   provider: script
