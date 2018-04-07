@@ -29,3 +29,6 @@ before_deploy:
 deploy:
   provider: script
   script: gist create "Travis $TRAVIS_REPO_SLUG $TRAVIS_JOB_NUMBER $SET" prof/combined.svg
+  on:
+    all-branches: true
+    repo: Artanicus/python-cozify
