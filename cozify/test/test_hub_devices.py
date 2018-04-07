@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-import pytest
+import pytest, time
 
 from cozify import hub
 from cozify.test import debug
-from cozify.test.fixtures import live_hub, tmp_hub, offline_device
+from cozify.test.fixtures import live_hub, tmp_hub, online_device
 from cozify.Error import APIError
+
+# global timer delay for tests that change device state
+delay = 2
 
 
 def test_hub_devices_filter_single(tmp_hub):
@@ -68,15 +71,34 @@ def test_hub_device_exists(tmp_hub):
 
 
 @pytest.mark.destructive
-def test_hub_device_toggle(live_hub, offline_device):
-    live_hub.device_toggle(offline_device)
+def test_hub_device_toggle(live_hub, online_device):
+    live_hub.device_toggle(online_device['id'])
+    time.sleep(delay)
 
 
 @pytest.mark.destructive
-def test_hub_device_on(live_hub, offline_device):
-    live_hub.device_on(offline_device)
+def test_hub_device_on_off(live_hub, online_device):
+    if online_device['state']['isOn']:
+        live_hub.device_off(online_device['id'])
+    else:
+        live_hub.device_on(online_device['id'])
+    time.sleep(delay)
 
 
 @pytest.mark.destructive
-def test_hub_device_off(live_hub, offline_device):
-    live_hub.device_off(offline_device)
+def test_hub_device_state_replace(live_hub, online_device):
+    live_hub.device_on(online_device['id'])
+
+    old_brightness = online_device['state']['brightness']
+    if old_brightness > 0.1:
+        set_brightness = old_brightness / 2
+    else:
+        set_brightness = 1
+    online_device['state']['brightness'] = set_brightness
+    live_hub.device_state_replace(online_device['id'], online_device['state'])
+    time.sleep(delay)
+    devs = live_hub.devices()
+    new_brightness = devs[online_device['id']]['state']['brightness']
+
+    assert new_brightness != old_brightness, 'brightness did not change'
+    assert new_brightness == set_brightness, 'brightness changed unexpectedly'
