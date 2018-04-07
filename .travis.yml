@@ -28,4 +28,4 @@ before_deploy:
 
 deploy:
   provider: script
-  script: gist create "Travis $TRAVIS_REPO_SLUG $TRAVIS_BUILD_NUMBER $SET" prof/combined.svg
+  script: gist create "Travis $TRAVIS_REPO_SLUG $TRAVIS_JOB_NUMBER $SET" prof/combined.svg
