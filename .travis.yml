@@ -6,7 +6,9 @@ python:
 cache: pip
 
 env:
-  - SET= SET=--live SET=--destructive
+  - SET=
+  - SET=--live
+  - SET=--destructive
 script:
   - coverage run setup.py test --addopts $SET
 
