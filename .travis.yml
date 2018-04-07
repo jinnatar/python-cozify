@@ -6,11 +6,11 @@ python:
 cache: pip
 
 env:
-  - SET=-m logic
-  - SET=-m live
-  - SET=-m destructive
+  - SET="-m logic"
+  - SET="-m live"
+  - SET="-m destructive"
 script:
-  - coverage run setup.py test --addopts $SET
+  - coverage run setup.py test --addopts "$SET"
 
 before_install:
   - mkdir -p $HOME/$DEST
