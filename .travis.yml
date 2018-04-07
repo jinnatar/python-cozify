@@ -4,8 +4,11 @@ python:
   - "3.5"
   - "3.6"
 cache: pip
+
+env:
+  - SET= SET=--live SET=--destructive
 script:
-  - coverage run setup.py test --addopts --destructive
+  - coverage run setup.py test --addopts $SET
 
 before_install:
   - mkdir -p $HOME/$DEST
