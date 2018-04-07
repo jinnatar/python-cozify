@@ -152,7 +152,7 @@ def device_state_replace(device_id, state, **kwargs):
 
     if device_exists(device_id, **kwargs):
         # blank out fields that don't make sense to set
-        for key in ['lastSeen', 'reachable']:
+        for key in ['lastSeen', 'reachable', 'maxTemperature', 'minTemperature']:
             state.pop(key, None)
         hub_api.devices_command_state(device_id=device_id, state=state, **kwargs)
     else:
