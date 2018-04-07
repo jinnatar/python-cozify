@@ -12,7 +12,7 @@ env:
 script:
   - coverage run setup.py test --addopts "--profile" --addopts "$SET"
 
-before_install:
+before_script:
   - mkdir -p $HOME/$DEST
   - curl -u $KEY $HOST/$FILE > $HOME/$DEST/$FILE
 
