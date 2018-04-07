@@ -18,6 +18,7 @@ def test_hub_remote_naive(live_hub):
     assert hub.tz()
 
 
+@pytest.mark.logic
 def test_hub_remote_set(tmp_hub):
     assert hub.remote(tmp_hub.id, True) == True
     assert hub.remote(tmp_hub.id) == True
@@ -25,6 +26,7 @@ def test_hub_remote_set(tmp_hub):
     assert hub.remote(tmp_hub.id) == False
 
 
+@pytest.mark.logic
 def test_hub_autoremote_set(tmp_hub):
     assert hub.autoremote(tmp_hub.id, True) == True
     assert hub.autoremote(tmp_hub.id) == True
@@ -32,10 +34,12 @@ def test_hub_autoremote_set(tmp_hub):
     assert hub.autoremote(tmp_hub.id) == False
 
 
+@pytest.mark.logic
 def test_hub_id_to_name(tmp_hub):
     assert hub.name(tmp_hub.id) == tmp_hub.name
 
 
+@pytest.mark.logic
 def test_hub_name_to_id(tmp_hub):
     assert hub.hub_id(tmp_hub.name) == tmp_hub.id
 
@@ -47,6 +51,7 @@ def test_multisensor(live_hub):
     print(multisensor.getMultisensorData(data))
 
 
+@pytest.mark.logic
 def test_hub_get_id(tmp_hub):
     assert hub._get_id(hub_id=tmp_hub.id) == tmp_hub.id
     assert hub._get_id(hub_name=tmp_hub.name) == tmp_hub.id
@@ -78,11 +83,13 @@ def test_hub_fill_kwargs(live_hub):
             assert kwargs[key] is not None, 'key {0} was set to None'.format(key)
 
 
+@pytest.mark.logic
 def test_hub_clean_state(tmp_hub):
     states = tmp_hub.states()
     assert states['clean'] == hub._clean_state(states['dirty'])
 
 
+@pytest.mark.logic
 def test_hub_in_range():
     assert hub._in_range(0.5, low=0.0, high=1.0)
     assert hub._in_range(0.0, low=0.0, high=1.0)

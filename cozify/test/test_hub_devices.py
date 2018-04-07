@@ -10,6 +10,7 @@ from cozify.Error import APIError
 delay = 2
 
 
+@pytest.mark.logic
 def test_hub_devices_filter_single(tmp_hub):
     ids, devs = tmp_hub.devices()
     out = hub.devices(hub_id=tmp_hub.id, capabilities=hub.capability.COLOR_LOOP, mock_devices=devs)
@@ -17,6 +18,7 @@ def test_hub_devices_filter_single(tmp_hub):
     assert len(out) == 2
 
 
+@pytest.mark.logic
 def test_hub_devices_filter_or(tmp_hub):
     ids, devs = tmp_hub.devices()
     out = hub.devices(
@@ -28,6 +30,7 @@ def test_hub_devices_filter_or(tmp_hub):
     assert len(out) == 3
 
 
+@pytest.mark.logic
 def test_hub_devices_filter_and(tmp_hub):
     ids, devs = tmp_hub.devices()
     out = hub.devices(
@@ -39,6 +42,7 @@ def test_hub_devices_filter_and(tmp_hub):
     assert len(out) == 2
 
 
+@pytest.mark.logic
 def test_hub_device_eligible(tmp_hub):
     ids, devs = tmp_hub.devices()
     assert hub.device_eligible(ids['lamp_osram'], hub.capability.COLOR_TEMP, mock_devices=devs)
@@ -46,6 +50,7 @@ def test_hub_device_eligible(tmp_hub):
         ids['twilight_nexa'], hub.capability.COLOR_TEMP, mock_devices=devs)
 
 
+@pytest.mark.logic
 def test_hub_device_implicit_state(tmp_hub):
     ids, devs = tmp_hub.devices()
     state = {}
@@ -56,6 +61,7 @@ def test_hub_device_implicit_state(tmp_hub):
     assert 'twilight' in state
 
 
+@pytest.mark.logic
 def test_hub_device_reachable(tmp_hub):
     ids, devs = tmp_hub.devices()
     assert hub.device_reachable(ids['reachable'], mock_devices=devs)
@@ -64,6 +70,7 @@ def test_hub_device_reachable(tmp_hub):
         hub.device_reachable('dead-beef', mock_devices=devs)
 
 
+@pytest.mark.logic
 def test_hub_device_exists(tmp_hub):
     ids, devs = tmp_hub.devices()
     assert hub.device_exists(ids['reachable'], mock_devices=devs)

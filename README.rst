@@ -161,26 +161,26 @@ New releases are cut from the devel branch as needed.
 Tests
 ~~~~~
 pytest is used for unit tests.
-Certain tests are marked as "live" tests and require an active authentication state and a real hub to query against. Live tests are non-destructive.
-Some tests are marked as "destructive" and will cause changes such as a light being turned on or tokens getting invalidated on purpose.
+-  Certain tests are marked as "live" tests and require an active authentication state and a real hub to query against. Live tests are non-destructive.
+-  Some tests are marked as "destructive" and will cause changes such as a light being turned on or tokens getting invalidated on purpose.
+-  Most tests are marked as "logic" and do not require anything external. If no set is defined, only logic tests are run.
 
 During development you can run the test suite right from the source directory:
 
 .. code:: console
 
     pytest
-    # or include the live tests as well:
-    pytest --live
-    # or for the brave, also run destructive tests (also implies --live):
-    pytest--destructive
+    # or run only live tests:
+    pytest -m live
+    # run everything except destructive tests:
+    pytest -m "not destructive"
 
-To run the test suite on an already installed python-cozify:
+To run the test suite on an already installed python-cozify (defining a set is mandatory, otherwise ALL sets are run including destructive):
 
 .. code:: console
 
-    pytest --pyargs cozify
+    pytest -v -m logic --pyargs cozify
 
-Unfortunately there doesn't seem to be a way to pass the --live argument in this case without first entering the system directory where the module was installed.
 
 Roadmap, aka. Current Limitations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
