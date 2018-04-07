@@ -10,6 +10,10 @@ env:
   - SET="-m live"
   - SET="-m destructive"
 
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq graphviz
+
 install:
   - pip install --quiet -r requirements.txt -r test_requirements.txt
 
