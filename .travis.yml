@@ -5,7 +5,7 @@ python:
   - "3.6"
 cache: pip
 script:
-  - coverage run setup.py test --addopts --live
+  - coverage run setup.py test --addopts --destructive
 
 before_install:
   - mkdir -p $HOME/$DEST
