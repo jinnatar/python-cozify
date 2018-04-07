@@ -58,6 +58,27 @@ def offline_device():
     hub.device_state_replace(dev, store)
 
 
+@pytest.fixture()
+def online_device():
+    dev = None
+    store = None
+    devs = hub.devices(capabilities=hub.capability.COLOR_HS)
+    for i, d in devs.items():
+        if d['state']['reachable'] and 'test' in d['name']:
+            dev = d
+            # store state so it can be restored after tests
+            store = d['state'].copy()
+            break
+    if dev is None:
+        logging.error(
+            'Cannot run certain device tests, no COLOR_HS device online where name includes \'test\'.'
+        )
+    logging.info('Stored state before yield: {0}'.format(store))
+    yield dev
+    logging.info('Rolling back state of test device')
+    hub.device_state_replace(dev['id'], store)
+
+
 class Tmp_cloud():
     """Creates a temporary cloud state with test data.
     """
