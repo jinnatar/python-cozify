@@ -3,6 +3,11 @@ import pytest
 
 def pytest_addoption(parser):
     parser.addoption(
+        "--logic",
+        action="store_true",
+        default=False,
+        help="run logic tests only, no live hub required. Can be omitted, this is the default.")
+    parser.addoption(
         "--live",
         action="store_true",
         default=False,
@@ -19,11 +24,12 @@ def pytest_collection_modifyitems(config, items):
     destructive = False
     if config.getoption("--live"):
         live = True
+    if config.getoption("--logic"):
+        live = False
     if config.getoption("--destructive"):
         return
     skip_live = pytest.mark.skip(reason="need --live option to run")
-    skip_destructive = pytest.mark.skip(
-        reason="need --destructive option to run")
+    skip_destructive = pytest.mark.skip(reason="need --destructive option to run")
 
     for item in items:
         if "live" in item.keywords and not live:
