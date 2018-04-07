@@ -28,10 +28,10 @@ after_success:
   - coveralls
 
 before_deploy:
-  - echo "[gist]\ntoken: $GIST" > $HOME/.gist
+  - echo "[gist]\ntoken:\ $GIST" > $HOME/.gist
 
 deploy:
   provider: script
   script: gist create "Travis $TRAVIS_REPO_SLUG $TRAVIS_JOB_NUMBER $SET" prof/combined.svg
   on:
-    all-branches: true
+    all_branches: true
