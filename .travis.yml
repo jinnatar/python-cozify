@@ -18,7 +18,7 @@ before_script:
   - curl -u $KEY $HOST/$FILE > $HOME/$DEST/$FILE
 
 script:
-  - coverage run setup.py test --addopts "--profile $SET"
+  - coverage run setup.py test --addopts "--profile-svg $SET"
 
 after_success:
   - coveralls
@@ -31,4 +31,3 @@ deploy:
   script: gist create "Travis $TRAVIS_REPO_SLUG $TRAVIS_JOB_NUMBER $SET" prof/combined.svg
   on:
     all-branches: true
-    repo: Artanicus/python-cozify
