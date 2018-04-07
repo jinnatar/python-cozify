@@ -2,3 +2,4 @@ pytest
 python-coveralls
 coverage
 pytest-profiling
+python-gist
