@@ -1,3 +1,4 @@
 pytest
 python-coveralls
 coverage
+pytest-profiling

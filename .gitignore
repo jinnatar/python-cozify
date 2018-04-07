@@ -4,6 +4,7 @@
 MANIFEST
 dist/
 build/
+prof/
 .cache/
 .pytest_cache/
 .coverage
