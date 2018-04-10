@@ -198,5 +198,5 @@ Roadmap, aka. Current Limitations
 .. |ci| image:: https://travis-ci.org/Artanicus/python-cozify.svg?branch=master
     :target: https://travis-ci.org/Artanicus/python-cozify
 
-.. |coverage| image:: https://coveralls.io/repos/github/Artanicus/python-cozify/badge.svg?branch=master
-    :target: https://coveralls.io/github/Artanicus/python-cozify?branch=master
+.. |coverage| image:: https://codecov.io/gh/Artanicus/python-cozify/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/Artanicus/python-cozify
