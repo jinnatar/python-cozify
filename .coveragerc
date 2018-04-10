@@ -1,0 +1,15 @@
+[run]
+source = cozify
+omit = */test/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    warnings.warn
+    except ValueError:
+    __str__
+    __repr__
+    __getitem__
+    raise RuntimeError
+    raise AttributeError
+    logging.fatal

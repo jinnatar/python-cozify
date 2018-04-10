@@ -2,6 +2,7 @@
 from cozify import hub
 import sys
 
+
 def main(capability=None):
     devs = None
     if capability:
@@ -11,6 +12,7 @@ def main(capability=None):
 
     for key, dev in devs.items():
         print('{0}: {1}'.format(key, dev['name']))
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
