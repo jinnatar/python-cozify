@@ -6,7 +6,7 @@ import os, tempfile
 
 from cozify import config
 from cozify.test import debug
-from cozify.test.fixtures import tmp_hub
+from cozify.test.fixtures import tmp_hub, tmp_cloud
 
 
 @pytest.mark.logic
