@@ -8,7 +8,7 @@ cache: pip
 env:
   - SET="-m logic"
   - SET="-m live"
-  - SET="-m destructive"
+  - SET="-m 'destructive or remote'"
 
 before_install:
   - sudo apt-get update -qq
