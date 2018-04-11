@@ -70,6 +70,7 @@ def test_hub_get_id(tmp_hub):
 
 @pytest.mark.destructive
 def test_hub_ping_autorefresh(live_hub):
+    assert hub.ping()
     hub_id = live_hub.default()
     live_hub.token(hub_id=hub_id, new_token='destroyed-on-purpose-by-destructive-test')
 
@@ -81,6 +82,7 @@ def test_hub_ping_autorefresh(live_hub):
 
 @pytest.mark.live
 def test_hub_fill_kwargs(live_hub):
+    assert hub.ping()
     kwargs = {}
     hub._fill_kwargs(kwargs)
     for key in ['hub_id', 'remote', 'autoremote', 'hub_token', 'cloud_token', 'host']:
