@@ -107,3 +107,11 @@ def test_hub_in_range():
         hub._in_range(1.5, low=0.0, high=1.0)
     with pytest.raises(ValueError):
         hub._in_range(-0.5, low=0.0, high=1.0)
+
+
+@pytest.mark.destructive
+@pytest.mark.remote
+def test_hub_dirty_remote(live_hub):
+    live_hub.remote(live_hub.default(), True)
+    assert live_hub.ping()
+    assert not live_hub.remote(live_hub.default())
