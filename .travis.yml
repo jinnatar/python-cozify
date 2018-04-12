@@ -4,35 +4,11 @@ python:
   - "3.5"
   - "3.6"
 cache: pip
-
-env:
-  - SET="-m logic"
-  - SET="-m live"
-  - SET="-m destructive"
-
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq graphviz
+script:
+  - pytest
 
 install:
-  - pip install --quiet -r requirements.txt -r test_requirements.txt
-
-before_script:
-  - mkdir -p $HOME/$DEST
-  - curl -u $KEY $HOST/$FILE > $HOME/$DEST/$FILE
-
-script:
-  - coverage run setup.py test --addopts "--profile-svg $SET"
+  - pip install --quiet python-coveralls -r requirements.txt
 
 after_success:
-  - codecov
-
-before_deploy:
-  - util/gist-conf.sh $GIST
-
-deploy:
-  provider: script
-  script: gist create "Travis $TRAVIS_REPO_SLUG $TRAVIS_JOB_NUMBER $SET" prof/combined.svg
-  on:
-    all_branches: true
-  skip_cleanup: true
+  - coveralls

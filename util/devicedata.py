@@ -1,12 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3                                                                                                                                         
 from cozify import hub
 import pprint, sys
-
 
 def main(device):
     devs = hub.devices()
     pprint.pprint(devs[device])
-
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

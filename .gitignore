@@ -1,11 +1,10 @@
+*.cfg
 *.pyc
 *.egg-info
 .eggs
 MANIFEST
 dist/
 build/
-prof/
 .cache/
 .pytest_cache/
 .coverage
-.tox
