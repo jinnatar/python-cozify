@@ -73,7 +73,6 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
     if kwargs['remote']:  # remote call
         if 'cloud_token' not in kwargs:
             raise AttributeError('Asked to do remote call but no cloud_token provided.')
-        logging.debug('_call routing to cloud.remote()')
         response = cloud_api.remote(apicall=call, payload=payload, **kwargs)
     else:  # local call
         if not kwargs['host']:
