@@ -112,6 +112,10 @@ def test_hub_in_range():
 @pytest.mark.destructive
 @pytest.mark.remote
 def test_hub_dirty_remote(live_hub):
+    live_hub.ping(live_hub.default())
+    if not live_hub.remote(live_hub.default()):
+        pytest.xfail("Not remote, cannot run this test")
+
     live_hub.remote(live_hub.default(), True)
     assert live_hub.ping()
-    assert not live_hub.remote(live_hub.default())
+    assert live_hub.remote(live_hub.default())

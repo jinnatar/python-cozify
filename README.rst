@@ -164,6 +164,7 @@ pytest is used for unit tests.
 
 -  Certain tests are marked as "live" tests and require an active authentication state and a real hub to query against. Live tests are non-destructive.
 -  Some tests are marked as "destructive" and will cause changes such as a light being turned on or tokens getting invalidated on purpose.
+-  A few tests are marked as "remote" and are only expected to succeed when testing remotely, i.e. outside the LAN of the hub.
 -  Most tests are marked as "logic" and do not require anything external. If no set is defined, only logic tests are run.
 
 During development you can run the test suite right from the source directory:
