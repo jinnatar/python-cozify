@@ -112,10 +112,14 @@ def test_hub_in_range():
 @pytest.mark.destructive
 @pytest.mark.remote
 def test_hub_dirty_remote(live_hub):
+    # test if we are remote to get meaningful results
     live_hub.ping(live_hub.default())
     if not live_hub.remote(live_hub.default()):
         pytest.xfail("Not remote, cannot run this test")
-
-    live_hub.remote(live_hub.default(), True)
-    assert live_hub.ping()
-    assert live_hub.remote(live_hub.default())
+    else:
+        # fuck up the state on purpose to say we're not remote
+        assert not live_hub.remote(live_hub.default(), False)
+        # attempt to repair the state
+        assert live_hub.ping()
+        # verify we're now considered to be remote
+        assert live_hub.remote(live_hub.default())

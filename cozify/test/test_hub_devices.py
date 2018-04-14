@@ -87,6 +87,8 @@ def test_hub_device_toggle(live_hub, online_device):
 def test_hub_device_on_off(live_hub, online_device):
     if online_device['state']['isOn']:
         live_hub.device_off(online_device['id'])
+        time.sleep(delay)
+        live_hub.device_on(online_device['id'])
     else:
         live_hub.device_on(online_device['id'])
     time.sleep(delay)
@@ -98,14 +100,17 @@ def test_hub_device_state_replace(live_hub, online_device):
 
     old_brightness = online_device['state']['brightness']
     if old_brightness > 0.1:
-        set_brightness = old_brightness / 2
+        set_brightness = old_brightness - 0.1
     else:
-        set_brightness = 1
+        set_brightness = 0.5
     online_device['state']['brightness'] = set_brightness
+    online_device['state']['isOn'] = True
     live_hub.device_state_replace(online_device['id'], online_device['state'])
     time.sleep(delay)
     devs = live_hub.devices()
     new_brightness = devs[online_device['id']]['state']['brightness']
+    new_isOn = devs[online_device['id']]['state']['isOn']
 
-    assert new_brightness != old_brightness, 'brightness did not change'
-    assert new_brightness == set_brightness, 'brightness changed unexpectedly'
+    assert new_brightness != old_brightness, 'brightness did not change, expected {0}'.format(new_brightness)
+    assert new_brightness == set_brightness, 'brightness changed unexpectedly, expected {0}'.format(set_brightness)
+    assert new_isOn == True

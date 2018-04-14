@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os, pytest, tempfile, datetime
+import hashlib, json
 
 from absl import logging
 from cozify import config, hub
@@ -78,7 +79,7 @@ def offline_device():
 def online_device():
     dev = None
     store = None
-    devs = hub.devices(capabilities=hub.capability.COLOR_HS)
+    devs = hub.devices(capabilities=hub.capability.BRIGHTNESS)
     for i, d in devs.items():
         if d['state']['reachable'] and 'test' in d['name']:
             dev = d
@@ -89,9 +90,9 @@ def online_device():
         logging.error(
             'Cannot run certain device tests, no COLOR_HS device online where name includes \'test\'.'
         )
-    logging.info('Stored state before yield: {0}'.format(store))
+    logging.info('online_device state before use ({1}): {0}'.format(store, _h6_dict(store)))
     yield dev
-    logging.info('Rolling back state of test device')
+    logging.info('online_device state after use, before rollback ({1}): {0}'.format(dev['state'], _h6_dict(dev['state'])))
     hub.device_state_replace(dev['id'], store)
 
 
@@ -123,3 +124,9 @@ class Tmp_hub():
 
     def states(self):
         return dev.states
+
+def _h6_dict(d):
+    j = json.dumps(d)
+    w = j.encode('utf8')
+    h = hashlib.md5(w)
+    return h.hexdigest()[:6]
