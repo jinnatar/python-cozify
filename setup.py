@@ -9,6 +9,7 @@ with open('README.rst') as file:
 setup(
     name='cozify',
     version=cozify.__version__,
+    python_requires='>=3.4',
     author='artanicus',
     author_email='python-cozify@nocturnal.fi',
     url='https://github.com/Artanicus/python-cozify',
@@ -20,7 +21,12 @@ setup(
     tests_require=['pytest'],
     install_requires=['requests', 'absl-py'],
     classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Topic :: Utilities",
-        "License :: OSI Approved :: MIT License",
-    ])
+        'License :: OSI Approved :: MIT License',
+        'Development Status :: 3 - Alpha',
+        'Topic :: Utilities',
+        'Intended Audience :: Developers',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6'
+    ])  # yapf: disable
