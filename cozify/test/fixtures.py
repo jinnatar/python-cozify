@@ -59,23 +59,6 @@ def live_hub():
 
 
 @pytest.fixture()
-def offline_device():
-    dev = None
-    store = None
-    for i, d in hub.devices(capabilities=hub.capability.COLOR_HS).items():
-        if not d['state']['reachable']:
-            dev = i
-            # store state so it can be restored after tests
-            store = d['state']
-            break
-    if dev is None:
-        logging.fatal('Cannot run device tests, no offline COLOR_HS device to test against.')
-
-    yield dev
-    hub.device_state_replace(dev, store)
-
-
-@pytest.fixture()
 def online_device():
     dev = None
     store = None
@@ -86,13 +69,11 @@ def online_device():
             # store state so it can be restored after tests
             store = d['state'].copy()
             break
-    if dev is None:
-        logging.error(
-            'Cannot run certain device tests, no COLOR_HS device online where name includes \'test\'.'
-        )
+    assert dev is not None, 'Cannot run live device tests, no reachable BRIGHTNESS capable device with name including \'test\' to test against.'
     logging.info('online_device state before use ({1}): {0}'.format(store, _h6_dict(store)))
     yield dev
-    logging.info('online_device state after use, before rollback ({1}): {0}'.format(dev['state'], _h6_dict(dev['state'])))
+    logging.info('online_device state after use, before rollback ({1}): {0}'.format(
+        dev['state'], _h6_dict(dev['state'])))
     hub.device_state_replace(dev['id'], store)
 
 
@@ -124,6 +105,7 @@ class Tmp_hub():
 
     def states(self):
         return dev.states
+
 
 def _h6_dict(d):
     j = json.dumps(d)
