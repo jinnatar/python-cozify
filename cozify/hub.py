@@ -63,10 +63,21 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
         return devs
 
 
-def device_reachable(device_id, **kwargs):
+def device_reachable(device_id, devs=None, state=None, **kwargs):
+    """Check if device exists and is reachable.
+
+    Args:
+        device_id(str): ID of the device to check.
+        devs(dict): Optional devices dictionary to use. If not defined, will be retrieved live.
+        state(dict): Optional state dictionary, will be updated with state of checked device if device is eligible. Previous data in the dict is preserved unless it's overwritten by new values.
+    Returns:
+        bool: True if filter matches.
+    """
     _fill_kwargs(kwargs)
-    state = {}
-    if device_exists(device_id, state=state, **kwargs):
+
+    if devs is None:  # only retrieve if we didn't get them
+        devs = devices(**kwargs)
+    if device_exists(device_id, state=state, devs=devs, **kwargs):
         return state['reachable']
     else:
         raise ValueError('Device not found: {}'.format(device_id))
