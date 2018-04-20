@@ -13,6 +13,7 @@ setup(
     author='artanicus',
     author_email='python-cozify@nocturnal.fi',
     url='https://github.com/Artanicus/python-cozify',
+    project_urls={"Documentation": "https://python-cozify.readthedocs.io/"},
     description='Unofficial Python3 client library for the Cozify API.',
     long_description=long_description,
     license='MIT',
