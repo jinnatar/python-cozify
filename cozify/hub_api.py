@@ -118,13 +118,13 @@ def devices(**kwargs):
     """1:1 implementation of /devices API call. For remaining kwargs see cozify.hub_api.get()
 
     Args:
-        **mock_devices(dict): If defined, returned as-is as if that were the result we received.
+        **devs(dict): If defined, returned as-is.
 
     Returns:
         dict: Full live device state as returned by the API
     """
-    if 'mock_devices' in kwargs:
-        return kwargs['mock_devices']
+    if 'devs' in kwargs:
+        return kwargs['devs']
 
     return get('/devices', **kwargs)
 

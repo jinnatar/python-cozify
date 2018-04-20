@@ -21,22 +21,25 @@ capability = Enum(
 ### Device data ###
 
 
-def devices(*, capabilities=None, and_filter=False, **kwargs):
+def devices(*, capabilities=None, and_filter=False, devs=None, **kwargs):
     """Get up to date full devices data set as a dict. Optionally can be filtered to only include certain devices.
 
     Args:
         capabilities(cozify.hub.capability): Single or list of cozify.hub.capability types to filter by, for example: [ cozify.hub.capability.TEMPERATURE, cozify.hub.capability.HUMIDITY ]. Defaults to no filtering.
         and_filter(bool): Multi-filter by AND instead of default OR. Defaults to False.
+        devs(dict): Optional devices dictionary to use. If not defined, will be retrieved live.
         **hub_name(str): optional name of hub to query.
         **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
         **remote(bool): Remote or local query.
 
     Returns:
-        dict: full live device state as returned by the API
+        dict: full live devices dictionary as returned by the API
 
     """
     _fill_kwargs(kwargs)
-    devs = hub_api.devices(**kwargs)
+
+    if devs is None:
+        devs = hub_api.devices(**kwargs)
     if capabilities:
         if isinstance(capabilities, capability):  # single capability given
             return {
@@ -75,6 +78,8 @@ def device_reachable(device_id, devs=None, state=None, **kwargs):
 
     if devs is None:  # only retrieve if we didn't get them
         devs = devices(**kwargs)
+    if state is None:
+        state = {}  # enable storing values since we need to get reachability
     if device_exists(device_id, state=state, devs=devs, **kwargs):
         return state['reachable']
     else:
@@ -113,8 +118,9 @@ def device_eligible(device_id, capability_filter, devs=None, state=None, **kwarg
     Returns:
         bool: True if filter matches.
     """
-    if devs is None:  # only retrieve if we didn't get them
-        devs = devices(capabilities=capability_filter, **kwargs)
+
+    # Even if we already have a devs dict it still needs to get filtered
+    devs = devices(capabilities=capability_filter, devs=devs, **kwargs)
     if device_id in devs:
         if state is not None:
             state.update(devs[device_id]['state'])
