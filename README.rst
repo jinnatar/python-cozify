@@ -1,7 +1,7 @@
 python-cozify
 =============
 
-|docs| |ci| |coverage|
+|docs| |ci| |coverage| |pyversions|
 
 Unofficial Python3 API bindings for the (unpublished) Cozify API.
 Includes high-level helpers for easier use of the APIs,
@@ -201,3 +201,6 @@ Roadmap, aka. Current Limitations
 
 .. |coverage| image:: https://codecov.io/gh/Artanicus/python-cozify/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/Artanicus/python-cozify
+
+
+.. |pyversions| image:: https://img.shields.io/pypi/pyversions/cozify.svg   :alt: PyPI - Python Version
