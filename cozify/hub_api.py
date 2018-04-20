@@ -1,7 +1,7 @@
 """Module for all Cozify Hub API 1:1 calls
 
 Attributes:
-    apiPath(str): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
+    api_path(str): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
 """
 
 import requests, json, logging
@@ -11,20 +11,20 @@ from cozify import cloud_api
 from .Error import APIError
 from requests.exceptions import RequestException
 
-apiPath = '/cc/1.9'
+api_path = '/cc/1.8'
 
 
 def _getBase(host, port=8893):
     return 'http://{0}:{1}'.format(host, port)
 
 
-def get(call, hub_token_header=True, base=apiPath, **kwargs):
+def get(call, hub_token_header=True, base=api_path, **kwargs):
     """GET method for calling hub API.
 
     Args:
-        call(str): API path to call after apiPath, needs to include leading /.
+        call(str): API path to call after api_path, needs to include leading /.
         hub_token_header(bool): Set to False to omit hub_token usage in call headers.
-        base(str): Base path to call from API instead of global apiPath. Defaults to apiPath.
+        base(str): Base path to call from API instead of global api_path. Defaults to api_path.
         **host(str): ip address or hostname of hub.
         **hub_token(str): Hub authentication token.
         **remote(bool): If call is to be local or remote (bounced via cloud).
@@ -37,14 +37,14 @@ def get(call, hub_token_header=True, base=apiPath, **kwargs):
         **kwargs)
 
 
-def put(call, payload, hub_token_header=True, base=apiPath, **kwargs):
+def put(call, payload, hub_token_header=True, base=api_path, **kwargs):
     """PUT method for calling hub API. For rest of kwargs parameters see get()
 
     Args:
-        call(str): API path to call after apiPath, needs to include leading /.
+        call(str): API path to call after api_path, needs to include leading /.
         payload(str): json string to push out as the payload.
         hub_token_header(bool): Set to False to omit hub_token usage in call headers.
-        base(str): Base path to call from API instead of global apiPath. Defaults to apiPath.
+        base(str): Base path to call from API instead of global api_path. Defaults to api_path.
     """
     return _call(
         method=requests.put,
