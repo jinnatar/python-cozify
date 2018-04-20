@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pytest
 
-from cozify import hub, multisensor
+from cozify import hub
 from cozify.test import debug
 from cozify.test.fixtures import *
 from cozify.Error import APIError
@@ -48,13 +48,6 @@ def test_hub_id_to_name(tmp_hub):
 @pytest.mark.logic
 def test_hub_name_to_id(tmp_hub):
     assert hub.hub_id(tmp_hub.name) == tmp_hub.id
-
-
-@pytest.mark.live
-def test_multisensor(live_hub):
-    assert hub.ping()
-    data = hub.devices()
-    print(multisensor.getMultisensorData(data))
 
 
 @pytest.mark.logic
