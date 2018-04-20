@@ -27,11 +27,9 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
     Args:
         capabilities(cozify.hub.capability): Single or list of cozify.hub.capability types to filter by, for example: [ cozify.hub.capability.TEMPERATURE, cozify.hub.capability.HUMIDITY ]. Defaults to no filtering.
         and_filter(bool): Multi-filter by AND instead of default OR. Defaults to False.
-        **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
+        **hub_name(str): optional name of hub to query.
         **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
         **remote(bool): Remote or local query.
-        **hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
-        **hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
 
     Returns:
         dict: full live device state as returned by the API
@@ -496,18 +494,11 @@ def _get_id(**kwargs):
     Args:
         **hub_id(str): Will be returned as-is if defined.
         **hub_name(str): Name of hub.
-        hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
-        hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
     """
-    if 'hub_id' in kwargs or 'hubId' in kwargs:
-        logging.debug("Redundant hub._get_id call, resolving hub_id to itself.")
-        if 'hub_id' in kwargs:
-            return kwargs['hub_id']
-        return kwargs['hubId']
-    if 'hub_name' in kwargs or 'hubName' in kwargs:
-        if 'hub_name' in kwargs:
-            return hub_id(kwargs['hub_name'])
-        return hub_id(kwargs['hubName'])
+    if 'hub_id' in kwargs:
+        return kwargs['hub_id']
+    if 'hub_name' in kwargs:
+        return hub_id(kwargs['hub_name'])
     return default()
 
 
@@ -563,56 +554,3 @@ def _in_range(value, low, high, description='undefined'):
             value, low, high, description))
     else:
         return True
-
-
-### Deprecated functions, will be removed in v0.3. Until then they'll merely cause a logging WARN to be emitted.
-
-
-def getDevices(**kwargs):  # pragma: no cover
-    """Deprecated, will be removed in v0.3. Get up to date full devices data set as a dict.
-
-    Args:
-        **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
-        **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
-        **remote(bool): Remote or local query.
-        **hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
-        **hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
-
-    Returns:
-        dict: full live device state as returned by the API
-
-    """
-    from . import cloud
-    cloud.authenticate(
-    )  # the old version of getDevices did more than it was supposed to, including making sure there was a valid connection
-
-    hub_id = _get_id(**kwargs)
-    hub_token = token(hub_id)
-    cloud_token = cloud.token()
-    hostname = host(hub_id)
-
-    if 'remote' not in kwargs:
-        kwargs['remote'] = remote
-
-    return devices(**kwargs)
-
-
-def getDefaultHub():  # pragma: no cover
-    """Deprecated, use default(). Return id of default Hub.
-    """
-    logging.warn('hub.getDefaultHub is deprecated and will be removed soon. Use hub.default()')
-    return default()
-
-
-def getHubId(hub_name):  # pragma: no cover
-    """Deprecated, use hub_id(). Return id of hub by it's name.
-
-    Args:
-        hub_name(str): Name of hub to query. The name is given when registering a hub to an account.
-        str: hub_id on success, raises an attributeerror on failure.
-
-    Returns:
-        str: Hub id or raises
-    """
-    logging.warn('hub.getHubId is deprecated and will be removed soon. Use hub.hub_id()')
-    return hub_id(hub_name)
