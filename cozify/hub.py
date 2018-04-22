@@ -390,6 +390,8 @@ def host(hub_id=None):
     Returns:
         str: ip address of matching hub. Be aware that this may be empty if the hub is only known remotely and will still give you an ip address even if the hub is currently remote and an ip address was previously locally known.
     """
+    if hub_id is None:
+        hub_id = default()
     return _getAttr(hub_id, 'host')
 
 
