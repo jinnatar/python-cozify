@@ -42,6 +42,7 @@ def test_hub_autoremote_set(tmp_hub):
 
 @pytest.mark.logic
 def test_hub_id_to_name(tmp_hub):
+    assert hub.name() == tmp_hub.name
     assert hub.name(tmp_hub.id) == tmp_hub.name
 
 
@@ -59,6 +60,11 @@ def test_hub_get_id(tmp_hub):
     assert hub._get_id(hubId=tmp_hub.id) == tmp_hub.id
     assert hub._get_id() == tmp_hub.id
     assert not hub._get_id(hub_id='foo') == tmp_hub.id
+
+
+@pytest.mark.logic
+def test_hub_host(tmp_hub):
+    assert hub.host() == tmp_hub.host
 
 
 @pytest.mark.destructive
