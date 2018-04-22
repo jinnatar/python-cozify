@@ -367,8 +367,8 @@ def ping(autorefresh=True, **kwargs):
         return True
 
 
-def name(hub_id):
-    """Get hub name by it's id.
+def name(hub_id=None):
+    """Get hub name
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
@@ -376,11 +376,13 @@ def name(hub_id):
     Returns:
         str: Hub name or None if the hub wasn't found.
     """
+    if hub_id is None:
+        hub_id = default()
     return _getAttr(hub_id, 'hubname')
 
 
-def host(hub_id):
-    """Get hostname of matching hub_id
+def host(hub_id=None):
+    """Get hostname of hub
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
@@ -391,8 +393,8 @@ def host(hub_id):
     return _getAttr(hub_id, 'host')
 
 
-def token(hub_id, new_token=None):
-    """Get hub_token of matching hub_id or set a new value for it.
+def token(hub_id=None, new_token=None):
+    """Get hub_token or set a new value for it.
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
@@ -400,6 +402,8 @@ def token(hub_id, new_token=None):
     Returns:
         str: Hub authentication token.
     """
+    if hub_id is None:
+        hub_id = default()
     if new_token:
         _setAttr(hub_id, 'hubtoken', new_token)
     return _getAttr(hub_id, 'hubtoken')
@@ -423,12 +427,14 @@ def hub_id(hub_name):
     raise AttributeError('Hub not found: {0}'.format(hub_name))
 
 
-def exists(hub_id):
+def exists(hub_id=None):
     """Check for existance of hub in local state.
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
     """
+    if hub_id is None:
+        hub_id = default()
     if 'Hubs.{0}'.format(hub_id) in config.state:
         return True
     else:
