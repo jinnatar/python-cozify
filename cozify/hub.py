@@ -275,44 +275,44 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
 ### Hub modifiers ###
 
 
-def remote(new_state=None, **kwargs):
+def remote(hub_id=None, new_state=None):
     """Get remote status of hub or set a new value for it. Always returns current state at the end.
 
     Args:
-        new_state(bool): New remoteness state to set for hub. True means remote. Defaults to None when only the current value will be returned.
         **hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub. Defaults to hub.default()
+        new_state(bool): New remoteness state to set for hub. True means remote. Defaults to None when only the current value will be returned.
 
     Returns:
         bool: True for a hub considered remote.
     """
-    if 'hub_id' not in kwargs:
-        kwargs['hub_id'] = default()
+    if hub_id is None:
+        hub_id = default()
     if new_state is not None:
         if not isinstance(new_state, bool):
             raise ValueError('Expected boolean as new value of remote, got {0}'.format(
                 type(new_state)))
-        _setAttr(kwargs['hub_id'], 'remote', new_state)
-    return _getAttr(kwargs['hub_id'], 'remote', default=False, boolean=True)
+        _setAttr(hub_id, 'remote', new_state)
+    return _getAttr(hub_id, 'remote', default=False, boolean=True)
 
 
-def autoremote(new_state=None, **kwargs):
+def autoremote(hub_id=None, new_state=None):
     """Get autoremote status of hub or set a new value for it. Always returns current state at the end.
 
     Args:
+        hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub. Defaults to hub.default()
         new_state(bool): New autoremoteness state to set for hub. True means remote will be automanaged. Defaults to None when only the current value will be returned.
-        **hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub. Defaults to hub.default()
 
     Returns:
         bool: True for a hub with autoremote enabled.
     """
-    if 'hub_id' not in kwargs:
-        kwargs['hub_id'] = default()
+    if hub_id is None:
+        hub_id = default()
     if new_state is not None:
         if not isinstance(new_state, bool):
             raise ValueError('Expected boolean as new value of autoremote, got {0}'.format(
                 type(new_state)))
-        _setAttr(kwargs['hub_id'], 'autoremote', new_state)
-    return _getAttr(kwargs['hub_id'], 'autoremote', default=True, boolean=True)
+        _setAttr(hub_id, 'autoremote', new_state)
+    return _getAttr(hub_id, 'autoremote', default=True, boolean=True)
 
 
 ### Hub info ###
