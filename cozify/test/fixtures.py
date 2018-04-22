@@ -77,6 +77,18 @@ def online_device():
     hub.device_state_replace(dev['id'], store)
 
 
+@pytest.fixture
+def ready_kwargs(live_hub, live_cloud):
+    kwargs = {}
+    kwargs['hub_id'] = live_hub.default()
+    kwargs['hub_token'] = live_hub.token()
+    kwargs['cloud_token'] = live_cloud.token()
+    kwargs['remote'] = live_hub.remote()
+    kwargs['autoremote'] = live_hub.autoremote()
+    kwargs['host'] = live_hub.host()
+    return kwargs
+
+
 class Tmp_hub():
     """Creates a temporary hub section (with test data) in a tmp_cloud
     """
