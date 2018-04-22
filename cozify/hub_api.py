@@ -23,9 +23,10 @@ def get(call, hub_token_header=True, base=api_path, **kwargs):
 
     Args:
         call(str): API path to call after api_path, needs to include leading /.
-        hub_token_header(bool): Set to False to omit hub_token usage in call headers.
-        base(str): Base path to call from API instead of global api_path. Defaults to api_path.
-        **host(str): ip address or hostname of hub.
+        hub_token_header(bool): Set to False to omit hub_token usage in call headers. Most calls need this.
+        base(str): Base path to call from API instead of global api_path. Defaults to api_path. Most calls need the default.
+        **remote(bool): If call is to be local or remote (bounced via cloud).
+        **host(str): ip address or hostname of hub. Only needed if remote == False.
         **hub_token(str): Hub authentication token.
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
@@ -38,13 +39,18 @@ def get(call, hub_token_header=True, base=api_path, **kwargs):
 
 
 def put(call, payload, hub_token_header=True, base=api_path, **kwargs):
-    """PUT method for calling hub API. For rest of kwargs parameters see get()
+    """PUT method for calling hub API.
 
     Args:
         call(str): API path to call after api_path, needs to include leading /.
         payload(str): json string to push out as the payload.
         hub_token_header(bool): Set to False to omit hub_token usage in call headers.
-        base(str): Base path to call from API instead of global api_path. Defaults to api_path.
+        base(str): Base path to call from API instead of global api_path. Defaults to api_path. Most calls need the default.
+        **remote(bool): If call is to be local or remote (bounced via cloud).
+        **host(str): ip address or hostname of hub. Only needed if remote == False.
+        **hub_token(str): Hub authentication token.
+        **remote(bool): If call is to be local or remote (bounced via cloud).
+        **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
     return _call(
         method=requests.put,
@@ -60,6 +66,13 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
     Args:
         call(str): Full API path to call.
         method(function): requests.get|put function to use for call.
+        payload(str): json string to push out as any potential payload.
+        hub_token_header(bool): Set to False to omit hub_token usage in call headers.
+        **remote(bool): If call is to be local or remote (bounced via cloud).
+        **host(str): ip address or hostname of hub. Only needed if remote == False.
+        **hub_token(str): Hub authentication token.
+        **remote(bool): If call is to be local or remote (bounced via cloud).
+        **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
     response = None
     headers = {}
