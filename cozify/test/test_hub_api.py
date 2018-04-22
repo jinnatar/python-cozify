@@ -13,6 +13,6 @@ def test_hub(live_cloud, live_hub):
     assert hub_api.hub(
         hub_id=hub_id,
         host=live_hub.host(hub_id),
-        remote=live_hub.remote(hub_id),
+        remote=live_hub.remote(hub_id=hub_id),
         cloud_token=live_cloud.token(),
         hub_token=live_hub.token(hub_id))

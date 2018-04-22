@@ -26,18 +26,18 @@ def test_hub_remote_naive(live_hub):
 
 @pytest.mark.logic
 def test_hub_remote_set(tmp_hub):
-    assert hub.remote(tmp_hub.id, True) == True
-    assert hub.remote(tmp_hub.id) == True
-    assert hub.remote(tmp_hub.id, False) == False
-    assert hub.remote(tmp_hub.id) == False
+    assert hub.remote(hub_id=tmp_hub.id, new_state=True) == True
+    assert hub.remote(hub_id=tmp_hub.id) == True
+    assert hub.remote(hub_id=tmp_hub.id, new_state=False) == False
+    assert hub.remote(hub_id=tmp_hub.id) == False
 
 
 @pytest.mark.logic
 def test_hub_autoremote_set(tmp_hub):
-    assert hub.autoremote(tmp_hub.id, True) == True
-    assert hub.autoremote(tmp_hub.id) == True
-    assert hub.autoremote(tmp_hub.id, False) == False
-    assert hub.autoremote(tmp_hub.id) == False
+    assert hub.autoremote(hub_id=tmp_hub.id, new_state=True) == True
+    assert hub.autoremote(hub_id=tmp_hub.id) == True
+    assert hub.autoremote(hub_id=tmp_hub.id, new_state=False) == False
+    assert hub.autoremote(hub_id=tmp_hub.id) == False
 
 
 @pytest.mark.logic
@@ -80,7 +80,7 @@ def test_hub_fill_kwargs(live_hub):
     hub._fill_kwargs(kwargs)
     for key in ['hub_id', 'remote', 'autoremote', 'hub_token', 'cloud_token', 'host']:
         assert key in kwargs, 'key {0} did not get set.'.format(key)
-        if key != 'host' or (key == 'host' and not live_hub.remote(hub.default())):
+        if key != 'host' or (key == 'host' and not live_hub.remote()):
             assert kwargs[key] is not None, 'key {0} was set to None'.format(key)
 
 
@@ -106,13 +106,13 @@ def test_hub_in_range():
 @pytest.mark.remote
 def test_hub_dirty_remote(live_hub):
     # test if we are remote to get meaningful results
-    live_hub.ping(live_hub.default())
-    if not live_hub.remote(live_hub.default()):
+    live_hub.ping()
+    if not live_hub.remote():
         pytest.xfail("Not remote, cannot run this test")
     else:
         # fuck up the state on purpose to say we're not remote
-        assert not live_hub.remote(live_hub.default(), False)
+        assert not live_hub.remote(new_state=False)
         # attempt to repair the state
         assert live_hub.ping()
         # verify we're now considered to be remote
-        assert live_hub.remote(live_hub.default())
+        assert live_hub.remote()

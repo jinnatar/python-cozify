@@ -275,34 +275,44 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
 ### Hub modifiers ###
 
 
-def remote(hub_id, new_state=None):
-    """Get remote status of matching hub_id or set a new value for it. Always returns current state at the end.
+def remote(new_state=None, **kwargs):
+    """Get remote status of hub or set a new value for it. Always returns current state at the end.
 
     Args:
-        hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
         new_state(bool): New remoteness state to set for hub. True means remote. Defaults to None when only the current value will be returned.
+        **hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub. Defaults to hub.default()
 
     Returns:
         bool: True for a hub considered remote.
     """
+    if 'hub_id' not in kwargs:
+        kwargs['hub_id'] = default()
     if new_state is not None:
-        _setAttr(hub_id, 'remote', new_state)
-    return _getAttr(hub_id, 'remote', default=False, boolean=True)
+        if not isinstance(new_state, bool):
+            raise ValueError('Expected boolean as new value of remote, got {0}'.format(
+                type(new_state)))
+        _setAttr(kwargs['hub_id'], 'remote', new_state)
+    return _getAttr(kwargs['hub_id'], 'remote', default=False, boolean=True)
 
 
-def autoremote(hub_id, new_state=None):
-    """Get autoremote status of matching hub_id or set a new value for it. Always returns current state at the end.
+def autoremote(new_state=None, **kwargs):
+    """Get autoremote status of hub or set a new value for it. Always returns current state at the end.
 
     Args:
-        hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
         new_state(bool): New autoremoteness state to set for hub. True means remote will be automanaged. Defaults to None when only the current value will be returned.
+        **hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub. Defaults to hub.default()
 
     Returns:
         bool: True for a hub with autoremote enabled.
     """
+    if 'hub_id' not in kwargs:
+        kwargs['hub_id'] = default()
     if new_state is not None:
-        _setAttr(hub_id, 'autoremote', new_state)
-    return _getAttr(hub_id, 'autoremote', default=True, boolean=True)
+        if not isinstance(new_state, bool):
+            raise ValueError('Expected boolean as new value of autoremote, got {0}'.format(
+                type(new_state)))
+        _setAttr(kwargs['hub_id'], 'autoremote', new_state)
+    return _getAttr(kwargs['hub_id'], 'autoremote', default=True, boolean=True)
 
 
 ### Hub info ###
@@ -335,7 +345,7 @@ def ping(autorefresh=True, **kwargs):
         _fill_kwargs(kwargs)  # this can raise an APIError if hub_token has expired
         # Detect remote-ness and flip state if needed
         if not kwargs['remote'] and kwargs['autoremote'] and not kwargs['host']:
-            remote(kwargs['hub_id'], True)
+            remote(hub_id=kwargs['hub_id'], new_state=True)
             kwargs['remote'] = True
             logging.debug('Ping determined hub is remote and flipped state to remote.')
         # We could still be remote but just have host set. If so, tz will fail.
@@ -518,7 +528,7 @@ def _fill_kwargs(kwargs):
     if 'hub_id' not in kwargs:
         kwargs['hub_id'] = _get_id(**kwargs)
     if 'remote' not in kwargs:
-        kwargs['remote'] = remote(kwargs['hub_id'])
+        kwargs['remote'] = remote(hub_id=kwargs['hub_id'])
     if 'autoremote' not in kwargs:
         kwargs['autoremote'] = True
     if 'hub_token' not in kwargs:

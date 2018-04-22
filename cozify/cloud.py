@@ -89,7 +89,8 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 logging.info('No local Hubs detected, changing to remote mode.')
                 hub_info = hub_api.hub(remote=True, cloud_token=cloud_token, hub_token=hub_token)
                 # if the hub wants autoremote we flip the state. If this is the first time the hub is seen, act as if autoremote=True, remote=False
-                if not hub.exists(hub_id) or (hub.autoremote(hub_id) and not hub.remote(hub_id)):
+                if not hub.exists(hub_id) or (hub.autoremote(hub_id=hub_id) and
+                                              not hub.remote(hub_id=hub_id)):
                     logging.info('[autoremote] Flipping hub remote status from local to remote.')
                     remote = True
             else:
@@ -99,7 +100,8 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 hub_ip = localHubs[0]
                 hub_info = hub_api.hub(host=hub_ip, remote=False)
                 # if the hub wants autoremote we flip the state. If this is the first time the hub is seen, act as if autoremote=True, remote=False
-                if not hub.exists(hub_id) or (hub.autoremote(hub_id) and hub.remote(hub_id)):
+                if not hub.exists(hub_id) or (hub.autoremote(hub_id=hub_id) and
+                                              hub.remote(hub_id=hub_id)):
                     logging.info('[autoremote] Flipping hub remote status from remote to local.')
                     remote = False
 
@@ -123,8 +125,8 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             # store Hub data under it's named section
             hub._setAttr(hub_id, 'host', hub_ip, commit=False)
             hub._setAttr(hub_id, 'hubName', hub_name, commit=False)
-            hub.token(hub_id, hub_token)
-            hub.remote(hub_id, remote)
+            hub.token(hub_id=hub_id, new_token=hub_token)
+            hub.remote(hub_id=hub_id, new_state=remote)
     return True
 
 
