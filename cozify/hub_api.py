@@ -127,6 +127,15 @@ def tz(**kwargs):
     return get('/hub/tz', **kwargs)
 
 
+def colors(**kwargs):
+    """1:1 implementation of /hub/colors API call. For kwargs see cozify.hub_api.get()
+
+    Returns:
+        list: List of hexadecimal color codes of all defined custom colors.
+    """
+    return get('/hub/colors', **kwargs)
+
+
 def devices(**kwargs):
     """1:1 implementation of /devices API call. For remaining kwargs see cozify.hub_api.get()
 
