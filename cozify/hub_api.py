@@ -136,6 +136,15 @@ def colors(**kwargs):
     return get('/hub/colors', **kwargs)
 
 
+def lpd433devices(**kwargs):
+    """1:1 implementation of /hub/433devices API call. For kwargs see cozify.hub_api.get()
+
+    Returns:
+        list: List of dictionaries describing all 433MHz devices paired with hub.
+    """
+    return get('/hub/433devices', **kwargs)
+
+
 def devices(**kwargs):
     """1:1 implementation of /devices API call. For remaining kwargs see cozify.hub_api.get()
 

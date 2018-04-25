@@ -23,3 +23,10 @@ def test_colors(live_hub, ready_kwargs):
     assert live_hub.ping()
     response = hub_api.colors(**ready_kwargs)
     assert isinstance(response, list)
+
+
+@pytest.mark.live
+def test_lpd433devices(live_hub, ready_kwargs):
+    assert live_hub.ping()
+    response = hub_api.lpd433devices(**ready_kwargs)
+    assert isinstance(response, list)
