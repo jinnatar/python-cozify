@@ -9,6 +9,8 @@ FLAGS = flags.FLAGS
 flags.DEFINE_bool('debug', False, 'Enable debug output.')
 flags.DEFINE_string('path', None, 'Path to query.')
 flags.DEFINE_string('put', None, 'Use PUT instead of GET and send this data.')
+flags.DEFINE_string('post', None, 'Use POST instead of GET and send this data.')
+flags.DEFINE_bool('pretty', False, 'Pretty-print output assuming it to be a dict.')
 
 
 def main(argv):
@@ -18,13 +20,28 @@ def main(argv):
 
     hub.ping()
     try:
-        print(
-            hub_api.get(
-                FLAGS.path,
-                host=hub.host(),
-                remote=hub.remote(),
-                hub_token=hub.token(),
-                cloud_token=cloud.token()))
+        if FLAGS.put:
+            call = hub_api.put
+            payload = FLAGS.put
+        elif FLAGS.post:
+            call = hub_api.post
+            payload = FLAGS.post
+        else:
+            call = hub_api.get
+            payload = ''
+        output = call(
+            FLAGS.path,
+            host=hub.host(),
+            remote=hub.remote(),
+            hub_token=hub.token(),
+            cloud_token=cloud.token(),
+            payload=payload)
+        if FLAGS.pretty:
+            import pprint
+            pp = pprint.PrettyPrinter(indent=2)
+            pp.pprint(output)
+        else:
+            print(output)
     except APIError as e:
         if e.status_code == 404:
             logging.error('Unknown API endpoint \'{0}\': {1}'.format(FLAGS.path, e))
