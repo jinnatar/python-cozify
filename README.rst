@@ -193,14 +193,17 @@ Roadmap, aka. Current Limitations
 
 
 .. |docs| image:: https://readthedocs.org/projects/python-cozify/badge/?version=latest
-    :target: http://python-cozify.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
+  :target: http://python-cozify.readthedocs.io/en/latest/?badge=latest
+  :alt: Documentation Status
 
 .. |ci| image:: https://travis-ci.org/Artanicus/python-cozify.svg?branch=master
-    :target: https://travis-ci.org/Artanicus/python-cozify
+  :target: https://travis-ci.org/Artanicus/python-cozify
+  :alt: Build Status
 
 .. |coverage| image:: https://codecov.io/gh/Artanicus/python-cozify/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/Artanicus/python-cozify
+  :target: https://codecov.io/gh/Artanicus/python-cozify
+  :alt: Coverage Status
 
 
-.. |pyversions| image:: https://img.shields.io/pypi/pyversions/cozify.svg   :alt: PyPI - Python Version
+.. |pyversions| image:: https://img.shields.io/pypi/pyversions/cozify.svg
+  :alt: PyPI - Python Version
