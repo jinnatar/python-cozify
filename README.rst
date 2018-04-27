@@ -1,6 +1,10 @@
 python-cozify
 =============
 
+.. image:: https://badges.gitter.im/python-cozify/Lobby.svg
+   :alt: Join the chat at https://gitter.im/python-cozify/Lobby
+   :target: https://gitter.im/python-cozify/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 |docs| |ci| |coverage|
 
 Unofficial Python3 API bindings for the (unpublished) Cozify API.
