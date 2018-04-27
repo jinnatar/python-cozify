@@ -1,7 +1,7 @@
 python-cozify
 =============
 
-|docs| |ci| |coverage| |pyversions|
+|docs| |ci| |coverage| |pyversions| |gitter|
 
 Unofficial Python3 API bindings for the (unpublished) Cozify API.
 Includes high-level helpers for easier use of the APIs,
@@ -207,3 +207,7 @@ Roadmap, aka. Current Limitations
 
 .. |pyversions| image:: https://img.shields.io/pypi/pyversions/cozify.svg
   :alt: PyPI - Python Version
+
+.. |gitter| image:: https://badges.gitter.im/python-cozify/Lobby.svg
+  :alt: Join the chat at https://gitter.im/python-cozify/Lobby
+  :target: https://gitter.im/python-cozify/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
