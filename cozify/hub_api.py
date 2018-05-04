@@ -11,7 +11,7 @@ from cozify import cloud_api
 from .Error import APIError
 from requests.exceptions import RequestException
 
-api_path = '/cc/1.8'
+api_path = '/cc/1.9'
 
 
 def _getBase(host, port=8893):
