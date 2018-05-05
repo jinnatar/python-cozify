@@ -2,6 +2,7 @@
 
 Attributes:
     api_path(str): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
+    session(requests.Session): Global session object for doing keep-alive connections.
 """
 
 import requests, json, logging
@@ -12,6 +13,7 @@ from .Error import APIError
 from requests.exceptions import RequestException
 
 api_path = '/cc/1.9'
+session = requests.Session()
 
 
 def _getBase(host, port=8893):
@@ -32,7 +34,7 @@ def get(call, hub_token_header=True, base=api_path, **kwargs):
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
     return _call(
-        method=requests.get,
+        method=session.get,
         call='{0}{1}'.format(base, call),
         hub_token_header=hub_token_header,
         **kwargs)
@@ -53,7 +55,7 @@ def put(call, payload, hub_token_header=True, base=api_path, **kwargs):
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
     return _call(
-        method=requests.put,
+        method=session.put,
         call='{0}{1}'.format(base, call),
         hub_token_header=hub_token_header,
         payload=payload,
@@ -65,7 +67,7 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
 
     Args:
         call(str): Full API path to call.
-        method(function): requests.get|put function to use for call.
+        method(function): session.get|put function to use for call.
         payload(str): json string to push out as any potential payload.
         hub_token_header(bool): Set to False to omit hub_token usage in call headers.
         **remote(bool): If call is to be local or remote (bounced via cloud).

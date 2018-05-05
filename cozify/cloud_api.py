@@ -2,7 +2,7 @@
 
 Attributes:
     cloudBase(str): API endpoint including version
-
+    session(requests.Session): Global session object for doing keep-alive connections.
 """
 
 import json, requests
@@ -10,6 +10,7 @@ import json, requests
 from .Error import APIError, AuthenticationError
 
 cloudBase = 'https://cloud2.cozify.fi/ui/0.2/'
+session = requests.Session()
 
 
 def requestlogin(email):  # pragma: no cover
@@ -20,7 +21,7 @@ def requestlogin(email):  # pragma: no cover
     """
 
     payload = {'email': email}
-    response = requests.post(cloudBase + 'user/requestlogin', params=payload)
+    response = session.post(cloudBase + 'user/requestlogin', params=payload)
     if response.status_code is not 200:
         raise APIError(response.status_code, response.text)
 
@@ -38,7 +39,7 @@ def emaillogin(email, otp):  # pragma: no cover
 
     payload = {'email': email, 'password': otp}
 
-    response = requests.post(cloudBase + 'user/emaillogin', params=payload)
+    response = session.post(cloudBase + 'user/emaillogin', params=payload)
     if response.status_code == 200:
         return response.text
     else:
@@ -54,7 +55,7 @@ def lan_ip():  # pragma: no cover
     Returns:
         list: List of Hub ip addresses.
     """
-    response = requests.get(cloudBase + 'hub/lan_ip')
+    response = session.get(cloudBase + 'hub/lan_ip')
     if response.status_code == 200:
         return json.loads(response.text)
     else:
@@ -71,7 +72,7 @@ def hubkeys(cloud_token):  # pragma: no cover
         dict: Map of hub_id: hub_token pairs.
     """
     headers = {'Authorization': cloud_token}
-    response = requests.get(cloudBase + 'user/hubkeys', headers=headers)
+    response = session.get(cloudBase + 'user/hubkeys', headers=headers)
     if response.status_code == 200:
         return json.loads(response.text)
     else:
@@ -88,7 +89,7 @@ def refreshsession(cloud_token):  # pragma: no cover
         str: New cloud remote authentication token. Not automatically stored into state.
     """
     headers = {'Authorization': cloud_token}
-    response = requests.get(cloudBase + 'user/refreshsession', headers=headers)
+    response = session.get(cloudBase + 'user/refreshsession', headers=headers)
     if response.status_code == 200:
         return response.text
     else:
@@ -110,8 +111,8 @@ def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):  # pragma: 
 
     headers = {'Authorization': cloud_token, 'X-Hub-Key': hub_token}
     if payload:
-        response = requests.put(cloudBase + 'hub/remote' + apicall, headers=headers, data=payload)
+        response = session.put(cloudBase + 'hub/remote' + apicall, headers=headers, data=payload)
     else:
-        response = requests.get(cloudBase + 'hub/remote' + apicall, headers=headers)
+        response = session.get(cloudBase + 'hub/remote' + apicall, headers=headers)
 
     return response
