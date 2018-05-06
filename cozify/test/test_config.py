@@ -23,6 +23,14 @@ def test_config_XDG_env(tmp_hub):
 
 
 @pytest.mark.logic
+def test_config_state_copy(tmp_hub):
+    with tempfile.NamedTemporaryFile() as tf:
+        prev_state = config.state.items('Cloud')
+        config.set_state_path(tf.name, copy_current=True)
+        assert prev_state == config.state.items('Cloud')
+
+
+@pytest.mark.logic
 def test_config_XDG_basedir(tmp_hub):
     # using mktemp deliberately to let _initXDG create it
     td = tempfile.mktemp()
