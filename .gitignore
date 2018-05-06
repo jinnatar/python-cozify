@@ -9,3 +9,4 @@ prof/
 .pytest_cache/
 .coverage
 .tox
+__pycache__/
