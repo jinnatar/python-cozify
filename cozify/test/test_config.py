@@ -35,3 +35,13 @@ def test_config_XDG_basedir(tmp_hub):
 @pytest.mark.logic
 def test_config_version(tmp_hub):
     assert config.version() == tmp_hub.meta_version
+
+
+@pytest.mark.logic
+def test_config_version_cold(tmp_hub):
+    del config.state['meta']['version']
+    config.commit()
+    assert config.version() == 1
+    del config.state['meta']
+    config.commit()
+    assert config.version() == 1
