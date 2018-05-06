@@ -8,7 +8,7 @@ def main():
     config.setStatePath(tmp)
 
     assert cloud.authenticate()
-    config.dump_state()
+    config.dump()
     print(hub.tz())
     os.remove(tmp)
 

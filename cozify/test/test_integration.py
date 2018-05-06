@@ -29,7 +29,7 @@ def test_integration_ping_autorenew(live_hub, live_cloud):
 
 @pytest.mark.live
 def test_integration_remote_match(live_cloud, live_hub):
-    config.dump_state()
+    config.dump()
     live_hub.ping()
     local_tz = live_hub.tz()
     remote_tz = live_hub.tz(remote=True)

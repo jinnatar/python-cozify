@@ -72,7 +72,7 @@ def setStatePath(filepath=_initXDG(), copy_current=False):
         state = _initState(state_file)
 
 
-def dump_state():
+def dump():
     """Print out current state file to stdout. Long values are truncated since this is only for visualization.
     """
     for section in state.sections():

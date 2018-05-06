@@ -45,7 +45,7 @@ def live_cloud():
 def tmp_hub(tmp_cloud):
     with Tmp_hub(tmp_cloud) as hub_obj:
         print('Tmp hub state for testing:')
-        config.dump_state()
+        config.dump()
         yield hub_obj
 
 
@@ -53,7 +53,7 @@ def tmp_hub(tmp_cloud):
 def live_hub():
     config.setStatePath()  # default config assumed to be live
     print('Live hub state for testing:')
-    config.dump_state()  # dump state so it's visible in failed test output
+    config.dump()  # dump state so it's visible in failed test output
     from cozify import hub
     yield hub
 
