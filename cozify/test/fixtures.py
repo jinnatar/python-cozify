@@ -21,7 +21,7 @@ def tmp_cloud():
     obj.iso_now = obj.now.isoformat().split(".")[0]
     obj.yesterday = obj.now - datetime.timedelta(days=1)
     obj.iso_yesterday = obj.yesterday.isoformat().split(".")[0]
-    config.setStatePath(obj.configpath)
+    config.set_state_path(obj.configpath)
     from cozify import cloud
     cloud._setAttr('email', obj.email)
     cloud._setAttr('remotetoken', obj.token)
@@ -34,10 +34,10 @@ def tmp_cloud():
 @pytest.fixture
 def live_cloud():
     configfile, configpath = tempfile.mkstemp(suffix='live_cloud')
-    config.setStatePath(configpath, copy_current=True)
+    config.set_state_path(configpath, copy_current=True)
     from cozify import cloud
     yield cloud
-    config.setStatePath()
+    config.set_state_path()
     os.remove(configpath)
 
 
@@ -51,7 +51,7 @@ def tmp_hub(tmp_cloud):
 
 @pytest.fixture()
 def live_hub():
-    config.setStatePath()  # default config assumed to be live
+    config.set_state_path()  # default config assumed to be live
     print('Live hub state for testing:')
     config.dump()  # dump state so it's visible in failed test output
     from cozify import hub
@@ -110,7 +110,7 @@ class Tmp_hub():
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        config.setStatePath()
+        config.set_state_path()
 
     def devices(self):
         return dev.device_ids, dev.devices

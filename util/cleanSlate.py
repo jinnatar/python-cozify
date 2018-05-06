@@ -5,7 +5,7 @@ from cozify import config, cloud, hub
 
 def main():
     fh, tmp = tempfile.mkstemp()
-    config.setStatePath(tmp)
+    config.set_state_path(tmp)
 
     assert cloud.authenticate()
     config.dump()

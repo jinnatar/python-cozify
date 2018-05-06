@@ -66,7 +66,7 @@ authenticate with a non-default state storage
 .. code:: python
 
     from cozify import cloud, config
-    config.setStatePath('/tmp/testing-state.cfg')
+    config.set_state_path('/tmp/testing-state.cfg')
     cloud.authenticate()
     # authentication and other useful data is now stored in the defined location instead of ~/.config/python-cozify/python-cozify.cfg
     # you could also use the environment variable XDG_CONFIG_HOME to override where config files are stored

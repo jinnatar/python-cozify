@@ -1,14 +1,33 @@
 """Module for handling consistent state storage.
 
 Attributes:
-    state_file(str): file path where state storage is kept. By default XDG conventions are used. (Most likely ~/.config/python-cozify/python-cozify.cfg)
+    state_path(str): file path where state storage is kept. By default XDG conventions are used. (Most likely ~/.config/python-cozify/python-cozify.cfg)
     state(configparser.ConfigParser): State object used for in-memory state. By default initialized with _initState.
+    latest_version(int): Current up to date version number. Anything encountered lower than this will go through autoconversion.
 """
 
 import configparser
 import os
 import datetime
 from absl import logging
+
+# anything below 2 was not versioned
+latest_version = 2
+
+
+def version(new_version=None):
+    """Return or manipulate current config version.
+
+    Args:
+        new_version(int): New version number to set. You probably don't want to do this!
+    """
+    global state
+
+    if 'meta' not in state:
+        state['meta'] = {}
+    if 'version' not in state['meta']:
+        state['meta']['version'] = 1  # version not set, assume it to be ancient
+    commit()
 
 
 def commit(tmpstate=None):
@@ -17,28 +36,30 @@ def commit(tmpstate=None):
     Args:
         tmpstate(configparser.ConfigParser): State object to store instead of default state.
     """
-    global state_file
+    global state_path
     if tmpstate is None:
         global state
         tmpstate = state
-    with open(state_file, 'w') as cf:
+    with open(state_path, 'w') as cf:
         tmpstate.write(cf)
 
 
-def setStatePath(filepath=_initXDG(), copy_current=False):
+def set_state_path(filepath=None, copy_current=False):
     """Set state storage path. Useful for example for testing without affecting your normal state. Call with no arguments to reset back to autoconfigured location.
 
     Args:
         filepath(str): file path to use as new storage location. Defaults to XDG defined path.
         copy_current(bool): Instead of initializing target file, dump previous state into it.
     """
-    global state_file
+    if filepath is None:
+        filepath = _initXDG()
+    global state_path
     global state
-    state_file = filepath
+    state_path = filepath
     if copy_current:
         commit()
     else:
-        state = _initState(state_file)
+        state = _initState(state_path)
 
 
 def dump():
@@ -61,21 +82,21 @@ def _iso_now():
     return datetime.datetime.now().isoformat().split(".")[0]
 
 
-def _initState(state_file):
+def _initState(state_path):
     """Initialize state on cold start. Any stored state is read in or a new basic state is initialized.
 
     Args:
-        state_file(str): State storage filepath to attempt to read from.
+        state_path(str): State storage filepath to attempt to read from.
     Returns:
         configparser.ConfigParser: State object.
     """
     # if we can read it, read it in, otherwise create empty file
     state = configparser.ConfigParser(allow_no_value=True)
     try:
-        cf = open(state_file, 'r')
+        cf = open(state_path, 'r')
     except IOError:
-        cf = open(state_file, 'w+')
-        os.chmod(state_file, 0o600)  # set to user readwrite only to protect tokens
+        cf = open(state_path, 'w+')
+        os.chmod(state_path, 0o600)  # set to user readwrite only to protect tokens
     else:
         state.read_file(cf)
 
@@ -113,10 +134,10 @@ def _initXDG():
         logging.debug('XDG local dir does not exist, creating: {0}'.format(config_dir))
         os.mkdir(config_dir, 0o0700)
 
-    state_file = "%s/python-cozify.cfg" % config_dir
-    logging.debug('state_file determined to be: {0}'.format(state_file))
-    return state_file
+    state_path = "%s/python-cozify.cfg" % config_dir
+    logging.debug('state_path determined to be: {0}'.format(state_path))
+    return state_path
 
 
-state_file = _initXDG()
-state = _initState(state_file)
+state_path = _initXDG()
+state = _initState(state_path)

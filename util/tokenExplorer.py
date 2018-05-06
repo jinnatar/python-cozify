@@ -6,7 +6,7 @@ from cozify import hub, cloud, config
 
 
 def main(statepath):
-    config.setStatePath(statepath)
+    config.set_state_path(statepath)
 
     cloud_token = cloud.token()
     hub_id = hub.default()
