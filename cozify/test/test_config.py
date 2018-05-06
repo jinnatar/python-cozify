@@ -30,3 +30,8 @@ def test_config_XDG_basedir(tmp_hub):
     assert config._initXDG()
     assert os.path.isdir(td)
     os.removedirs(td + '/python-cozify')
+
+
+@pytest.mark.logic
+def test_config_version(tmp_hub):
+    assert config.version() == tmp_hub.meta_version

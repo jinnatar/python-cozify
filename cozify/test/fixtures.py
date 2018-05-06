@@ -94,6 +94,7 @@ class Tmp_hub():
     """
 
     def __init__(self, tmp_cloud):
+        self.meta_version = 137
         self.id = 'deadbeef-aaaa-bbbb-cccc-tmphubdddddd'
         self.name = 'HubbyMcHubFace'
         self.host = '127.0.0.1'
@@ -102,6 +103,8 @@ class Tmp_hub():
 
     @pytest.mark.usefixtures("tmp_cloud")
     def __enter__(self):
+        config.state.add_section('meta')
+        config.state['meta']['version'] = str(self.meta_version)
         config.state.add_section(self.section)
         config.state[self.section]['hubname'] = self.name
         config.state[self.section]['host'] = self.host

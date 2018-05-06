@@ -19,15 +19,20 @@ def version(new_version=None):
     """Return or manipulate current config version.
 
     Args:
-        new_version(int): New version number to set. You probably don't want to do this!
+        new_version(int): New version number to assume for the current config. You probably don't want to do this!
     """
     global state
 
     if 'meta' not in state:
         state['meta'] = {}
     if 'version' not in state['meta']:
-        state['meta']['version'] = 1  # version not set, assume it to be ancient
-    commit()
+        state['meta']['version'] = '1'  # version not set, assume it to be ancient
+        commit()
+    if new_version is not None and isinstance(new_version, int):
+        state['meta']['version'] = str(new_version)
+        commit()
+
+    return state.getint('meta', 'version')
 
 
 def commit(tmpstate=None):
