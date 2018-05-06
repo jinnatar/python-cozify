@@ -25,3 +25,13 @@ def test_integration_ping_autorenew(live_hub, live_cloud):
     live_cloud._setAttr('last_refresh', ancient_date, commit=False)
     assert live_hub.ping(autorefresh=True)
     assert live_cloud._getAttr('last_refresh') != ancient_date, 'cloud was not autorefreshed'
+
+
+@pytest.mark.live
+def test_integration_remote_match(live_cloud, live_hub):
+    config.dump_state()
+    live_hub.ping()
+    local_tz = live_hub.tz()
+    remote_tz = live_hub.tz(remote=True)
+
+    assert local_tz == remote_tz
