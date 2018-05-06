@@ -1,4 +1,7 @@
 """Module for handling Cozify Cloud highlevel operations.
+
+Attributes:
+    token_expiry(datetime.timedelta): timedelta object for duration how often cloud_token will be considered valid for refresh.
 """
 
 from absl import logging
@@ -10,8 +13,17 @@ from . import cloud_api
 
 from .Error import APIError, AuthenticationError
 
+# 1 day is a very conservative value, at current tokens seem to actually be valid for 28 days.
+# We err heavily on the side of "too often" since the price of missing the window is very high.
+token_expiry = datetime.timedelta(days=1)
 
-def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
+
+def authenticate(trustCloud=True,
+                 trustHub=True,
+                 remote=False,
+                 autoremote=True,
+                 autorenew=True,
+                 expiry=None):
     """Authenticate with the Cozify Cloud and Hub.
 
     Interactive only when absolutely needed, mostly on the first run.
@@ -30,6 +42,8 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
         trustHub(bool): Trust current stored state of hub auth. Default True.
         remote(bool): Treat a hub as being outside the LAN, i.e. calls will be routed via the Cozify Cloud remote call system. Defaults to False.
         autoremote(bool): Autodetect hub LAN presence and flip to remote mode if needed. Defaults to True.
+        autorefresh(bool): Autorefresh cloud and hub tokens if they're no longer valid but can still be rescued. Defaults to True.
+        expiry(datetime.timedelta): timedelta object for duration how often cloud_token will be auto-refreshed. Defaults to cloud.token_expiry
 
     Returns:
         bool: True on authentication success. Failure will result in an exception.
@@ -125,8 +139,8 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             # store Hub data under it's named section
             hub._setAttr(hub_id, 'host', hub_ip, commit=False)
             hub._setAttr(hub_id, 'hubName', hub_name, commit=False)
-            hub.token(hub_id=hub_id, new_token=hub_token)
-            hub.remote(hub_id=hub_id, new_state=remote)
+            hub.token(hub_id=hub_id, new_token=hub_token, commit=False)
+            hub.remote(hub_id=hub_id, new_state=remote, commit=True)
     return True
 
 
@@ -138,7 +152,7 @@ def resetState():
     """
 
     config.state['Cloud'] = {}
-    config.stateWrite()
+    config.commit()
 
 
 def ping(autorefresh=True, expiry=None):
@@ -146,7 +160,7 @@ def ping(autorefresh=True, expiry=None):
 
     Args:
         refresh(bool): Wether to perform a autorefresh check after a successful ping. Defaults to True.
-        expiry(datetime.timedelta): timedelta object for duration how often cloud_token will be auto-refreshed when cloud.ping() is called. If not set, cloud.refresh() defaults are used.
+        expiry(datetime.timedelta): timedelta object for duration how often cloud_token will be auto-refreshed when cloud.ping() is called. Defaults to cloud.token_expiry()
 
     Returns:
         bool: validity of stored token.
@@ -161,14 +175,11 @@ def ping(autorefresh=True, expiry=None):
         else:
             raise
     else:
-        if expiry:  # pragma: no cover
-            refresh(expiry=expiry)
-        else:  # let refresh use it's default expiry
-            refresh()
+        refresh(expiry=expiry)
         return True
 
 
-def refresh(force=False, expiry=datetime.timedelta(days=1)):
+def refresh(force=False, expiry=None):
     """Renew current cloud token and store new token in state.
 
     This call will only succeed if the current cloud token is still valid.
@@ -176,11 +187,13 @@ def refresh(force=False, expiry=datetime.timedelta(days=1)):
 
     Args:
         force(bool): Set to True to always perform a refresh regardless of time passed since previous refresh.
-        expiry(datetime.timedelta): timedelta object for duration of refresh expiry. Defaults to one day.
+        expiry(datetime.timedelta): timedelta object for duration of refresh expiry. Defaults to cloud.token_expiry
 
     Returns:
         bool: Success of refresh attempt, True also when expiry wasn't over yet even though no refresh was performed.
     """
+    if expiry is None:  # use global default
+        expiry = token_expiry
     if _need_refresh(force, expiry):
         try:
             cloud_token = cloud_api.refreshsession(token())
@@ -192,13 +205,12 @@ def refresh(force=False, expiry=datetime.timedelta(days=1)):
                 raise
         else:
             _setAttr('last_refresh', config._iso_now(), commit=False)
-            token(cloud_token)
+            token(cloud_token, commit=True)
             logging.info('cloud_token has been successfully refreshed.')
 
             return True
     else:
-        logging.debug(
-            "Not refreshing token, it's not old enough yet. Limit is: {0})".format(expiry))
+        logging.debug("No token refresh, not expired yet. Limit is: {0})".format(expiry))
 
 
 def _need_refresh(force, expiry):
@@ -323,7 +335,7 @@ def _setAttr(attr, value, commit=True):
                     attr, section))
         config.state[section][attr] = value
         if commit:
-            config.stateWrite()
+            config.commit()
     else:  # pragma: no cover
         logging.warning('Section {0} not found in state.'.format(section))
         raise AttributeError
@@ -338,14 +350,18 @@ def _isAttr(attr):
     return attr in config.state['Cloud'] and config.state['Cloud'][attr]
 
 
-def token(new_token=None):
+def token(new_token=None, commit=True):
     """Get currently used cloud_token or set a new one.
+
+    Args:
+        new_token(str): New cloud_token to store. Use cautiously since an invalid token means interactive recovery.
+        commit(bool): Wether to commit the new value to persistent storage immediately or not.
 
     Returns:
         str: Cloud remote authentication token.
     """
     if new_token:
-        _setAttr('remotetoken', new_token)
+        _setAttr('remotetoken', new_token, commit=commit)
     return _getAttr('remotetoken')
 
 

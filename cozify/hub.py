@@ -275,12 +275,13 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
 ### Hub modifiers ###
 
 
-def remote(hub_id=None, new_state=None):
+def remote(hub_id=None, new_state=None, commit=True):
     """Get remote status of hub or set a new value for it. Always returns current state at the end.
 
     Args:
         **hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub. Defaults to hub.default()
         new_state(bool): New remoteness state to set for hub. True means remote. Defaults to None when only the current value will be returned.
+        commit(bool): True to commit new state after set. Defaults to True.
 
     Returns:
         bool: True for a hub considered remote.
@@ -291,16 +292,17 @@ def remote(hub_id=None, new_state=None):
         if not isinstance(new_state, bool):
             raise ValueError('Expected boolean as new value of remote, got {0}'.format(
                 type(new_state)))
-        _setAttr(hub_id, 'remote', new_state)
+        _setAttr(hub_id, 'remote', new_state, commit=commit)
     return _getAttr(hub_id, 'remote', default=False, boolean=True)
 
 
-def autoremote(hub_id=None, new_state=None):
+def autoremote(hub_id=None, new_state=None, commit=True):
     """Get autoremote status of hub or set a new value for it. Always returns current state at the end.
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub. Defaults to hub.default()
         new_state(bool): New autoremoteness state to set for hub. True means remote will be automanaged. Defaults to None when only the current value will be returned.
+        commit(bool): True to commit new state after set. Defaults to True.
 
     Returns:
         bool: True for a hub with autoremote enabled.
@@ -311,7 +313,7 @@ def autoremote(hub_id=None, new_state=None):
         if not isinstance(new_state, bool):
             raise ValueError('Expected boolean as new value of autoremote, got {0}'.format(
                 type(new_state)))
-        _setAttr(hub_id, 'autoremote', new_state)
+        _setAttr(hub_id, 'autoremote', new_state, commit=commit)
     return _getAttr(hub_id, 'autoremote', default=True, boolean=True)
 
 
@@ -395,11 +397,12 @@ def host(hub_id=None):
     return _getAttr(hub_id, 'host')
 
 
-def token(hub_id=None, new_token=None):
+def token(hub_id=None, new_token=None, commit=True):
     """Get hub_token or set a new value for it.
 
     Args:
         hub_id(str): Id of hub to query. The id is a string of hexadecimal sections used internally to represent a hub.
+        commit(bool): True to commit new state after set. Defaults to True.
 
     Returns:
         str: Hub authentication token.
@@ -407,7 +410,7 @@ def token(hub_id=None, new_token=None):
     if hub_id is None:
         hub_id = default()
     if new_token:
-        _setAttr(hub_id, 'hubtoken', new_token)
+        _setAttr(hub_id, 'hubtoken', new_token, commit=commit)
     return _getAttr(hub_id, 'hubtoken')
 
 
@@ -505,7 +508,7 @@ def _setAttr(hub_id, attr, value, commit=True):
                     attr, section))
         config.state[section][attr] = value
         if commit:
-            config.stateWrite()
+            config.commit()
     else:
         logging.warning('Section {0} not found in state.'.format(section))
         raise AttributeError

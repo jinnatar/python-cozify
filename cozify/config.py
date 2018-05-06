@@ -42,7 +42,7 @@ def _initXDG():
     return state_file
 
 
-def stateWrite(tmpstate=None):
+def commit(tmpstate=None):
     """Write current state to file storage.
 
     Args:
@@ -67,7 +67,7 @@ def setStatePath(filepath=_initXDG(), copy_current=False):
     global state
     state_file = filepath
     if copy_current:
-        stateWrite()
+        commit()
     else:
         state = _initState(state_file)
 
@@ -114,7 +114,7 @@ def _initState(state_file):
     for key in ['Cloud', 'Hubs']:
         if key not in state:
             state[key] = {}
-    stateWrite(state)
+    commit(state)
     return state
 
 
