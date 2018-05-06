@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import pytest
 
-from cozify import hub
+from cozify import hub, config
 from cozify.test import debug
-from cozify.test.fixtures import *
+from cozify.test.fixtures import tmp_hub, live_hub, tmp_cloud
 from cozify.Error import APIError
 
 
