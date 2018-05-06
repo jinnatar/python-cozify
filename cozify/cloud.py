@@ -22,7 +22,7 @@ def authenticate(trustCloud=True,
                  trustHub=True,
                  remote=False,
                  autoremote=True,
-                 autorenew=True,
+                 autorefresh=True,
                  expiry=None):
     """Authenticate with the Cozify Cloud and Hub.
 
@@ -76,6 +76,9 @@ def authenticate(trustCloud=True,
         _setAttr('remoteToken', cloud_token, commit=True)
     else:
         # cloud_token already fine, let's just use it
+        if autorefresh:
+            logging.debug('cloud.authenticate attempting token refresh')
+            refresh(expiry=expiry)
         cloud_token = _getAttr('remoteToken')
 
     if _need_hub_token(trustHub):

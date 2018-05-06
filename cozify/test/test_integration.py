@@ -8,7 +8,7 @@ from cozify.Error import APIError
 
 
 @pytest.mark.destructive
-def test_integration_ping_autorenew(live_hub, live_cloud):
+def test_integration_ping_autorefresh(live_hub, live_cloud):
     # make sure state is as expected before mangling it
     assert live_hub.ping()
     assert live_cloud.ping()
@@ -21,6 +21,7 @@ def test_integration_ping_autorenew(live_hub, live_cloud):
         hub.tz()
     assert live_hub.ping(autorefresh=True)
 
+    live_hub.token(hub_id=hub_id, new_token='destroyed-on-purpose-by-destructive-integration-test')
     ancient_date = '2000-01-01T00:00:00'
     live_cloud._setAttr('last_refresh', ancient_date, commit=False)
     assert live_hub.ping(autorefresh=True)
