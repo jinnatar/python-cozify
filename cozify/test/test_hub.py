@@ -7,12 +7,6 @@ from cozify.test.fixtures import tmp_hub, live_hub, tmp_cloud
 from cozify.Error import APIError
 
 
-@pytest.mark.logic
-def test_hub_tmp_hub(tmp_hub):
-    assert config.state['Cloud']['email'] == 'example@example.com'
-    assert config.state['Hubs']['default'] == 'deadbeef-aaaa-bbbb-cccc-tmphubdddddd'
-
-
 @pytest.mark.live
 def test_hub_tz(live_hub):
     assert hub.ping()
