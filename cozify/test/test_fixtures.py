@@ -7,6 +7,19 @@ from cozify.test.fixtures import tmp_hub, live_hub, tmp_cloud, live_cloud
 from cozify.Error import APIError
 
 
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    print('Before fixture:')
+    config.dump()
+    prev_default = config.state['Hubs']['default']
+    prev_email = config.state['Cloud']['email']
+    yield
+    print('After fixture:')
+    config.dump()
+    assert prev_default == config.state['Hubs']['default']
+    assert prev_email == config.state['Cloud']['email']
+
+
 @pytest.mark.logic
 def test_fixture_tmp_hub(tmp_hub):
     assert config.state['Cloud']['email'] == 'example@example.com'
