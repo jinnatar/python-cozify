@@ -72,7 +72,7 @@ def refreshsession(cloud_token):  # pragma: no cover
     Returns:
         str: New cloud remote authentication token. Not automatically stored into state.
     """
-    return = http.get(base + 'user/refreshsession', token=cloud_token, return_text=True)
+    return http.get(base + 'user/refreshsession', token=cloud_token, return_text=True)
 
 
 def remote(*, cloud_token, hub_token, apicall, method=http.get, params=None, payload=None,
