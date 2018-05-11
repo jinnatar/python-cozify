@@ -316,8 +316,7 @@ def _getAttr(attr):
     if section in config.state and attr in config.state[section]:
         return config.state[section][attr]
     else:
-        logging.warning('Cloud attribute {0} not found in state.'.format(attr))
-        raise AttributeError
+        raise AttributeError('Cloud attribute {0} not found in state.'.format(attr))
 
 
 def _setAttr(attr, value, commit=True):
@@ -338,8 +337,7 @@ def _setAttr(attr, value, commit=True):
         if commit:
             config.commit()
     else:  # pragma: no cover
-        logging.warning('Section {0} not found in state.'.format(section))
-        raise AttributeError
+        raise AttributeError('Section {0} not found in state.'.format(section))
 
 
 def _isAttr(attr):
