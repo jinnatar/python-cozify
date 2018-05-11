@@ -17,6 +17,7 @@ api_path = '/cc/1.9'
 def base(*, host, port=8893, path=api_path, **kwargs):
     return 'http://{0}:{1}{2}'.format(host, port, path)
 
+
 def hub(**kwargs):
     """1:1 implementation of /hub API call. For kwargs see cozify.hub_api.get()
 
@@ -32,7 +33,8 @@ def tz(**kwargs):
     Returns:
         str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
-    return http.get(base(**kwargs) + '/hub/tz', token=kwargs['hub_token'] return_text=True, **kwargs)
+    return http.get(
+        base(**kwargs) + '/hub/tz', token=kwargs['hub_token'], return_text=True, **kwargs)
 
 
 def colors(**kwargs):
@@ -79,7 +81,12 @@ def devices_command(command, **kwargs):
     """
     command = json.dumps(command)
     logging.debug('command json to send: {0}'.format(command))
-    return http.put(base(**kwargs) + '/devices/command', command, token=kwargs['hub_token'], return_text=True, **kwargs)
+    return http.put(
+        base(**kwargs) + '/devices/command',
+        command,
+        token=kwargs['hub_token'],
+        return_text=True,
+        **kwargs)
 
 
 def devices_command_generic(*, device_id, command=None, request_type, **kwargs):
