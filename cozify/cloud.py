@@ -102,7 +102,8 @@ def authenticate(trustCloud=True,
             # if we're remote, we didn't get a valid ip
             if not localHubs:
                 logging.info('No local Hubs detected, changing to remote mode.')
-                hub_info = hub_api.hub(remote=True, cloud_token=cloud_token, hub_token=hub_token)
+                hub_info = hub_api.hub(
+                    remote=True, cloud_token=cloud_token, hub_token=hub_token, host=None)
                 # if the hub wants autoremote we flip the state. If this is the first time the hub is seen, act as if autoremote=True, remote=False
                 if not hub.exists(hub_id) or (hub.autoremote(hub_id=hub_id) and
                                               not hub.remote(hub_id=hub_id)):
