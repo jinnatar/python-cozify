@@ -19,8 +19,8 @@ def requestlogin(email):  # pragma: no cover
         email(str): Email address connected to Cozify account.
     """
 
-    payload = {'email': email}
-    http.post(base + 'user/requestlogin', token=None, payload=payload)
+    params = {'email': email}
+    http.post(base + 'user/requestlogin', token=None, params=params)
 
 
 def emaillogin(email, otp):  # pragma: no cover
@@ -76,7 +76,8 @@ def refreshsession(cloud_token):  # pragma: no cover
     return response.text
 
 
-def remote(*, cloud_token, hub_token, apicall, method=http.get, payload=None, **kwargs):
+def remote(*, cloud_token, hub_token, apicall, method=http.get, params=None, payload=None,
+           **kwargs):
     """1:1 implementation of 'hub/remote'
 
     Args:
@@ -84,6 +85,7 @@ def remote(*, cloud_token, hub_token, apicall, method=http.get, payload=None, **
         hub_token(str): Hub authentication token.
         apicall(str): Full API call that would normally go directly to hub, e.g. '/cc/1.6/hub/colors'
         method(function): cozify.http method to use, e.g. http.put. Defaults to http.get.
+        params(dict): Any additional URL parameters to pass.
         payload(str): json string to use as payload, changes method to PUT.
 
     Returns:
@@ -102,5 +104,6 @@ def remote(*, cloud_token, hub_token, apicall, method=http.get, payload=None, **
         token=cloud_token,
         headers=headers,
         payload=payload,
+        params=params,
         return_data=False,
         **kwargs)

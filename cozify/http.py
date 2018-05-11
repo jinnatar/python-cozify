@@ -10,13 +10,14 @@ from requests.exceptions import RequestException
 
 session = requests.Session()
 
-def get(call, *, token, headers=None, **kwargs):
+def get(call, *, token, headers=None, params=None, **kwargs):
     """GET method for calling hub or cloud APIs.
 
     Args:
         call(str): Full API URL.
         token(str): Either hub_token or cloud_token depending on target of call.
         headers(dict): Any additional headers to add to the call.
+        params(dict): Any additional URL parameters to pass.
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
@@ -25,10 +26,11 @@ def get(call, *, token, headers=None, **kwargs):
         call=call,
         token=token,
         headers=headers,
+        params=params,
         **kwargs)
 
 
-def put(call, payload, *, token, headers=None, **kwargs):
+def put(call, payload, *, token, headers=None, params=None, **kwargs):
     """PUT method for calling hub or cloud APIs.
 
     Args:
@@ -36,6 +38,7 @@ def put(call, payload, *, token, headers=None, **kwargs):
         payload(str): json string to push out as the payload.
         token(str): Either hub_token or cloud_token depending on target of call.
         headers(dict): Any additional headers to add to the call.
+        params(dict): Any additional URL parameters to pass.
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
@@ -44,10 +47,11 @@ def put(call, payload, *, token, headers=None, **kwargs):
         call=call,
         token=token,
         headers=headers,
+        params=params,
         payload=payload,
         **kwargs)
 
-def post(call, payload, *, token, headers=None, **kwargs):
+def post(call, *, token, headers=None, payload=None, params=None, **kwargs):
     """POST method for calling hub our cloud APIs.
 
     Args:
@@ -55,6 +59,7 @@ def post(call, payload, *, token, headers=None, **kwargs):
         payload(str): json string to push out as the payload.
         token(str): Either hub_token or cloud_token depending on target of call.
         headers(dict): Any additional headers to add to the call.
+        params(dict): Any additional URL parameters to pass.
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
@@ -63,10 +68,11 @@ def post(call, payload, *, token, headers=None, **kwargs):
         call=call,
         token=token,
         headers=headers,
+        params=params,
         payload=payload,
         **kwargs)
 
-def _call(*, call, method, token, headers=None, payload=None, return_data=True, **kwargs):
+def _call(*, call, method, token, headers=None, params=None, payload=None, return_data=True, **kwargs):
     """Backend for get & put
 
     Args:
@@ -74,6 +80,7 @@ def _call(*, call, method, token, headers=None, payload=None, return_data=True, 
         method(function): session.get|put function to use for call.
         token(str): Either hub_token or cloud_token depending on target of call.
         headers(dict): Any additional headers to add to the call.
+        params(dict): Any additional URL parameters to pass.
         payload(str): json string to push out as any potential payload.
         return_data(bool): Return only decoded data, not a requests.response object. Defaults to True.
         **remote(bool): If call is to be local or remote (bounced via cloud).
@@ -98,10 +105,10 @@ def _call(*, call, method, token, headers=None, payload=None, return_data=True, 
         if 'hub_token' not in kwargs:
             raise AttributeError('Asked to do remote call but no hub_token provided.')
         from . import cloud_api
-        response = cloud_api.remote(apicall=call, payload=payload, **kwargs)
+        response = cloud_api.remote(apicall=call, payload=payload, params=params **kwargs)
     else:  # direct call
         try:
-            response = method(call, headers=headers, data=payload)
+            response = method(call, headers=headers, data=payload, params=params)
         except RequestException as e:  # pragma: no cover
             raise APIError('connection failure', 'issues connection to \'{0}\': {1}'.format(call, e))
 
@@ -116,6 +123,7 @@ def _call(*, call, method, token, headers=None, payload=None, return_data=True, 
                        'API version outdated. Update python-cozify. %s - %s - %s' %
                        (response.reason, response.url, response.text))  # pragma: no cover
     else:
+        logging.debug('Failed call type: {2}, headers: {0}, params: {3} and payload: {1}'.format(headers, payload, method, params))
         raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url,
                                                                response.text))
 
