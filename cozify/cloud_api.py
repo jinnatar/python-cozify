@@ -36,7 +36,7 @@ def emaillogin(email, otp):  # pragma: no cover
 
     params = {'email': email, 'password': otp}
 
-    return http.post(base + 'user/emaillogin', token=None, params=params)
+    return http.post(base + 'user/emaillogin', token=None, params=params, return_text=True)
 
 
 def lan_ip():  # pragma: no cover
@@ -72,8 +72,7 @@ def refreshsession(cloud_token):  # pragma: no cover
     Returns:
         str: New cloud remote authentication token. Not automatically stored into state.
     """
-    response = http.get(base + 'user/refreshsession', token=cloud_token, return_data=False)
-    return response.text
+    return = http.get(base + 'user/refreshsession', token=cloud_token, return_text=True)
 
 
 def remote(*, cloud_token, hub_token, apicall, method=http.get, params=None, payload=None,
@@ -105,5 +104,5 @@ def remote(*, cloud_token, hub_token, apicall, method=http.get, params=None, pay
         headers=headers,
         payload=payload,
         params=params,
-        return_data=False,
+        return_raw=True,
         **kwargs)

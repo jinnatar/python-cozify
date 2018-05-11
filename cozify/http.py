@@ -72,7 +72,7 @@ def post(call, *, token, headers=None, payload=None, params=None, **kwargs):
         payload=payload,
         **kwargs)
 
-def _call(*, call, method, token, headers=None, params=None, payload=None, return_data=True, **kwargs):
+def _call(*, call, method, token, headers=None, params=None, payload=None, return_json=True, return_text=False, return_raw=False, **kwargs):
     """Backend for get & put
 
     Args:
@@ -82,7 +82,9 @@ def _call(*, call, method, token, headers=None, params=None, payload=None, retur
         headers(dict): Any additional headers to add to the call.
         params(dict): Any additional URL parameters to pass.
         payload(str): json string to push out as any potential payload.
-        return_data(bool): Return only decoded data, not a requests.response object. Defaults to True.
+        return_json(bool): Return data interpreted as json. Defaults to True.
+        return_text(bool): Return data as plain text. Defaults to False.
+        return_raw(bool): Return requests.request object. Defaults to False.
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **hub_token(str): Hub authentication token.
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
@@ -114,10 +116,12 @@ def _call(*, call, method, token, headers=None, params=None, payload=None, retur
 
     # evaluate response, wether it was remote or local
     if response.status_code == 200:
-        if return_data:
-            return response.json()
-        else:
+        if return_raw:
             return response
+        if return_text:
+            return response.text
+        if return_json:
+            return response.json()
     elif response.status_code == 410:
         raise APIError(response.status_code,
                        'API version outdated. Update python-cozify. %s - %s - %s' %
