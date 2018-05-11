@@ -2,114 +2,20 @@
 
 Attributes:
     api_path(str): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
-    session(requests.Session): Global session object for doing keep-alive connections.
 """
 
 import requests, json, logging
 
-from cozify import cloud_api
+from cozify import cloud_api, http
 
 from .Error import APIError
 from requests.exceptions import RequestException
 
 api_path = '/cc/1.9'
-session = requests.Session()
 
 
-def _getBase(host, port=8893):
-    return 'http://{0}:{1}'.format(host, port)
-
-
-def get(call, hub_token_header=True, base=api_path, **kwargs):
-    """GET method for calling hub API.
-
-    Args:
-        call(str): API path to call after api_path, needs to include leading /.
-        hub_token_header(bool): Set to False to omit hub_token usage in call headers. Most calls need this.
-        base(str): Base path to call from API instead of global api_path. Defaults to api_path. Most calls need the default.
-        **remote(bool): If call is to be local or remote (bounced via cloud).
-        **host(str): ip address or hostname of hub. Only needed if remote == False.
-        **hub_token(str): Hub authentication token.
-        **remote(bool): If call is to be local or remote (bounced via cloud).
-        **cloud_token(str): Cloud authentication token. Only needed if remote = True.
-    """
-    return _call(
-        method=session.get,
-        call='{0}{1}'.format(base, call),
-        hub_token_header=hub_token_header,
-        **kwargs)
-
-
-def put(call, payload, hub_token_header=True, base=api_path, **kwargs):
-    """PUT method for calling hub API.
-
-    Args:
-        call(str): API path to call after api_path, needs to include leading /.
-        payload(str): json string to push out as the payload.
-        hub_token_header(bool): Set to False to omit hub_token usage in call headers.
-        base(str): Base path to call from API instead of global api_path. Defaults to api_path. Most calls need the default.
-        **remote(bool): If call is to be local or remote (bounced via cloud).
-        **host(str): ip address or hostname of hub. Only needed if remote == False.
-        **hub_token(str): Hub authentication token.
-        **remote(bool): If call is to be local or remote (bounced via cloud).
-        **cloud_token(str): Cloud authentication token. Only needed if remote = True.
-    """
-    return _call(
-        method=session.put,
-        call='{0}{1}'.format(base, call),
-        hub_token_header=hub_token_header,
-        payload=payload,
-        **kwargs)
-
-
-def _call(*, call, method, hub_token_header, payload=None, **kwargs):
-    """Backend for get & put
-
-    Args:
-        call(str): Full API path to call.
-        method(function): session.get|put function to use for call.
-        payload(str): json string to push out as any potential payload.
-        hub_token_header(bool): Set to False to omit hub_token usage in call headers.
-        **remote(bool): If call is to be local or remote (bounced via cloud).
-        **host(str): ip address or hostname of hub. Only needed if remote == False.
-        **hub_token(str): Hub authentication token.
-        **remote(bool): If call is to be local or remote (bounced via cloud).
-        **cloud_token(str): Cloud authentication token. Only needed if remote = True.
-    """
-    response = None
-    headers = {}
-    if hub_token_header:
-        if 'hub_token' not in kwargs:
-            raise AttributeError('Asked to do a call to the hub but no hub_token provided.')
-        headers['Authorization'] = kwargs['hub_token']
-    if payload is not None:
-        headers['content-type'] = 'application/json'
-
-    if kwargs['remote']:  # remote call
-        if 'cloud_token' not in kwargs:
-            raise AttributeError('Asked to do remote call but no cloud_token provided.')
-        response = cloud_api.remote(apicall=call, payload=payload, **kwargs)
-    else:  # local call
-        if not kwargs['host']:
-            raise AttributeError(
-                'Local call but no hostname was provided. Either set keyword remote or host.')
-        try:
-            response = method(_getBase(host=kwargs['host']) + call, headers=headers, data=payload)
-        except RequestException as e:  # pragma: no cover
-            raise APIError('connection failure', 'issues connection to \'{0}\': {1}'.format(
-                kwargs['host'], e))
-
-    # evaluate response, wether it was remote or local
-    if response.status_code == 200:
-        return response.json()
-    elif response.status_code == 410:
-        raise APIError(response.status_code,
-                       'API version outdated. Update python-cozify. %s - %s - %s' %
-                       (response.reason, response.url, response.text))  # pragma: no cover
-    else:
-        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url,
-                                                               response.text))
-
+def base(*, host, port=8893, path=api_path, **kwargs):
+    return 'http://{0}:{1}{2}'.format(host, port, path)
 
 def hub(**kwargs):
     """1:1 implementation of /hub API call. For kwargs see cozify.hub_api.get()
@@ -117,7 +23,7 @@ def hub(**kwargs):
     Returns:
         dict: Hub state dict.
     """
-    return get('hub', base='/', hub_token_header=False, **kwargs)
+    return http.get(base(path='', **kwargs) + '/hub', token=None, **kwargs)
 
 
 def tz(**kwargs):
@@ -126,7 +32,7 @@ def tz(**kwargs):
     Returns:
         str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
-    return get('/hub/tz', **kwargs)
+    return http.get(base(**kwargs) + '/hub/tz', token=kwargs['hub_token'], **kwargs)
 
 
 def colors(**kwargs):
@@ -135,7 +41,7 @@ def colors(**kwargs):
     Returns:
         list: List of hexadecimal color codes of all defined custom colors.
     """
-    return get('/hub/colors', **kwargs)
+    return http.get(base(**kwargs) + '/hub/colors', token=kwargs['hub_token'], **kwargs)
 
 
 def lpd433devices(**kwargs):
@@ -144,7 +50,7 @@ def lpd433devices(**kwargs):
     Returns:
         list: List of dictionaries describing all 433MHz devices paired with hub.
     """
-    return get('/hub/433devices', **kwargs)
+    return http.get(base(**kwargs) + '/hub/433devices', token=kwargs['hub_token'], **kwargs)
 
 
 def devices(**kwargs):
@@ -159,7 +65,7 @@ def devices(**kwargs):
     if 'devs' in kwargs:
         return kwargs['devs']
 
-    return get('/devices', **kwargs)
+    return http.get(base(**kwargs) + '/devices', token=kwargs['hub_token'], **kwargs)
 
 
 def devices_command(command, **kwargs):
@@ -173,7 +79,7 @@ def devices_command(command, **kwargs):
     """
     command = json.dumps(command)
     logging.debug('command json to send: {0}'.format(command))
-    return put('/devices/command', command, **kwargs)
+    return http.put(base(**kwargs) + '/devices/command', command, token=kwargs['hub_token'], **kwargs)
 
 
 def devices_command_generic(*, device_id, command=None, request_type, **kwargs):

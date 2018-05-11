@@ -24,7 +24,7 @@ def authenticate(trustCloud=True,
                  autoremote=True,
                  autorefresh=True,
                  expiry=None):
-    """Authenticate with the Cozify Cloud and Hub.
+    """Authenticate with the Cozify Cloud and any Hubs found.
 
     Interactive only when absolutely needed, mostly on the first run.
     By default authentication is run selectively only for the portions needed.
@@ -87,9 +87,7 @@ def authenticate(trustCloud=True,
         hubkeys = cloud_api.hubkeys(
             cloud_token)  # get all registered hubs and their keys from the cloud.
         if not hubkeys:
-            logging.fatal(
-                'You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet.'
-            )
+            logging.error('You have not registered any hubs to Cozify.')
 
         # evaluate all returned Hubs and store them
         for hub_id, hub_token in hubkeys.items():

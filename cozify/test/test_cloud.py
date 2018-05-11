@@ -3,7 +3,7 @@
 import os, pytest, tempfile, datetime
 
 from cozify import cloud, config
-from cozify.test import debug
+from cozify.test import debug, state_verify
 from cozify.test.fixtures import tmp_cloud, live_cloud
 from cozify.Error import AuthenticationError
 

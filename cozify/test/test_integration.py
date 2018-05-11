@@ -2,7 +2,7 @@
 import pytest
 
 from cozify import hub, cloud
-from cozify.test import debug
+from cozify.test import debug, state_verify
 from cozify.test.fixtures import *
 from cozify.Error import APIError
 

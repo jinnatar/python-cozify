@@ -1,16 +1,15 @@
 """Module for handling Cozify Cloud API 1:1 functions
 
 Attributes:
-    cloudBase(str): API endpoint including version
-    session(requests.Session): Global session object for doing keep-alive connections.
+    base(str): API endpoint including version
 """
 
 import json, requests
-
+from absl import logging
+from . import http
 from .Error import APIError, AuthenticationError
 
-cloudBase = 'https://cloud2.cozify.fi/ui/0.2/'
-session = requests.Session()
+base = 'https://cloud2.cozify.fi/ui/0.2/'
 
 
 def requestlogin(email):  # pragma: no cover
@@ -21,9 +20,7 @@ def requestlogin(email):  # pragma: no cover
     """
 
     payload = {'email': email}
-    response = session.post(cloudBase + 'user/requestlogin', params=payload)
-    if response.status_code is not 200:
-        raise APIError(response.status_code, response.text)
+    http.post(base + 'user/requestlogin', token=None, payload=payload)
 
 
 def emaillogin(email, otp):  # pragma: no cover
@@ -39,11 +36,7 @@ def emaillogin(email, otp):  # pragma: no cover
 
     payload = {'email': email, 'password': otp}
 
-    response = session.post(cloudBase + 'user/emaillogin', params=payload)
-    if response.status_code == 200:
-        return response.text
-    else:
-        raise APIError(response.status_code, response.text)
+    return http.post(base + 'user/emaillogin', token=None, payload=payload)
 
 
 def lan_ip():  # pragma: no cover
@@ -55,11 +48,7 @@ def lan_ip():  # pragma: no cover
     Returns:
         list: List of Hub ip addresses.
     """
-    response = session.get(cloudBase + 'hub/lan_ip')
-    if response.status_code == 200:
-        return json.loads(response.text)
-    else:
-        raise APIError(response.status_code, response.text)
+    return http.get(base + 'hub/lan_ip', token=None)
 
 
 def hubkeys(cloud_token):  # pragma: no cover
@@ -71,12 +60,7 @@ def hubkeys(cloud_token):  # pragma: no cover
     Returns:
         dict: Map of hub_id: hub_token pairs.
     """
-    headers = {'Authorization': cloud_token}
-    response = session.get(cloudBase + 'user/hubkeys', headers=headers)
-    if response.status_code == 200:
-        return json.loads(response.text)
-    else:
-        raise APIError(response.status_code, response.text)
+    return http.get(base + 'user/hubkeys', token=cloud_token)
 
 
 def refreshsession(cloud_token):  # pragma: no cover
@@ -88,31 +72,35 @@ def refreshsession(cloud_token):  # pragma: no cover
     Returns:
         str: New cloud remote authentication token. Not automatically stored into state.
     """
-    headers = {'Authorization': cloud_token}
-    response = session.get(cloudBase + 'user/refreshsession', headers=headers)
-    if response.status_code == 200:
-        return response.text
-    else:
-        raise APIError(response.status_code, response.text)
+    response = http.get(base + 'user/refreshsession', token=cloud_token, return_data=False)
+    return response.text
 
 
-def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):  # pragma: no cover
+def remote(*, cloud_token, hub_token, apicall, method=http.get, payload=None, **kwargs):
     """1:1 implementation of 'hub/remote'
 
     Args:
         cloud_token(str): Cloud remote authentication token.
         hub_token(str): Hub authentication token.
         apicall(str): Full API call that would normally go directly to hub, e.g. '/cc/1.6/hub/colors'
+        method(function): cozify.http method to use, e.g. http.put. Defaults to http.get.
         payload(str): json string to use as payload, changes method to PUT.
 
     Returns:
         requests.response: Requests response object.
     """
+    headers = {'X-Hub-Key': hub_token}
 
-    headers = {'Authorization': cloud_token, 'X-Hub-Key': hub_token}
-    if payload:
-        response = session.put(cloudBase + 'hub/remote' + apicall, headers=headers, data=payload)
-    else:
-        response = session.get(cloudBase + 'hub/remote' + apicall, headers=headers)
-
-    return response
+    if 'cloud_token' not in kwargs:  # needed for the call
+        kwargs['cloud_token'] = cloud_token
+    if apicall.startswith('http'):  # full URL instead of only api path
+        import re
+        # strip out http(s)://0.0.0.0:0000
+        apicall = re.sub(r'^https?://.*?:[0-9]+', '', apicall)
+    return method(
+        base + 'hub/remote' + apicall,
+        token=cloud_token,
+        headers=headers,
+        payload=payload,
+        return_data=False,
+        **kwargs)

@@ -2,7 +2,7 @@
 import pytest
 
 from cozify import cloud, hub, hub_api, config
-from cozify.test import debug
+from cozify.test import debug, state_verify
 from cozify.test.fixtures import live_cloud, live_hub, ready_kwargs
 
 

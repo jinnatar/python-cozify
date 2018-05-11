@@ -27,8 +27,8 @@ def tmp_cloud():
     cloud._setAttr('remotetoken', obj.token)
     cloud._setAttr('last_refresh', obj.iso_yesterday)
     yield obj
+    config.set_state_path()
     os.remove(obj.configpath)
-    logging.error('exiting, tried to remove: {0}'.format(obj.configpath))
 
 
 @pytest.fixture
@@ -51,11 +51,16 @@ def tmp_hub(tmp_cloud):
 
 @pytest.fixture()
 def live_hub():
-    config.set_state_path()  # default config assumed to be live
-    print('Live hub state for testing:')
+    print('Live hub state before copy ({0}):'.format(config.state_path))
+    config.dump()
+    configfile, configpath = tempfile.mkstemp(suffix='live_hub')
+    config.set_state_path(configpath, copy_current=True)
+    print('Live hub state for testing ({0}):'.format(config.state_path))
     config.dump()  # dump state so it's visible in failed test output
     from cozify import hub
     yield hub
+    config.set_state_path()
+    os.remove(configpath)
 
 
 @pytest.fixture()

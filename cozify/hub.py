@@ -453,8 +453,7 @@ def default():
     """
 
     if 'default' not in config.state['Hubs']:
-        logging.fatal('Default hub not known, you should run cozify.authenticate()')
-        raise AttributeError
+        raise AttributeError('Default hub not known, you should run cozify.authenticate(). Your current state is stored at: {0}'.format(config.state_path))
     else:
         return config.state['Hubs']['default']
 
@@ -550,6 +549,7 @@ def _fill_kwargs(kwargs):
     if 'host' not in kwargs:
         # This may end up being None if we're remote
         kwargs['host'] = host(kwargs['hub_id'])
+    kwargs['filled'] = True
 
 
 def _clean_state(state):

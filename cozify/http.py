@@ -1,96 +1,122 @@
 """Helper module for hub_api & cloud_api
+
+Attributes:
+    session(requests.Session): Global session used for communications.
 """
 
 import requests, json, logging
-
 from .Error import APIError
 from requests.exceptions import RequestException
 
-def get(call, hub_token_header=True, base=api_path, **kwargs):
-    """GET method for calling hub API.
+session = requests.Session()
+
+def get(call, *, token, headers=None, **kwargs):
+    """GET method for calling hub or cloud APIs.
 
     Args:
-        call(str): API path to call after api_path, needs to include leading /.
-        hub_token_header(bool): Set to False to omit hub_token usage in call headers. Most calls need this.
-        base(str): Base path to call from API instead of global api_path. Defaults to api_path. Most calls need the default.
-        **remote(bool): If call is to be local or remote (bounced via cloud).
-        **host(str): ip address or hostname of hub. Only needed if remote == False.
-        **hub_token(str): Hub authentication token.
+        call(str): Full API URL.
+        token(str): Either hub_token or cloud_token depending on target of call.
+        headers(dict): Any additional headers to add to the call.
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
     return _call(
-        method=requests.get,
-        call='{0}{1}'.format(base, call),
-        hub_token_header=hub_token_header,
+        method=session.get,
+        call=call,
+        token=token,
+        headers=headers,
         **kwargs)
 
 
-def put(call, payload, hub_token_header=True, base=api_path, **kwargs):
-    """PUT method for calling hub API.
+def put(call, payload, *, token, headers=None, **kwargs):
+    """PUT method for calling hub or cloud APIs.
 
     Args:
-        call(str): API path to call after api_path, needs to include leading /.
+        call(str): Full API URL.
         payload(str): json string to push out as the payload.
-        hub_token_header(bool): Set to False to omit hub_token usage in call headers.
-        base(str): Base path to call from API instead of global api_path. Defaults to api_path. Most calls need the default.
-        **remote(bool): If call is to be local or remote (bounced via cloud).
-        **host(str): ip address or hostname of hub. Only needed if remote == False.
-        **hub_token(str): Hub authentication token.
+        token(str): Either hub_token or cloud_token depending on target of call.
+        headers(dict): Any additional headers to add to the call.
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
     return _call(
-        method=requests.put,
-        call='{0}{1}'.format(base, call),
-        hub_token_header=hub_token_header,
+        method=session.put,
+        call=call,
+        token=token,
+        headers=headers,
         payload=payload,
         **kwargs)
 
-
-def _call(*, call, method, hub_token_header, payload=None, **kwargs):
-    """Backend for get & put
+def post(call, payload, *, token, headers=None, **kwargs):
+    """POST method for calling hub our cloud APIs.
 
     Args:
-        call(str): Full API path to call.
-        method(function): requests.get|put function to use for call.
-        payload(str): json string to push out as any potential payload.
-        hub_token_header(bool): Set to False to omit hub_token usage in call headers.
-        **remote(bool): If call is to be local or remote (bounced via cloud).
-        **host(str): ip address or hostname of hub. Only needed if remote == False.
-        **hub_token(str): Hub authentication token.
+        call(str): Full API URL.
+        payload(str): json string to push out as the payload.
+        token(str): Either hub_token or cloud_token depending on target of call.
+        headers(dict): Any additional headers to add to the call.
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
+    return _call(
+        method=session.post,
+        call=call,
+        token=token,
+        headers=headers,
+        payload=payload,
+        **kwargs)
+
+def _call(*, call, method, token, headers=None, payload=None, return_data=True, **kwargs):
+    """Backend for get & put
+
+    Args:
+        call(str): Full API URL.
+        method(function): session.get|put function to use for call.
+        token(str): Either hub_token or cloud_token depending on target of call.
+        headers(dict): Any additional headers to add to the call.
+        payload(str): json string to push out as any potential payload.
+        return_data(bool): Return only decoded data, not a requests.response object. Defaults to True.
+        **remote(bool): If call is to be local or remote (bounced via cloud).
+        **hub_token(str): Hub authentication token.
+        **cloud_token(str): Cloud authentication token. Only needed if remote = True.
+    """
     response = None
-    headers = {}
-    if hub_token_header:
-        if 'hub_token' not in kwargs:
-            raise AttributeError('Asked to do a call to the hub but no hub_token provided.')
-        headers['Authorization'] = kwargs['hub_token']
+    if headers is None:
+        headers = {}
+    headers = {**{'Authorization': token}, **headers}
+
     if payload is not None:
         headers['content-type'] = 'application/json'
 
+    if 'remote' not in kwargs:  # Cloud calls won't have it set
+        kwargs['remote'] = False  # and won't care what the value is
     if kwargs['remote']:  # remote call
+        del headers # we have the wrong token there
+        kwargs['remote'] = False  # Doesn't make sense for direct cloud calls
         if 'cloud_token' not in kwargs:
             raise AttributeError('Asked to do remote call but no cloud_token provided.')
+        if 'hub_token' not in kwargs:
+            raise AttributeError('Asked to do remote call but no hub_token provided.')
+        from . import cloud_api
         response = cloud_api.remote(apicall=call, payload=payload, **kwargs)
-    else:  # local call
-        if not kwargs['host']:
-            raise AttributeError(
-                'Local call but no hostname was provided. Either set keyword remote or host.')
+    else:  # direct call
         try:
-            response = method(_getBase(host=kwargs['host']) + call, headers=headers, data=payload)
+            response = method(call, headers=headers, data=payload)
         except RequestException as e:  # pragma: no cover
-            raise APIError('connection failure', 'issues connection to \'{0}\': {1}'.format(
-                kwargs['host'], e))
+            raise APIError('connection failure', 'issues connection to \'{0}\': {1}'.format(call, e))
 
     # evaluate response, wether it was remote or local
     if response.status_code == 200:
-        return response.json()
+        if return_data:
+            return response.json()
+        else:
+            return response
     elif response.status_code == 410:
         raise APIError(response.status_code,
                        'API version outdated. Update python-cozify. %s - %s - %s' %
                        (response.reason, response.url, response.text))  # pragma: no cover
     else:
         raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url,
+                                                               response.text))
+
+

@@ -2,7 +2,7 @@
 import pytest
 
 from cozify import hub, config
-from cozify.test import debug
+from cozify.test import debug, state_verify
 from cozify.test.fixtures import tmp_hub, live_hub, tmp_cloud
 from cozify.Error import APIError
 
