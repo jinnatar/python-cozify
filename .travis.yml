@@ -30,7 +30,7 @@ before_script:
   - curl -u $KEY $HOST/$FILE > $HOME/$DEST/$FILE
 
 script:
-  - coverage run setup.py test --addopts "--profile-svg $SET"
+  - coverage run setup.py test --addopts "--profile-svg --color=yes $SET"
 
 after_success:
   - codecov
