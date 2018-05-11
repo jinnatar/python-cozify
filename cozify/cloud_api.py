@@ -34,9 +34,9 @@ def emaillogin(email, otp):  # pragma: no cover
         str: cloud token
     """
 
-    payload = {'email': email, 'password': otp}
+    params = {'email': email, 'password': otp}
 
-    return http.post(base + 'user/emaillogin', token=None, payload=payload)
+    return http.post(base + 'user/emaillogin', token=None, params=params)
 
 
 def lan_ip():  # pragma: no cover
