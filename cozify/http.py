@@ -107,7 +107,7 @@ def _call(*, call, method, token, headers=None, params=None, payload=None, retur
         if 'hub_token' not in kwargs:
             raise AttributeError('Asked to do remote call but no hub_token provided.')
         from . import cloud_api
-        response = cloud_api.remote(apicall=call, payload=payload, params=params **kwargs)
+        response = cloud_api.remote(apicall=call, payload=payload, params=params, **kwargs)
     else:  # direct call
         try:
             response = method(call, headers=headers, data=payload, params=params)
