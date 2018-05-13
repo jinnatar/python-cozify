@@ -15,7 +15,10 @@ api_path = '/cc/1.9'
 
 
 def base(*, host, port=8893, path=api_path, **kwargs):
-    return 'http://{0}:{1}{2}'.format(host, port, path)
+    if host is None:
+        return path
+    else:
+        return 'http://{0}:{1}{2}'.format(host, port, path)
 
 
 def hub(**kwargs):
