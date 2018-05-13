@@ -109,6 +109,8 @@ def _call(*, call, method, token, headers=None, params=None, payload=None, retur
         from . import cloud_api
         response = cloud_api.remote(apicall=call, payload=payload, params=params, **kwargs)
     else:  # direct call
+        if not call.startswith('http'):
+            raise ValueError('Asked to do a local call but URL is incomplete: {0}'.format(call))
         try:
             response = method(call, headers=headers, data=payload, params=params)
         except RequestException as e:  # pragma: no cover
