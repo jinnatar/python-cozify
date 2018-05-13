@@ -2,4 +2,5 @@ pytest
 codecov
 coverage
 pytest-profiling
+pytest-xdist
 python-gist

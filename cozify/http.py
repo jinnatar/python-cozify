@@ -4,11 +4,16 @@ Attributes:
     session(requests.Session): Global session used for communications.
 """
 
-import requests, json, logging
+import requests, json, logging, jwt
 from .Error import APIError
+from jwt.exceptions import DecodeError
 from requests.exceptions import RequestException
 
 session = requests.Session()
+cloud_base = 'https://cloud2.cozify.fi/ui/0.2/'
+hub_http = 'http://'
+hub_port = ':8893'
+hub_base = '/cc/1.9'
 
 def get(call, *, token, headers=None, params=None, **kwargs):
     """GET method for calling hub or cloud APIs.
@@ -72,13 +77,14 @@ def post(call, *, token, headers=None, payload=None, params=None, **kwargs):
         payload=payload,
         **kwargs)
 
-def _call(*, call, method, token, headers=None, params=None, payload=None, return_json=True, return_text=False, return_raw=False, **kwargs):
+def _call(*, call, method, token, type=None, headers=None, params=None, payload=None, return_json=True, return_text=False, return_raw=False, **kwargs):
     """Backend for get & put
 
     Args:
         call(str): Full API URL.
         method(function): session.get|put function to use for call.
-        token(str): Either hub_token or cloud_token depending on target of call.
+        token(str): Either hub_token or cloud_token depending on target of call. If the token isn't needed for the call you can specify None but must then specify argument type.
+        type(str): Either: 'cloud' or 'hub'. Only needed if token is not provided. (Can be autodetected from token.)
         headers(dict): Any additional headers to add to the call.
         params(dict): Any additional URL parameters to pass.
         payload(str): json string to push out as any potential payload.
@@ -88,35 +94,16 @@ def _call(*, call, method, token, headers=None, params=None, payload=None, retur
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **hub_token(str): Hub authentication token.
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
+        **base(str): Override automatic base detection with a custom string.
     """
-    response = None
-    if headers is None:
-        headers = {}
-    headers = {**{'Authorization': token}, **headers}
+    # Turn our call and kwargs data/metadata into a fully qualified URL and valid headers
+    url, headers = _get_url(token=token, type=type, call=call, headers=headers, payload=payload, **kwargs)
 
-    if payload is not None:
-        headers['content-type'] = 'application/json'
+    try:
+        response = method(url, headers=headers, data=payload, params=params)
+    except RequestException as e:  # pragma: no cover
+        raise APIError('connection failure', 'issues connecting to \'{0}\': {1}'.format(url, e))
 
-    if 'remote' not in kwargs:  # Cloud calls won't have it set
-        kwargs['remote'] = False  # and won't care what the value is
-    if kwargs['remote']:  # remote call
-        del headers # we have the wrong token there
-        kwargs['remote'] = False  # Doesn't make sense for direct cloud calls
-        if 'cloud_token' not in kwargs:
-            raise AttributeError('Asked to do remote call but no cloud_token provided.')
-        if 'hub_token' not in kwargs:
-            raise AttributeError('Asked to do remote call but no hub_token provided.')
-        from . import cloud_api
-        response = cloud_api.remote(apicall=call, payload=payload, params=params, **kwargs)
-    else:  # direct call
-        if not call.startswith('http'):
-            raise ValueError('Asked to do a local call but URL is incomplete: {0}'.format(call))
-        try:
-            response = method(call, headers=headers, data=payload, params=params)
-        except RequestException as e:  # pragma: no cover
-            raise APIError('connection failure', 'issues connection to \'{0}\': {1}'.format(call, e))
-
-    # evaluate response, wether it was remote or local
     if response.status_code == 200:
         if return_raw:
             return response
@@ -133,4 +120,55 @@ def _call(*, call, method, token, headers=None, params=None, payload=None, retur
         raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url,
                                                                response.text))
 
+def _get_url(call, headers, **kwargs):
+    if headers is None:
+        headers = {}
+    else:
+        headers = kwargs['headers']
+    # by default stick the token as auth and override with existing headers
+    headers = {**{'Authorization': kwargs['token']}, **headers}
 
+    # any payload is expected to be in json unless overriden with a custom header
+    if kwargs['payload'] is not None:
+        headers = {**{'content-type': 'application/json'}, **headers}
+
+    # figure out the base needed for the call based on token type and remoteness
+    base = ''
+    if _is_cloud_token(kwargs['token'], kwargs['type']):
+        base = cloud_base
+    else:
+        hub_base_local = hub_base
+        if 'base' in kwargs:  # if overriden
+            hub_base_local = kwargs['base']
+        if kwargs['remote']:  # remote call
+            # Shift the token into a X-Hub-Key header and insert a cloud_token as the main auth
+            if 'cloud_token' not in kwargs:
+                raise AttributeError('Asked to do remote call but no cloud_token provided.')
+            headers['Authorization'] = kwargs['cloud_token']
+            headers['X-Hub-Key'] = kwargs['token']
+            base = cloud_base + 'hub/remote' + hub_base_local
+        else:  # local call
+            if 'host' not in kwargs:
+                raise AttributeError('Asked to do local call but no host provided.')
+            base = hub_http + kwargs['host'] + hub_port + hub_base_local
+
+    if not base.startswith('http'):
+        raise RuntimeError('Internal error, autodetecting full URL has failed, ended up with base: {0}'.format(base))
+    return base + call, headers
+
+
+def _is_cloud_token(token, type):
+    if type is not None:
+        if type == 'cloud':
+            return True
+        else:
+            return False
+    try:
+        meta = jwt.decode(token, verify=False)
+    except DecodeError:  # if the token is broken let's claim it's a hub.
+        logging.error('An invalid token was encountered, the following behaviour is undefined.')
+        return False
+    if 'hub_name' in meta:
+        return False
+    else:
+        return True

@@ -1,7 +1,4 @@
 """Module for all Cozify Hub API 1:1 calls
-
-Attributes:
-    api_path(str): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
 """
 
 import requests, json, logging
@@ -11,15 +8,6 @@ from cozify import cloud_api, http
 from .Error import APIError
 from requests.exceptions import RequestException
 
-api_path = '/cc/1.9'
-
-
-def base(*, host, port=8893, path=api_path, **kwargs):
-    if host is None:
-        return path
-    else:
-        return 'http://{0}:{1}{2}'.format(host, port, path)
-
 
 def hub(**kwargs):
     """1:1 implementation of /hub API call. For kwargs see cozify.hub_api.get()
@@ -27,7 +15,7 @@ def hub(**kwargs):
     Returns:
         dict: Hub state dict.
     """
-    return http.get(base(path='', **kwargs) + '/hub', token=None, **kwargs)
+    return http.get('/hub', token=None, type='hub', base='', **kwargs)
 
 
 def tz(**kwargs):
@@ -36,8 +24,7 @@ def tz(**kwargs):
     Returns:
         str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
-    return http.get(
-        base(**kwargs) + '/hub/tz', token=kwargs['hub_token'], return_text=True, **kwargs)
+    return http.get('/hub/tz', token=kwargs['hub_token'], return_text=True, **kwargs)
 
 
 def colors(**kwargs):
@@ -46,7 +33,7 @@ def colors(**kwargs):
     Returns:
         list: List of hexadecimal color codes of all defined custom colors.
     """
-    return http.get(base(**kwargs) + '/hub/colors', token=kwargs['hub_token'], **kwargs)
+    return http.get('/hub/colors', token=kwargs['hub_token'], **kwargs)
 
 
 def lpd433devices(**kwargs):
@@ -55,7 +42,7 @@ def lpd433devices(**kwargs):
     Returns:
         list: List of dictionaries describing all 433MHz devices paired with hub.
     """
-    return http.get(base(**kwargs) + '/hub/433devices', token=kwargs['hub_token'], **kwargs)
+    return http.get('/hub/433devices', token=kwargs['hub_token'], **kwargs)
 
 
 def devices(**kwargs):
@@ -70,7 +57,7 @@ def devices(**kwargs):
     if 'devs' in kwargs:
         return kwargs['devs']
 
-    return http.get(base(**kwargs) + '/devices', token=kwargs['hub_token'], **kwargs)
+    return http.get('/devices', token=kwargs['hub_token'], **kwargs)
 
 
 def devices_command(command, **kwargs):
@@ -85,7 +72,7 @@ def devices_command(command, **kwargs):
     command = json.dumps(command)
     logging.debug('command json to send: {0}'.format(command))
     return http.put(
-        base(**kwargs) + '/devices/command',
+        '/devices/command',
         command,
         token=kwargs['hub_token'],
         return_text=True,

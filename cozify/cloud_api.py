@@ -1,15 +1,10 @@
 """Module for handling Cozify Cloud API 1:1 functions
-
-Attributes:
-    base(str): API endpoint including version
 """
 
 import json, requests
 from absl import logging
 from . import http
 from .Error import APIError, AuthenticationError
-
-base = 'https://cloud2.cozify.fi/ui/0.2/'
 
 
 def requestlogin(email):  # pragma: no cover
@@ -20,7 +15,7 @@ def requestlogin(email):  # pragma: no cover
     """
 
     params = {'email': email}
-    http.post(base + 'user/requestlogin', token=None, params=params)
+    http.post('user/requestlogin', token=None, type='cloud', params=params)
 
 
 def emaillogin(email, otp):  # pragma: no cover
@@ -36,7 +31,7 @@ def emaillogin(email, otp):  # pragma: no cover
 
     params = {'email': email, 'password': otp}
 
-    return http.post(base + 'user/emaillogin', token=None, params=params, return_text=True)
+    return http.post('user/emaillogin', token=None, type='cloud', params=params, return_text=True)
 
 
 def lan_ip():  # pragma: no cover
@@ -48,7 +43,7 @@ def lan_ip():  # pragma: no cover
     Returns:
         list: List of Hub ip addresses.
     """
-    return http.get(base + 'hub/lan_ip', token=None)
+    return http.get('hub/lan_ip', token=None, type='cloud')
 
 
 def hubkeys(cloud_token):  # pragma: no cover
@@ -60,7 +55,7 @@ def hubkeys(cloud_token):  # pragma: no cover
     Returns:
         dict: Map of hub_id: hub_token pairs.
     """
-    return http.get(base + 'user/hubkeys', token=cloud_token)
+    return http.get('user/hubkeys', token=cloud_token)
 
 
 def refreshsession(cloud_token):  # pragma: no cover
@@ -72,37 +67,4 @@ def refreshsession(cloud_token):  # pragma: no cover
     Returns:
         str: New cloud remote authentication token. Not automatically stored into state.
     """
-    return http.get(base + 'user/refreshsession', token=cloud_token, return_text=True)
-
-
-def remote(*, cloud_token, hub_token, apicall, method=http.get, params=None, payload=None,
-           **kwargs):
-    """1:1 implementation of 'hub/remote'
-
-    Args:
-        cloud_token(str): Cloud remote authentication token.
-        hub_token(str): Hub authentication token.
-        apicall(str): Full API call that would normally go directly to hub, e.g. '/cc/1.6/hub/colors'
-        method(function): cozify.http method to use, e.g. http.put. Defaults to http.get.
-        params(dict): Any additional URL parameters to pass.
-        payload(str): json string to use as payload, changes method to PUT.
-
-    Returns:
-        requests.response: Requests response object.
-    """
-    headers = {'X-Hub-Key': hub_token}
-
-    if 'cloud_token' not in kwargs:  # needed for the call
-        kwargs['cloud_token'] = cloud_token
-    if apicall.startswith('http'):  # full URL instead of only api path
-        import re
-        # strip out http(s)://0.0.0.0:0000
-        apicall = re.sub(r'^https?://.*?:[0-9]+', '', apicall)
-    return method(
-        base + 'hub/remote' + apicall,
-        token=cloud_token,
-        headers=headers,
-        payload=payload,
-        params=params,
-        return_raw=True,
-        **kwargs)
+    return http.get('user/refreshsession', token=cloud_token, return_text=True)

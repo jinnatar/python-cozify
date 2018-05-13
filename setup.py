@@ -20,7 +20,7 @@ setup(
     packages=['cozify'],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
-    install_requires=['requests', 'absl-py'],
+    install_requires=['requests', 'absl-py', 'pyjwt'],
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Development Status :: 3 - Alpha',

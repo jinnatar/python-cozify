@@ -255,7 +255,6 @@ def _need_cloud_token(trust=True):
     Returns:
         bool: True to indicate a need to request token.
     """
-
     # check if we've got a cloud_token before doing expensive checks
     if trust and 'remoteToken' in config.state['Cloud']:
         if config.state['Cloud']['remoteToken'] is None:  # pragma: no cover
@@ -302,7 +301,11 @@ def _getotp():
 
 
 def _getEmail():  # pragma: no cover
-    return input('Enter your Cozify account email address: ')
+    try:
+        return input('Enter your Cozify account email address: ')
+    except (EOFError, IOError):  # if running non-interactive or ^d
+        message = "Email unavailable, authentication cannot succeed. This may happen if running non-interactively (closed stdin)."
+        raise AuthenticationError(message)
 
 
 def _getAttr(attr):

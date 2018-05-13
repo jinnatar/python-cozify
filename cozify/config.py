@@ -140,7 +140,6 @@ def _initXDG():
         os.mkdir(config_dir, 0o0700)
 
     state_path = "%s/python-cozify.cfg" % config_dir
-    logging.debug('state_path determined to be: {0}'.format(state_path))
     return state_path
 
 
