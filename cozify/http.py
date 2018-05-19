@@ -4,12 +4,16 @@ Attributes:
     session(requests.Session): Global session used for communications.
 """
 
-import requests, json, logging, jwt
+import requests, json, logging, jwt, os
 from .Error import APIError
 from jwt.exceptions import DecodeError
 from requests.exceptions import RequestException
 
 session = requests.Session()
+if 'TRAVIS' in os.environ:
+    session.trust_env = False
+
+
 cloud_base = 'https://cloud2.cozify.fi/ui/0.2/'
 hub_http = 'http://'
 hub_port = ':8893'

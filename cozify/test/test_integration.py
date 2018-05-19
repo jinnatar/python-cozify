@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import pytest
+import pytest, os
 
 from cozify import hub, cloud
 from cozify.test import debug, state_verify
@@ -36,3 +36,16 @@ def test_integration_remote_match(live_cloud, live_hub):
     remote_tz = live_hub.tz(remote=True)
 
     assert local_tz == remote_tz
+
+@pytest.mark.logic
+def test_travis_debug():
+    if 'TRAVIS' not in os.environ:
+        pytest.xfail('This test can only succeed in a Travis environment.')
+
+    oldval = os.environ["TRAVIS"]
+    os.environ["TRAVIS"] = "true"
+    from cozify import http
+    assert http.session.trust_env == False
+
+    os.environ["TRAVIS"] = oldval
+
