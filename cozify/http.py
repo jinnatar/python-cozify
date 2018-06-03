@@ -7,7 +7,7 @@ Attributes:
 import requests, json, logging, jwt, os
 from .Error import APIError
 from jwt.exceptions import DecodeError
-from requests.exceptions import RequestException, timeoutError
+from requests.exceptions import RequestException
 
 session = requests.Session()
 if 'TRAVIS' in os.environ:
@@ -105,8 +105,6 @@ def _call(*, call, method, token, type=None, headers=None, params=None, payload=
 
     try:
         response = method(url, headers=headers, data=payload, params=params)
-    except timeoutError as e:  # pragma: no cover
-        raise APIError('connection failure', 'issues connecting to \'{0}\': {1}'.format(url, e))
     except RequestException as e:  # pragma: no cover
         raise APIError('connection failure', 'issues connecting to \'{0}\': {1}'.format(url, e))
 
