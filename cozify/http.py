@@ -4,14 +4,21 @@ Attributes:
     session(requests.Session): Global session used for communications.
 """
 
-import requests, json, logging, jwt, os
+import requests, json, jwt, os
 from .Error import APIError
 from jwt.exceptions import DecodeError
 from requests.exceptions import RequestException
+from absl import logging
+
+from cozify import config
 
 session = requests.Session()
 if 'TRAVIS' in os.environ:
     session.trust_env = False
+if 'Proxies' in config.state:
+    session.proxies = dict(config.state['Proxies'])
+    logging.warn('Proxies in use: {0}'.format(session.proxies))
+session.timeout = 10
 
 
 cloud_base = 'https://cloud2.cozify.fi/ui/0.2/'
