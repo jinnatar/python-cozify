@@ -91,7 +91,6 @@ def authenticate(trustCloud=True,
 
         # evaluate all returned Hubs and store them
         for hub_id, hub_token in hubkeys.items():
-            logging.debug('hub: {0} token: {1}'.format(hub_id, hub_token))
             hub_info = None
             hub_ip = None
 
@@ -172,7 +171,8 @@ def ping(autorefresh=True, expiry=None):
     try:
         cloud_api.hubkeys(token())  # TODO(artanicus): see if there's a cheaper API call
     except APIError as e:  # pragma: no cover
-        if e.status_code == 401:
+        fail_codes = [401, 503]  # codes to consider ping failure
+        if e.status_code in fail_codes:
             return False
         else:
             raise

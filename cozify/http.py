@@ -126,6 +126,9 @@ def _call(*, call, method, token, type=None, headers=None, params=None, payload=
         raise APIError(response.status_code,
                        'API version outdated. Update python-cozify. %s - %s - %s' %
                        (response.reason, response.url, response.text))  # pragma: no cover
+    elif response.status_code == 403:
+        raise APIError(response.status_code,
+                'Auth failure({0}). Headers: {1}, error: {2}'.format(response.url, response.request.headers, response.text))  # pragma: no cover
     else:
         logging.debug('Failed call type: {2}, headers: {0}, params: {3} and payload: {1}'.format(headers, payload, method, params))
         raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url,
@@ -152,11 +155,10 @@ def _get_url(call, headers, **kwargs):
         if 'base' in kwargs:  # if overriden
             hub_base_local = kwargs['base']
         if kwargs['remote']:  # remote call
-            # Shift the token into a X-Hub-Key header and insert a cloud_token as the main auth
             if 'cloud_token' not in kwargs:
                 raise AttributeError('Asked to do remote call but no cloud_token provided.')
             headers['Authorization'] = kwargs['cloud_token']
-            headers['X-Hub-Key'] = kwargs['token']
+            headers['X-Hub-Key'] = kwargs['hub_token']
             base = cloud_base + 'hub/remote' + hub_base_local
         else:  # local call
             if 'host' not in kwargs:
@@ -165,6 +167,7 @@ def _get_url(call, headers, **kwargs):
 
     if not base.startswith('http'):
         raise RuntimeError('Internal error, autodetecting full URL has failed, ended up with base: {0}'.format(base))
+    logging.debug('Headers for {0}: {1}'.format(base + call, headers))
     return base + call, headers
 
 

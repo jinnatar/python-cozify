@@ -354,7 +354,9 @@ def ping(autorefresh=True, **kwargs):
         timezone = tz(**kwargs)
         logging.debug('Ping performed with tz call, response: {0}'.format(timezone))
     except APIError as e:
-        if e.status_code == 401 or e.status_code == 403 or e.status_code == 'connection failure':
+        refresh_codes = [401, 403]  # codes to consider for autorefresh
+        fail_codes = [503, 504, 'connection failure']  # codes to consider a remote state failure
+        if e.status_code in refresh_codes:
             if autorefresh:
                 from cozify import cloud
                 logging.warn('Hub token has expired, hub.ping() attempting to renew it.')
@@ -363,7 +365,15 @@ def ping(autorefresh=True, **kwargs):
                     return True
             logging.warn(e)
             return False
-        else:
+        elif e.status_code in fail_codes:
+            if kwargs['autoremote']:
+                remote(hub_id=kwargs['hub_id'], new_state=True)
+                kwargs['remote'] = True
+                logging.warn('Ping had connection issues to the hub and flipped to remote mode.')
+            else:
+                logging.warn(e)
+                return False
+        else: # unknown error code, raise it and let it burn
             raise
     else:
         return True
