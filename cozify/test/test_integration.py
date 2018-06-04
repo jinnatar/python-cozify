@@ -49,3 +49,23 @@ def test_travis_debug():
 
     os.environ["TRAVIS"] = oldval
 
+@pytest.mark.live
+def test_proxy():
+    if 'Proxies' not in config.state:
+        pytest.xfail('This test can only succeed if the Proxies section is defined in the config.')
+
+    import requests
+    import logging
+    import http.client as http_client
+    http_client.HTTPConnection.debuglevel = 1
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.DEBUG)
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True
+    proxies = dict(config.state['Proxies'])
+    s = requests.Session()
+    s.proxies = proxies
+    s.timeout = 5
+    r = s.get('https://example.com')
+    assert r.status_code == 200
