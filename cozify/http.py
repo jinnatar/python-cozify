@@ -161,7 +161,7 @@ def _get_url(call, headers, **kwargs):
             headers['X-Hub-Key'] = kwargs['hub_token']
             base = cloud_base + 'hub/remote' + hub_base_local
         else:  # local call
-            if 'host' not in kwargs:
+            if 'host' not in kwargs or kwargs['host'] is None:
                 raise AttributeError('Asked to do local call but no host provided.')
             base = hub_http + kwargs['host'] + hub_port + hub_base_local
 
