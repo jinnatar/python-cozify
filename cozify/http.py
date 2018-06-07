@@ -8,6 +8,7 @@ import requests, json, jwt, os
 from .Error import APIError
 from jwt.exceptions import DecodeError
 from requests.exceptions import RequestException
+from urllib3.exceptions import TimeoutError, ConnectTimeoutError
 from absl import logging
 
 from cozify import config
@@ -112,7 +113,7 @@ def _call(*, call, method, token, type=None, headers=None, params=None, payload=
 
     try:
         response = method(url, headers=headers, data=payload, params=params)
-    except RequestException as e:  # pragma: no cover
+    except (RequestException, TimeoutError, ConnectTimeoutError) as e:  # pragma: no cover
         raise APIError('connection failure', 'issues connecting to \'{0}\': {1}'.format(url, e))
 
     if response.status_code == 200:
