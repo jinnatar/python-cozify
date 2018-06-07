@@ -114,7 +114,7 @@ def _call(*, call, method, token, type=None, headers=None, params=None, payload=
     try:
         response = method(url, headers=headers, data=payload, params=params)
     except (RequestException, TimeoutError, ConnectTimeoutError) as e:  # pragma: no cover
-        raise APIError('connection failure', 'issues connecting to \'{0}\': {1}'.format(url, e))
+        raise APIError('connection failure', 'issues connecting to \'{0}\': {1}'.format(url, e)) from None
 
     if response.status_code == 200:
         if return_raw:
