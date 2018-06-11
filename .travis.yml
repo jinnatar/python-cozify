@@ -19,7 +19,6 @@ env:
   - SET="-m 'destructive or remote'"
 
 before_install:
-  - echo "proxy config, http $HTTP_PROXY https $HTTPS_PROXY"
   - sudo apt-get update -qq
   - sudo apt-get install -qq graphviz
 
@@ -29,6 +28,7 @@ install:
 before_script:
   - mkdir -p $HOME/$DEST
   - curl -u $KEY $HOST/$FILE > $HOME/$DEST/$FILE
+  - sed -i "s/remote = False/remote = True/" $HOME/$DEST/$FILE
 
 script:
   - coverage run setup.py test --addopts "--profile-svg --color=yes $SET"
