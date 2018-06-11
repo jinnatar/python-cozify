@@ -4,3 +4,4 @@ coverage
 pytest-profiling
 pytest-xdist
 python-gist
+datadiff

@@ -168,7 +168,6 @@ def _get_url(call, headers, **kwargs):
 
     if not base.startswith('http'):
         raise RuntimeError('Internal error, autodetecting full URL has failed, ended up with base: {0}'.format(base))
-    logging.debug('Headers for {0}: {1}'.format(base + call, headers))
     return base + call, headers
 
 

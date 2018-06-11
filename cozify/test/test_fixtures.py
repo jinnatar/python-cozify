@@ -3,7 +3,7 @@ import pytest
 
 from cozify import config
 from cozify.test import debug
-from cozify.test.fixtures import tmp_hub, live_hub, tmp_cloud, live_cloud
+from cozify.test.fixtures import *
 from cozify.Error import APIError
 
 
@@ -14,12 +14,14 @@ def run_around_tests():
     assert 'default' in config.state['Hubs'] and 'email' in config.state['Cloud'], 'State failed before fixture.'
     prev_default = config.state['Hubs']['default']
     prev_email = config.state['Cloud']['email']
+    prev_remote = config.state['Hubs.' + config.state['Hubs']['default']]['remote']
     yield
     print('After fixture:')
     config.dump()
     assert 'default' in config.state['Hubs'] and 'email' in config.state['Cloud'], 'State failed due to fixture.'
     assert prev_default == config.state['Hubs']['default']
     assert prev_email == config.state['Cloud']['email']
+    assert prev_remote == config.state['Hubs.' + config.state['Hubs']['default']]['remote']
 
 
 @pytest.mark.logic

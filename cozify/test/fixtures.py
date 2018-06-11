@@ -5,14 +5,45 @@ import hashlib, json
 
 from absl import logging
 from cozify import config, hub
+from datadiff import diff
 
 from . import fixtures_devices as dev
 
 
 @pytest.fixture
-def tmp_cloud():
+def tmp_config():
+    fh, path = tempfile.mkstemp(suffix='tmp_config')
+    config.set_state_path(path, copy_current=True)
+    print('tmp_config state before passing onwards:')
+    config.dump()
+    old_state = _state_to_dict(config.state)
+    yield config
+    print('tmp_config state before reverting it:')
+    print(diff(old_state, _state_to_dict(config.state)))
+    config.set_state_path()
+    os.remove(path)
+
+
+@pytest.fixture
+def empty_config():
+    fh, path = tempfile.mkstemp(suffix='empty_config')
+    config.set_state_path(path)
+    yield config
+    config.set_state_path()
+    os.remove(path)
+
+
+@pytest.fixture
+def live_config():
+    config.set_state_path()
+    yield config
+    config.set_state_path()
+
+
+@pytest.fixture
+def tmp_cloud(empty_config):
     obj = lambda: 0
-    obj.configfile, obj.configpath = tempfile.mkstemp(suffix='tmp_cloud')
+    obj.config = empty_config
     obj.section = 'Cloud'
     obj.email = 'example@example.com'
     obj.token = 'eyJkb20iOiJ1ayIsImFsZyI6IkhTNTEyIiwidHlwIjoiSldUIn0.eyJyb2xlIjo4LCJpYXQiOjE1MTI5ODg5NjksImV4cCI6MTUxNTQwODc2OSwidXNlcl9pZCI6ImRlYWRiZWVmLWFhYWEtYmJiYi1jY2NjLWRkZGRkZGRkZGRkZCIsImtpZCI6ImRlYWRiZWVmLWRkZGQtY2NjYy1iYmJiLWFhYWFhYWFhYWFhYSIsImlzcyI6IkNsb3VkIn0.QVKKYyfTJPks_BXeKs23uvslkcGGQnBTKodA-UGjgHg'  # valid but useless jwt token.
@@ -21,46 +52,29 @@ def tmp_cloud():
     obj.iso_now = obj.now.isoformat().split(".")[0]
     obj.yesterday = obj.now - datetime.timedelta(days=1)
     obj.iso_yesterday = obj.yesterday.isoformat().split(".")[0]
-    config.set_state_path(obj.configpath)
     from cozify import cloud
     cloud._setAttr('email', obj.email)
     cloud._setAttr('remotetoken', obj.token)
     cloud._setAttr('last_refresh', obj.iso_yesterday)
     yield obj
-    config.set_state_path()
-    os.remove(obj.configpath)
 
 
 @pytest.fixture
-def live_cloud():
-    configfile, configpath = tempfile.mkstemp(suffix='live_cloud')
-    config.set_state_path(configpath, copy_current=True)
+def live_cloud(tmp_config):
     from cozify import cloud
     yield cloud
-    config.set_state_path()
-    os.remove(configpath)
 
 
 @pytest.fixture
 def tmp_hub(tmp_cloud):
     with Tmp_hub(tmp_cloud) as hub_obj:
-        print('Tmp hub state for testing:')
-        config.dump()
         yield hub_obj
 
 
 @pytest.fixture()
-def live_hub():
-    print('Live hub state before copy ({0}):'.format(config.state_path))
-    config.dump()
-    configfile, configpath = tempfile.mkstemp(suffix='live_hub')
-    config.set_state_path(configpath, copy_current=True)
-    print('Live hub state for testing ({0}):'.format(config.state_path))
-    config.dump()  # dump state so it's visible in failed test output
+def live_hub(tmp_config):
     from cozify import hub
     yield hub
-    config.set_state_path()
-    os.remove(configpath)
 
 
 @pytest.fixture()
@@ -132,3 +146,9 @@ def _h6_dict(d):
     w = j.encode('utf8')
     h = hashlib.md5(w)
     return h.hexdigest()[:6]
+
+def _state_to_dict(state):
+    out = dict(state)
+    for section in out:
+        out[section] = dict(out[section])
+    return out

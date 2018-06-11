@@ -3,7 +3,7 @@ import pytest, time
 
 from cozify import hub
 from cozify.test import debug, state_verify
-from cozify.test.fixtures import live_hub, tmp_hub, tmp_cloud, online_device
+from cozify.test.fixtures import tmp_config, empty_config, live_hub, tmp_hub, tmp_cloud, online_device
 from cozify.Error import APIError
 
 # global timer delay for tests that change device state
