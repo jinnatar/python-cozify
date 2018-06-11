@@ -13,13 +13,11 @@ from cozify.Error import AuthenticationError
 @pytest.mark.live
 def test_cloud_authenticate(tmp_config):
     assert cloud.authenticate()
-    assert False
 
 
 @pytest.mark.live
 def test_cloud_authenticate_hub(tmp_config):
     assert cloud.authenticate(trustHub=False)
-    assert False
 
 
 @pytest.mark.logic
