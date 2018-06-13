@@ -43,7 +43,7 @@ coverage:
   stage: deploy
   script:
     - coverage report -m
-  coverage: "/^\S+\.py\s+\d+\s+\d+\s+(\d+\%)/"
+  coverage: '/^\S+\.py\s+\d+\s+\d+\s+(\d+\%)/'
 
 coverage-html:
   stage: deploy
