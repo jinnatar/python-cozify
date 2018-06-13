@@ -1,0 +1,54 @@
+stages:
+  - test
+  - deploy
+
+image: "python:3.5"
+
+before_script:
+    - apt-get update -qq && apt-get install -y -qq graphviz
+    - pip install --quiet -r requirements.txt -r test_requirements.txt
+    - mkdir -p $HOME/$DEST
+    - curl -u $KEY $HOST/$FILE > $HOME/$DEST/$FILE
+    - sed -i "s/remote = False/remote = True/" $HOME/$DEST/$FILE
+
+
+logic:
+  stage: test
+  script:
+    - coverage run setup.py test --addopts "--profile-svg --color=yes -m logic"
+  artifacts:
+    paths:
+      - prof
+      - .coverage
+
+live:
+  stage: test
+  script:
+    - coverage run setup.py test --addopts "--profile-svg --color=yes -m live"
+  artifacts:
+    paths:
+      - prof
+      - .coverage
+
+destructive:
+  stage: test
+  script:
+    - coverage run setup.py test --addopts "--profile-svg --color=yes -m 'destructive or remote'"
+  artifacts:
+    paths:
+      - prof/
+      - .coverage
+
+coverage:
+  stage: deploy
+  script:
+    - coverage report -m
+  coverage: "/^\S+\.py\s+\d+\s+\d+\s+(\d+\%)/"
+
+coverage-html:
+  stage: deploy
+  script:
+    - coverage html
+  artifacts:
+    paths:
+      - htmlcov/
