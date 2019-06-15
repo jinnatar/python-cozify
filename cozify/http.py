@@ -147,27 +147,29 @@ def _get_url(call, headers, **kwargs):
     if kwargs['payload'] is not None:
         headers = {**{'content-type': 'application/json'}, **headers}
 
-    # figure out the base needed for the call based on token type and remoteness
+    # figure out the base needed for the call based on the call itself, token type and remoteness
     base = ''
-    if _is_cloud_token(kwargs['token'], kwargs['type']):
-        base = cloud_base
-    else:
-        hub_base_local = hub_base
-        if 'base' in kwargs:  # if overriden
-            hub_base_local = kwargs['base']
-        if kwargs['remote']:  # remote call
-            if 'cloud_token' not in kwargs:
-                raise AttributeError('Asked to do remote call but no cloud_token provided.')
-            headers['Authorization'] = kwargs['cloud_token']
-            headers['X-Hub-Key'] = kwargs['hub_token']
-            base = cloud_base + 'hub/remote' + hub_base_local
-        else:  # local call
-            if 'host' not in kwargs or kwargs['host'] is None:
-                raise AttributeError('Asked to do local call but no host provided.')
-            base = hub_http + kwargs['host'] + hub_port + hub_base_local
+    # If the call already has http in front, assume it needs no further mangling
+    if not call.startswith('http'):
+        if _is_cloud_token(kwargs['token'], kwargs['type']):
+            base = cloud_base
+        else:
+            hub_base_local = hub_base # start with global default
+            if 'base' in kwargs:  # if overriden
+                hub_base_local = kwargs['base']
+            if kwargs['remote']:  # remote call
+                if 'cloud_token' not in kwargs:
+                    raise AttributeError('Asked to do remote call but no cloud_token provided.')
+                headers['Authorization'] = kwargs['cloud_token']
+                headers['X-Hub-Key'] = kwargs['hub_token']
+                base = cloud_base + 'hub/remote' + hub_base_local
+            else:  # local call
+                if 'host' not in kwargs or kwargs['host'] is None:
+                    raise AttributeError('Asked to do local call but no host provided.')
+                base = hub_http + kwargs['host'] + hub_port + hub_base_local
 
-    if not base.startswith('http'):
-        raise RuntimeError('Internal error, autodetecting full URL has failed, ended up with base: {0}'.format(base))
+        if not base.startswith('http'):
+            raise RuntimeError('Internal error, autodetecting full URL has failed, ended up with base: {0}'.format(base))
     return base + call, headers
 
 
