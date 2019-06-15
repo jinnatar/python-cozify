@@ -94,6 +94,8 @@ def test_hub_device_on_off(live_hub, online_device):
         live_hub.device_on(online_device['id'])
     else:
         live_hub.device_on(online_device['id'])
+        time.sleep(delay)
+        live_hub.device_off(online_device['id'])
     time.sleep(delay)
 
 
