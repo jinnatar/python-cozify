@@ -1,5 +1,7 @@
 pytest>=4.4.0
+codecov
 coverage
 pytest-profiling
 pytest-xdist
+python-gist
 datadiff
