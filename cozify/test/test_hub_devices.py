@@ -68,6 +68,11 @@ def test_hub_device_reachable(tmp_hub):
         hub.device_reachable('dead-beef', devs=devs)
 
 
+@pytest.mark.live
+def test_hub_device_reachable_live(live_hub, online_device):
+    assert live_hub.device_reachable(online_device['id'])
+
+
 @pytest.mark.logic
 def test_hub_device_exists(tmp_hub):
     ids, devs = tmp_hub.devices()
