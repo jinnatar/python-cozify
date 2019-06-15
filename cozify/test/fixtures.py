@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os, pytest, tempfile, datetime
-import hashlib, json
+import hashlib, json, jwt
 
 from absl import logging
 from cozify import config, hub
@@ -38,6 +38,23 @@ def live_config():
     config.set_state_path()
     yield config
     config.set_state_path()
+
+
+@pytest.fixture
+def expired_hub_token():
+    payload = {
+        'email': 'example@example.com',
+        'exp': 42,
+        'hub_id': 'deadbeef-aaaa-bbbb-cccc-tmphubdddddd',
+        'hub_name': 'HubbyMcHubFace',
+        'iat': 42,
+        'kid': 'deadbeef-aaaa-bbbb-cccc-tmphubdddddd',
+        'nickname': 'Demo',
+        'owner': True,
+        'role': 32,
+        'user_id': 'deadbeef-aaaa-bbbb-cccc-tmpusrdddddd',
+    }
+    yield str(jwt.encode(payload, 'supersecret'))
 
 
 @pytest.fixture
@@ -146,6 +163,7 @@ def _h6_dict(d):
     w = j.encode('utf8')
     h = hashlib.md5(w)
     return h.hexdigest()[:6]
+
 
 def _state_to_dict(state):
     out = dict(state)

@@ -3,7 +3,7 @@ import pytest
 
 from cozify import hub
 from cozify.test import debug, state_verify
-from cozify.test.fixtures import tmp_config, empty_config, tmp_hub, live_hub, tmp_cloud
+from cozify.test.fixtures import tmp_config, empty_config, tmp_hub, live_hub, tmp_cloud, expired_hub_token
 from cozify.Error import APIError
 
 
@@ -62,10 +62,10 @@ def test_hub_host(tmp_hub):
 
 
 @pytest.mark.destructive
-def test_hub_ping_autorefresh(live_hub):
+def test_hub_ping_autorefresh(live_hub, expired_hub_token):
     assert hub.ping()
     hub_id = live_hub.default()
-    live_hub.token(hub_id=hub_id, new_token='destroyed-on-purpose-by-destructive-test')
+    live_hub.token(hub_id=hub_id, new_token=expired_hub_token)
 
     assert not live_hub.ping(autorefresh=False)
     with pytest.raises(APIError):
