@@ -359,19 +359,19 @@ def ping(autorefresh=True, **kwargs):
         if e.status_code in refresh_codes:
             if autorefresh:
                 from cozify import cloud
-                logging.warn('Hub token has expired, hub.ping() attempting to renew it.')
+                logging.warning('Hub token has expired, hub.ping() attempting to renew it.')
                 logging.debug('Original APIError was: {0}'.format(e))
                 if cloud.authenticate(trustHub=False):  # if this fails we let it fail.
                     return True
-            logging.warn(e)
+            logging.warning(e)
             return False
         elif e.status_code in fail_codes:
             if kwargs['autoremote']:
                 remote(hub_id=kwargs['hub_id'], new_state=True)
                 kwargs['remote'] = True
-                logging.warn('Ping had connection issues to the hub and flipped to remote mode.')
+                logging.warning('Ping had connection issues to the hub and flipped to remote mode.')
             else:
-                logging.warn(e)
+                logging.warning(e)
                 return False
         else: # unknown error code, raise it and let it burn
             raise

@@ -24,7 +24,7 @@ def test_config_XDG_env(tmp_hub):
     # we actually need to do some manual cleanup since this is very low level testing
     del os.environ["XDG_CONFIG_HOME"]
     config.set_state_path()
-    logging.warn('Resetting state path back: {0}'.format(config.state_path))
+    logging.warning('Resetting state path back: {0}'.format(config.state_path))
 
 
 @pytest.mark.logic

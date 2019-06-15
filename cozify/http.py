@@ -18,7 +18,7 @@ if 'TRAVIS' in os.environ:
     session.trust_env = False
 if 'Proxies' in config.state:
     session.proxies = dict(config.state['Proxies'])
-    logging.warn('Proxies in use: {0}'.format(session.proxies))
+    logging.warning('Proxies in use: {0}'.format(session.proxies))
 session.timeout = 10
 
 
