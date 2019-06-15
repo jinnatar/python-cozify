@@ -369,11 +369,13 @@ def ping(autorefresh=True, **kwargs):
             if kwargs['autoremote']:
                 remote(hub_id=kwargs['hub_id'], new_state=True)
                 kwargs['remote'] = True
-                logging.warning('Ping had connection issues to the hub and flipped to remote mode.')
+                logging.warning(
+                    'Ping had connection issues to the hub ({0}) and flipped to remote mode.'
+                    .format(e))
             else:
                 logging.warning(e)
                 return False
-        else: # unknown error code, raise it and let it burn
+        else:  # unknown error code, raise it and let it burn
             raise
     else:
         return True
@@ -463,7 +465,9 @@ def default():
     """
 
     if 'default' not in config.state['Hubs']:
-        raise AttributeError('Default hub not known, you should run cozify.authenticate(). Your current state is stored at: {0}'.format(config.state_path))
+        raise AttributeError(
+            'Default hub not known, you should run cozify.authenticate(). Your current state is stored at: {0}'
+            .format(config.state_path))
     else:
         return config.state['Hubs']['default']
 
