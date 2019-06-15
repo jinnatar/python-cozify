@@ -3,5 +3,6 @@ codecov
 coverage
 pytest-profiling
 pytest-xdist
+yapf
 python-gist
 datadiff
