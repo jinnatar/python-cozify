@@ -25,7 +25,7 @@ session.timeout = 10
 cloud_base = 'https://cloud2.cozify.fi/ui/0.2/'
 hub_http = 'http://'
 hub_port = ':8893'
-hub_base = '/cc/1.9'
+hub_base = '/cc/1.11'
 
 def get(call, *, token, headers=None, params=None, **kwargs):
     """GET method for calling hub or cloud APIs.
