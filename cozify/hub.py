@@ -354,8 +354,11 @@ def ping(autorefresh=True, **kwargs):
         timezone = tz(**kwargs)
         logging.debug('Ping performed with tz call, response: {0}'.format(timezone))
     except APIError as e:
-        refresh_codes = [401, 403]  # codes to consider for autorefresh
-        fail_codes = [503, 504, 'connection failure']  # codes to consider a remote state failure
+        # codes to consider for autorefresh, i.e. the token is bad:
+        refresh_codes = [401, 403]
+        # codes to consider a local connection failure -> try remote
+        local_fail_codes = ['connection failure']
+        total_fail_codes = [500, 503, 504]
         if e.status_code in refresh_codes:
             if autorefresh:
                 from cozify import cloud
@@ -365,7 +368,7 @@ def ping(autorefresh=True, **kwargs):
                     return True
             logging.warning(e)
             return False
-        elif e.status_code in fail_codes:
+        elif e.status_code in local_fail_codes:
             if kwargs['autoremote']:
                 remote(hub_id=kwargs['hub_id'], new_state=True)
                 kwargs['remote'] = True
@@ -375,8 +378,12 @@ def ping(autorefresh=True, **kwargs):
                 # retry with remote = True
                 return ping(autorefresh, **kwargs)
             else:
-                logging.warning(e)
+                logging.error(
+                    'Ping could not contact hub and autoremote is off. Nothing we can do.')
                 return False
+        elif e.status_code in total_fail_codes:
+            logging.error('Ping failed: {0}'.format(e))
+            return False
         else:  # unknown error code, raise it and let it burn
             raise
     else:

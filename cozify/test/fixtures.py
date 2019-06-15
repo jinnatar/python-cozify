@@ -54,7 +54,7 @@ def expired_hub_token():
         'role': 32,
         'user_id': 'deadbeef-aaaa-bbbb-cccc-tmpusrdddddd',
     }
-    yield str(jwt.encode(payload, 'supersecret'))
+    yield jwt.encode(payload, 'supersecret').decode('utf-8')
 
 
 @pytest.fixture

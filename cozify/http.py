@@ -21,11 +21,11 @@ if 'Proxies' in config.state:
     logging.warning('Proxies in use: {0}'.format(session.proxies))
 session.timeout = 10
 
-
 cloud_base = 'https://cloud2.cozify.fi/ui/0.2/'
 hub_http = 'http://'
 hub_port = ':8893'
 hub_base = '/cc/1.11'
+
 
 def get(call, *, token, headers=None, params=None, **kwargs):
     """GET method for calling hub or cloud APIs.
@@ -39,12 +39,7 @@ def get(call, *, token, headers=None, params=None, **kwargs):
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
     return _call(
-        method=session.get,
-        call=call,
-        token=token,
-        headers=headers,
-        params=params,
-        **kwargs)
+        method=session.get, call=call, token=token, headers=headers, params=params, **kwargs)
 
 
 def put(call, payload, *, token, headers=None, params=None, **kwargs):
@@ -68,6 +63,7 @@ def put(call, payload, *, token, headers=None, params=None, **kwargs):
         payload=payload,
         **kwargs)
 
+
 def post(call, *, token, headers=None, payload=None, params=None, **kwargs):
     """POST method for calling hub our cloud APIs.
 
@@ -89,7 +85,19 @@ def post(call, *, token, headers=None, payload=None, params=None, **kwargs):
         payload=payload,
         **kwargs)
 
-def _call(*, call, method, token, type=None, headers=None, params=None, payload=None, return_json=True, return_text=False, return_raw=False, **kwargs):
+
+def _call(*,
+          call,
+          method,
+          token,
+          type=None,
+          headers=None,
+          params=None,
+          payload=None,
+          return_json=True,
+          return_text=False,
+          return_raw=False,
+          **kwargs):
     """Backend for get & put
 
     Args:
@@ -109,12 +117,14 @@ def _call(*, call, method, token, type=None, headers=None, params=None, payload=
         **base(str): Override automatic base detection with a custom string.
     """
     # Turn our call and kwargs data/metadata into a fully qualified URL and valid headers
-    url, headers = _get_url(token=token, type=type, call=call, headers=headers, payload=payload, **kwargs)
+    url, headers = _get_url(
+        token=token, type=type, call=call, headers=headers, payload=payload, **kwargs)
 
     try:
         response = method(url, headers=headers, data=payload, params=params)
     except (RequestException, TimeoutError, ConnectTimeoutError) as e:  # pragma: no cover
-        raise APIError('connection failure', 'issues connecting to \'{0}\': {1}'.format(url, e)) from None
+        raise APIError('connection failure',
+                       'issues connecting to \'{0}\': {1}'.format(url, e)) from None
 
     if response.status_code == 200:
         if return_raw:
@@ -128,12 +138,15 @@ def _call(*, call, method, token, type=None, headers=None, params=None, payload=
                        'API version outdated. Update python-cozify. %s - %s - %s' %
                        (response.reason, response.url, response.text))  # pragma: no cover
     elif response.status_code == 403:
-        raise APIError(response.status_code,
-                'Auth failure({0}). Headers: {1}, error: {2}'.format(response.url, response.request.headers, response.text))  # pragma: no cover
+        raise APIError(response.status_code, 'Auth failure({0}). Headers: {1}, error: {2}'.format(
+            response.url, response.request.headers, response.text))  # pragma: no cover
     else:
-        logging.debug('Failed call type: {2}, headers: {0}, params: {3} and payload: {1}'.format(headers, payload, method, params))
-        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url,
-                                                               response.text))
+        logging.debug(
+            'Failed call: {4} type: {2}, headers: {0}, params: {3} and payload: {1}'.format(
+                headers, payload, method, params, url))
+        raise APIError(response.status_code,
+                       '%s - %s - %s' % (response.reason, response.url, response.text))
+
 
 def _get_url(call, headers, **kwargs):
     if headers is None:
@@ -154,7 +167,7 @@ def _get_url(call, headers, **kwargs):
         if _is_cloud_token(kwargs['token'], kwargs['type']):
             base = cloud_base
         else:
-            hub_base_local = hub_base # start with global default
+            hub_base_local = hub_base  # start with global default
             if 'base' in kwargs:  # if overriden
                 hub_base_local = kwargs['base']
             if kwargs['remote']:  # remote call
@@ -169,7 +182,9 @@ def _get_url(call, headers, **kwargs):
                 base = hub_http + kwargs['host'] + hub_port + hub_base_local
 
         if not base.startswith('http'):
-            raise RuntimeError('Internal error, autodetecting full URL has failed, ended up with base: {0}'.format(base))
+            raise RuntimeError(
+                'Internal error, autodetecting full URL has failed, ended up with base: {0}'.format(
+                    base))
     return base + call, headers
 
 
@@ -181,8 +196,9 @@ def _is_cloud_token(token, type):
             return False
     try:
         meta = jwt.decode(token, verify=False)
-    except DecodeError:  # if the token is broken let's claim it's a hub.
-        logging.error('An invalid token was encountered, the following behaviour is undefined.')
+    except DecodeError as e:  # if the token is broken let's claim it's a hub.
+        logging.error('An invalid token was encountered: {0}'.format(e))
+        logging.debug('The invalid token was: {0}'.format(token))
         return False
     if 'hub_name' in meta:
         return False
