@@ -372,6 +372,8 @@ def ping(autorefresh=True, **kwargs):
                 logging.warning(
                     'Ping had connection issues to the hub and flipped to remote mode: {0}'.format(
                         e))
+                # retry with remote = True
+                return ping(autorefresh, **kwargs)
             else:
                 logging.warning(e)
                 return False
