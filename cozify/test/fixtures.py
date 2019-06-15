@@ -113,6 +113,18 @@ def online_device():
     hub.device_state_replace(dev['id'], store)
 
 
+@pytest.fixture()
+def live_sensor_temperature():
+    dev = None
+    devs = hub.devices(capabilities=hub.capability.TEMPERATURE)
+    for i, d in devs.items():
+        if d['state']['reachable']:
+            dev = d
+            break
+    assert dev is not None, 'Cannot run live sensor tests, no reachable TEMPERATURE capable device to test against.'
+    yield dev
+
+
 @pytest.fixture
 def ready_kwargs(live_hub, live_cloud):
     kwargs = {}

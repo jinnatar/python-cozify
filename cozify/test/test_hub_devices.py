@@ -3,7 +3,7 @@ import pytest, time
 
 from cozify import hub
 from cozify.test import debug, state_verify
-from cozify.test.fixtures import tmp_config, empty_config, live_hub, tmp_hub, tmp_cloud, online_device
+from cozify.test.fixtures import tmp_config, empty_config, live_hub, tmp_hub, tmp_cloud, online_device, live_sensor_temperature
 from cozify.Error import APIError
 
 # global timer delay for tests that change device state
@@ -97,6 +97,14 @@ def test_hub_device_on_off(live_hub, online_device):
         time.sleep(delay)
         live_hub.device_off(online_device['id'])
     time.sleep(delay)
+
+
+@pytest.mark.live
+def test_hub_device_on_off_not_eligible(live_hub, live_sensor_temperature):
+    with pytest.raises(ValueError):
+        live_hub.device_on(live_sensor_temperature['id'])
+    with pytest.raises(ValueError):
+        live_hub.device_off(live_sensor_temperature['id'])
 
 
 @pytest.mark.destructive
