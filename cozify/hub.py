@@ -370,8 +370,8 @@ def ping(autorefresh=True, **kwargs):
                 remote(hub_id=kwargs['hub_id'], new_state=True)
                 kwargs['remote'] = True
                 logging.warning(
-                    'Ping had connection issues to the hub ({0}) and flipped to remote mode.'
-                    .format(e))
+                    'Ping had connection issues to the hub and flipped to remote mode: {0}'.format(
+                        e))
             else:
                 logging.warning(e)
                 return False
