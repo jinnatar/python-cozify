@@ -165,6 +165,11 @@ def device_state_replace(device_id, state, **kwargs):
     """
     _fill_kwargs(kwargs)
 
+    # Things will be wonky if this doesn't hold true
+    if not isinstance(state, dict):
+        raise ValueError(
+            'Invalid state received for device {0}, expected dictionary, got: {1}'.format(
+                device_id, type(state)))
     if device_exists(device_id, **kwargs):
         # blank out fields that don't make sense to set
         for key in ['lastSeen', 'reachable', 'maxTemperature', 'minTemperature']:

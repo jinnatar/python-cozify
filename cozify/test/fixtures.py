@@ -95,34 +95,46 @@ def live_hub(tmp_config):
 
 
 @pytest.fixture()
-def online_device():
-    dev = None
-    store = None
-    devs = hub.devices(capabilities=hub.capability.BRIGHTNESS)
-    for i, d in devs.items():
-        if d['state']['reachable'] and 'test' in d['name']:
-            dev = d
-            # store state so it can be restored after tests
-            store = d['state'].copy()
-            break
-    assert dev is not None, 'Cannot run live device tests, no reachable BRIGHTNESS capable device with name including \'test\' to test against.'
-    logging.info('online_device state before use ({1}): {0}'.format(store, _h6_dict(store)))
-    yield dev
-    logging.info('online_device state after use, before rollback ({1}): {0}'.format(
-        dev['state'], _h6_dict(dev['state'])))
-    hub.device_state_replace(dev['id'], store)
+def destructive_device():
+    dev = []
+    store = []
+
+    def _device(capability, dev=dev, store=store):
+        devs = hub.devices(capabilities=capability)
+        for i, d in devs.items():
+            if d['state']['reachable'] and 'test' in d['name']:
+                dev.append(d)
+                # store state so it can be restored after tests
+                store.append(d['state'].copy())
+                break
+        assert dev is not None, 'Cannot run class of destructive device tests, no reachable device with name including \'test\' and capability {0} to test against.'.format(
+            capability)
+        logging.info('destructive_device state before use ({1}): {0}'.format(
+            store, _h6_dict(store)))
+        return dev[0]
+
+    yield _device
+    assert dev, store
+    logging.info('destructive_device state after use, before rollback ({1}): {0}'.format(
+        dev[0]['state'], _h6_dict(dev[0]['state'])))
+    hub.device_state_replace(dev[0]['id'], store[0])
 
 
 @pytest.fixture()
-def live_sensor_temperature():
-    dev = None
-    devs = hub.devices(capabilities=hub.capability.TEMPERATURE)
-    for i, d in devs.items():
-        if d['state']['reachable']:
-            dev = d
-            break
-    assert dev is not None, 'Cannot run live sensor tests, no reachable TEMPERATURE capable device to test against.'
-    yield dev
+def live_device():
+
+    def _device(capability):
+        dev = None
+        devs = hub.devices(capabilities=capability)
+        for i, d in devs.items():
+            if d['state']['reachable']:
+                dev = d
+                break
+        assert dev is not None, 'Cannot run class of live device tests, no reachable device with capability {0} to test against.'.format(
+            capability)
+        return dev
+
+    yield _device
 
 
 @pytest.fixture

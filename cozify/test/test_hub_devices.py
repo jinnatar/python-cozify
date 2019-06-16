@@ -3,7 +3,7 @@ import pytest, time
 
 from cozify import hub
 from cozify.test import debug, state_verify
-from cozify.test.fixtures import tmp_config, empty_config, live_hub, tmp_hub, tmp_cloud, online_device, live_sensor_temperature
+from cozify.test.fixtures import tmp_config, empty_config, live_hub, tmp_hub, tmp_cloud, destructive_device, live_device
 from cozify.Error import APIError
 
 # global timer delay for tests that change device state
@@ -69,8 +69,9 @@ def test_hub_device_reachable(tmp_hub):
 
 
 @pytest.mark.live
-def test_hub_device_reachable_live(live_hub, online_device):
-    assert live_hub.device_reachable(online_device['id'])
+def test_hub_device_reachable_live(live_hub, live_device):
+    dev = live_device(hub.capability.ON_OFF)
+    assert live_hub.device_reachable(dev['id'])
 
 
 @pytest.mark.logic
@@ -81,49 +82,55 @@ def test_hub_device_exists(tmp_hub):
 
 
 @pytest.mark.destructive
-def test_hub_device_toggle(live_hub, online_device):
-    live_hub.device_toggle(online_device['id'])
+def test_hub_device_toggle(live_hub, destructive_device):
+    live_hub.device_toggle(destructive_device(hub.capability.ON_OFF)['id'])
     time.sleep(delay)
 
 
 @pytest.mark.destructive
-def test_hub_device_on_off(live_hub, online_device):
-    if online_device['state']['isOn']:
-        live_hub.device_off(online_device['id'])
+def test_hub_device_on_off(live_hub, destructive_device):
+    dev = destructive_device(hub.capability.ON_OFF)
+    if dev['state']['isOn']:
+        live_hub.device_off(dev['id'])
         time.sleep(delay)
-        live_hub.device_on(online_device['id'])
+        live_hub.device_on(dev['id'])
     else:
-        live_hub.device_on(online_device['id'])
+        live_hub.device_on(dev['id'])
         time.sleep(delay)
-        live_hub.device_off(online_device['id'])
+        live_hub.device_off(dev['id'])
     time.sleep(delay)
 
 
 @pytest.mark.live
-def test_hub_device_on_off_not_eligible(live_hub, live_sensor_temperature):
+def test_hub_device_on_off_not_eligible(live_hub, live_device):
+    dev = live_device(hub.capability.TEMPERATURE)
     with pytest.raises(ValueError):
-        live_hub.device_on(live_sensor_temperature['id'])
+        live_hub.device_on(dev['id'])
     with pytest.raises(ValueError):
-        live_hub.device_off(live_sensor_temperature['id'])
+        live_hub.device_off(dev['id'])
 
 
 @pytest.mark.destructive
-def test_hub_device_state_replace(live_hub, online_device):
+def test_hub_device_state_replace_brightness(live_hub, destructive_device):
+    dev = destructive_device(hub.capability.BRIGHTNESS)
     import math
-    live_hub.device_on(online_device['id'])
+    live_hub.device_on(dev['id'])
 
-    old_brightness = online_device['state']['brightness']
+    old_brightness = dev['state']['brightness']
     if old_brightness > 0.1:
         set_brightness = old_brightness - 0.1
     else:
         set_brightness = 0.5
-    online_device['state']['brightness'] = set_brightness
-    online_device['state']['isOn'] = True
-    live_hub.device_state_replace(online_device['id'], online_device['state'])
+    dev['state']['brightness'] = set_brightness
+    dev['state']['isOn'] = True
+
+    assert isinstance(dev, dict)
+    live_hub.device_state_replace(dev['id'], dev['state'])
+
     time.sleep(delay)
     devs = live_hub.devices()
-    new_brightness = devs[online_device['id']]['state']['brightness']
-    new_isOn = devs[online_device['id']]['state']['isOn']
+    new_brightness = devs[dev['id']]['state']['brightness']
+    new_isOn = devs[dev['id']]['state']['isOn']
 
     assert not math.isclose(
         new_brightness, old_brightness,
