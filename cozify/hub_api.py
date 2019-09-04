@@ -11,7 +11,7 @@ from cozify import cloud_api
 from .Error import APIError
 from requests.exceptions import RequestException
 
-apiPath = '/cc/1.11'
+apiPath = '/cc/1.12'
 
 
 def _getBase(host, port=8893):
@@ -81,8 +81,8 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
         try:
             response = method(_getBase(host=kwargs['host']) + call, headers=headers, data=payload)
         except RequestException as e:  # pragma: no cover
-            raise APIError('connection failure', 'issues connection to \'{0}\': {1}'.format(
-                kwargs['host'], e))
+            raise APIError('connection failure',
+                           'issues connection to \'{0}\': {1}'.format(kwargs['host'], e))
 
     # evaluate response, wether it was remote or local
     if response.status_code == 200:
@@ -92,8 +92,8 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
                        'API version outdated. Update python-cozify. %s - %s - %s' %
                        (response.reason, response.url, response.text))  # pragma: no cover
     else:
-        raise APIError(response.status_code, '%s - %s - %s' % (response.reason, response.url,
-                                                               response.text))
+        raise APIError(response.status_code,
+                       '%s - %s - %s' % (response.reason, response.url, response.text))
 
 
 def hub(**kwargs):
