@@ -330,11 +330,11 @@ def ping(autorefresh=True, **kwargs):
         if e.status_code == 401 or e.status_code == 403 or e.status_code == 'connection failure':
             if autorefresh:
                 from cozify import cloud
-                logging.warn('Hub token has expired, hub.ping() attempting to renew it.')
+                logging.warning('Hub token has expired, hub.ping() attempting to renew it.')
                 logging.debug('Original APIError was: {0}'.format(e))
                 if cloud.authenticate(trustHub=False):  # if this fails we let it fail.
                     return True
-            logging.warn(e)
+            logging.warning(e)
             return False
         else:
             raise
@@ -589,7 +589,7 @@ def getDevices(**kwargs):  # pragma: no cover
 def getDefaultHub():  # pragma: no cover
     """Deprecated, use default(). Return id of default Hub.
     """
-    logging.warn('hub.getDefaultHub is deprecated and will be removed soon. Use hub.default()')
+    logging.warning('hub.getDefaultHub is deprecated and will be removed soon. Use hub.default()')
     return default()
 
 
@@ -603,5 +603,5 @@ def getHubId(hub_name):  # pragma: no cover
     Returns:
         str: Hub id or raises
     """
-    logging.warn('hub.getHubId is deprecated and will be removed soon. Use hub.hub_id()')
+    logging.warning('hub.getHubId is deprecated and will be removed soon. Use hub.hub_id()')
     return hub_id(hub_name)
