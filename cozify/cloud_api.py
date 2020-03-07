@@ -20,7 +20,7 @@ def requestlogin(email):  # pragma: no cover
     """
 
     payload = {'email': email}
-    response = requests.post(cloudBase + 'user/requestlogin', params=payload)
+    response = requests.post(cloudBase + 'user/requestlogin', params=payload, timeout=5)
     if response.status_code is not 200:
         raise APIError(response.status_code, response.text)
 
@@ -38,7 +38,7 @@ def emaillogin(email, otp):  # pragma: no cover
 
     payload = {'email': email, 'password': otp}
 
-    response = requests.post(cloudBase + 'user/emaillogin', params=payload)
+    response = requests.post(cloudBase + 'user/emaillogin', params=payload, timeout=5)
     if response.status_code == 200:
         return response.text
     else:
@@ -54,7 +54,7 @@ def lan_ip():  # pragma: no cover
     Returns:
         list: List of Hub ip addresses.
     """
-    response = requests.get(cloudBase + 'hub/lan_ip')
+    response = requests.get(cloudBase + 'hub/lan_ip', timeout=5)
     if response.status_code == 200:
         return json.loads(response.text)
     else:
@@ -71,7 +71,7 @@ def hubkeys(cloud_token):  # pragma: no cover
         dict: Map of hub_id: hub_token pairs.
     """
     headers = {'Authorization': cloud_token}
-    response = requests.get(cloudBase + 'user/hubkeys', headers=headers)
+    response = requests.get(cloudBase + 'user/hubkeys', headers=headers, timeout=5)
     if response.status_code == 200:
         return json.loads(response.text)
     else:
@@ -88,7 +88,7 @@ def refreshsession(cloud_token):  # pragma: no cover
         str: New cloud remote authentication token. Not automatically stored into state.
     """
     headers = {'Authorization': cloud_token}
-    response = requests.get(cloudBase + 'user/refreshsession', headers=headers)
+    response = requests.get(cloudBase + 'user/refreshsession', headers=headers, timeout=5)
     if response.status_code == 200:
         return response.text
     else:
@@ -110,8 +110,9 @@ def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):  # pragma: 
 
     headers = {'Authorization': cloud_token, 'X-Hub-Key': hub_token}
     if payload:
-        response = requests.put(cloudBase + 'hub/remote' + apicall, headers=headers, data=payload)
+        response = requests.put(
+            cloudBase + 'hub/remote' + apicall, headers=headers, data=payload, timeout=5)
     else:
-        response = requests.get(cloudBase + 'hub/remote' + apicall, headers=headers)
+        response = requests.get(cloudBase + 'hub/remote' + apicall, headers=headers, timeout=5)
 
     return response

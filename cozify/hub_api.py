@@ -79,7 +79,8 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
             raise AttributeError(
                 'Local call but no hostname was provided. Either set keyword remote or host.')
         try:
-            response = method(_getBase(host=kwargs['host']) + call, headers=headers, data=payload)
+            response = method(
+                _getBase(host=kwargs['host']) + call, headers=headers, data=payload, timeout=5)
         except RequestException as e:  # pragma: no cover
             raise APIError('connection failure',
                            'issues connection to \'{0}\': {1}'.format(kwargs['host'], e))

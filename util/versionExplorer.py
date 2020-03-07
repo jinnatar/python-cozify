@@ -33,7 +33,7 @@ def increment(apipath):
 def ping(base, hub_token):
     headers = {'Authorization': hub_token}
     call = '/hub/tz'
-    response = requests.get(base + call, headers=headers)
+    response = requests.get(base + call, headers=headers, timeout=5)
     if response.status_code == 200:
         return True
     else:
