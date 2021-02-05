@@ -15,7 +15,25 @@ class APIError(Exception):
         self.message = message
 
     def __str__(self):
-        return 'API error, %s: %s' % (self.status_code, self.message)
+        return 'API error, {code}: {message}'.format(code=self.status_code, message=self.message)
+
+
+class ConnectionError(Exception):
+    """Error raised for connection level failures,
+    such as a lost internet connection.
+
+    Args:
+        message(str): Potential error message returned by the requests library
+
+    Attributes:
+        message(str): Potential error message returned by the requests library
+    """
+
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return 'Connection error: {}'.format(self.message)
 
 
 class AuthenticationError(Exception):
@@ -32,4 +50,4 @@ class AuthenticationError(Exception):
         self.message = message
 
     def __str__(self):
-        return 'Authentication error: %s' % self.message
+        return 'Authentication error: {}'.format(self.message)
