@@ -4,12 +4,13 @@ Attributes:
     apiPath(str): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
 """
 
-import requests, json, logging
+import requests
+import json
+from absl import logging
 
 from cozify import cloud_api
 
-from .Error import APIError
-from requests.exceptions import RequestException
+from .Error import APIError, ConnectionError
 
 apiPath = '/cc/1.14'
 
@@ -81,9 +82,8 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
         try:
             response = method(
                 _getBase(host=kwargs['host']) + call, headers=headers, data=payload, timeout=5)
-        except RequestException as e:  # pragma: no cover
-            raise APIError('connection failure',
-                           'issues connection to \'{0}\': {1}'.format(kwargs['host'], e))
+        except requests.exceptions.RequestException as e:  # pragma: no cover
+            raise ConnectionError(str(e)) from None
 
     # evaluate response, wether it was remote or local
     if response.status_code == 200:
