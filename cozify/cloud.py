@@ -8,7 +8,7 @@ from . import config
 from . import hub_api
 from . import cloud_api
 
-from .Error import APIError, AuthenticationError
+from .Error import APIError, AuthenticationError, ConnectionError
 
 
 def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
@@ -44,7 +44,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
     if _need_cloud_token(trustCloud):  # pragma: no cover
         try:
             cloud_api.requestlogin(email)
-        except APIError:
+        except (APIError, ConnectionError):
             resetState()  # a bogus email will shaft all future attempts, better to reset
             raise
 
@@ -52,7 +52,7 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
         otp = _getotp()
         try:
             cloud_token = cloud_api.emaillogin(email, otp)
-        except APIError:
+        except (APIError, ConnectionError):
             logging.error('OTP authentication has failed.')
             resetState()
             raise
@@ -265,9 +265,8 @@ def _need_hub_token(trust=True):
         return True
 
     # First do quick checks, i.e. do we even have a token already
-    if 'default' not in config.state['Hubs'] or 'hubtoken' not in config.state['Hubs.' +
-                                                                               config.state['Hubs']
-                                                                               ['default']]:
+    if 'default' not in config.state['Hubs'] or 'hubtoken' not in config.state[
+            'Hubs.' + config.state['Hubs']['default']]:
         logging.debug("We don't have a valid hubtoken or it's not trusted.")
         return True
     else:  # if we have a token, we need to test if the API is callable

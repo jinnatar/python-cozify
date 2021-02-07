@@ -11,7 +11,7 @@ from . import config
 from . import hub_api
 from enum import Enum
 
-from .Error import APIError
+from .Error import APIError, ConnectionError
 
 capability = Enum(
     'capability',
@@ -327,16 +327,36 @@ def ping(autorefresh=True, **kwargs):
         timezone = tz(**kwargs)
         logging.debug('Ping performed with tz call, response: {0}'.format(timezone))
     except APIError as e:
-        if e.status_code == 401 or e.status_code == 403 or e.status_code == 'connection failure':
+        if e.status_code == 401 or e.status_code == 403:
             if autorefresh:
                 from cozify import cloud
                 logging.warning('Hub token has expired, hub.ping() attempting to renew it.')
                 logging.debug('Original APIError was: {0}'.format(e))
                 if cloud.authenticate(trustHub=False):  # if this fails we let it fail.
                     return True
-            logging.warning(e)
+            logging.error(e)
             return False
         else:
+            raise
+    except ConnectionError as e:
+        # If we're not already remote but are allowed to flip to it
+        if not kwargs['remote'] and kwargs['autoremote']:
+            # Flip to remote to hopefully reach the hub that way
+            logging.warning('Hub connection failed, switching to remote.')
+            remote(kwargs['hub_id'], True)
+            kwargs['remote'] = True
+
+            # retry the call and let it burn to the ground on failure
+            try:
+                timezone = tz(**kwargs)
+            except (APIError, ConnectionError) as e:
+                logging.error('Cannot connect via Cloud either, your hub is dead.')
+                # undo remote so it doesn't stick around, since the failure was undetermined
+                remote(kwargs['hub_id'], False)
+            else:
+                logging.info('Hub connection succeeded remotely, leaving hub configured as remote.')
+        else:
+            # Failure was to the cloud, we can't salvage that.
             raise
     else:
         return True
