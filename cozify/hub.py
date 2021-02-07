@@ -353,8 +353,10 @@ def ping(autorefresh=True, **kwargs):
                 logging.error('Cannot connect via Cloud either, your hub is dead.')
                 # undo remote so it doesn't stick around, since the failure was undetermined
                 remote(kwargs['hub_id'], False)
+                return False
             else:
                 logging.info('Hub connection succeeded remotely, leaving hub configured as remote.')
+                return True
         else:
             # Failure was to the cloud, we can't salvage that.
             raise
