@@ -12,8 +12,8 @@ for example an automatic authentication flow, and low-level 1:1 API functions.
 Installation
 ------------
 
-Python3.4 is the current minimum supported version of Python.
-For example Ubuntu 14.04 LTS is still barely supported in theory but not explicitly tested for.
+Python3.6 is the current minimum supported version of Python.
+For example Ubuntu 18.04 LTS is still supported out of the box, older versions may need a manual Python upgrade or PPA.
 
 The recommended way is to install from PyPi:
 
