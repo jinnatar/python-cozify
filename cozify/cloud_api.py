@@ -166,7 +166,8 @@ def _call(*,
           payload=None,
           no_headers=False,
           json=True,
-          raw=False):
+          raw=False,
+          **kwargs):
     """Backend for get & post
 
     Args:
