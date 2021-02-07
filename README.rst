@@ -165,6 +165,7 @@ pytest is used for unit tests.
 -  Certain tests are marked as "live" tests and require an active authentication state and a real hub to query against. Live tests are non-destructive.
 -  Some tests are marked as "destructive" and will cause changes such as a light being turned on or tokens getting invalidated on purpose.
 -  A few tests are marked as "remote" and are only expected to succeed when testing remotely, i.e. outside the LAN of the hub.
+-  A few tests are marked as "mbtest" and will only work if a MonteBank server is available. If a non-local instance is desired, provide a .env file with MBTEST_HOST set.
 -  Most tests are marked as "logic" and do not require anything external. If no set is defined, only logic tests are run.
 
 During development you can run the test suite right from the source directory:
@@ -174,8 +175,8 @@ During development you can run the test suite right from the source directory:
     pytest
     # or run only live tests:
     pytest -m live
-    # run everything except destructive tests:
-    pytest -m "not destructive"
+    # run everything except destructive * MonteBank tests:
+    pytest -m "not destructive and not mbtest"
 
 To run the test suite on an already installed python-cozify (defining a set is mandatory, otherwise ALL sets are run including destructive):
 

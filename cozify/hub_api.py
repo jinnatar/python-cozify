@@ -15,7 +15,7 @@ from .Error import APIError, ConnectionError
 apiPath = '/cc/1.14'
 
 
-def _getBase(host, port=8893):
+def _getBase(host, port=8893, **kwargs):
     return 'http://{0}:{1}'.format(host, port)
 
 
@@ -71,17 +71,16 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
     if payload is not None:
         headers['content-type'] = 'application/json'
 
-    if kwargs['remote']:  # remote call
+    if 'remote' in kwargs and kwargs['remote']:  # remote call
         if 'cloud_token' not in kwargs:
             raise AttributeError('Asked to do remote call but no cloud_token provided.')
         response = cloud_api.remote(apicall=call, payload=payload, **kwargs)
     else:  # local call
-        if not kwargs['host']:
+        if 'host' not in kwargs or not kwargs['host']:
             raise AttributeError(
                 'Local call but no hostname was provided. Either set keyword remote or host.')
         try:
-            response = method(
-                _getBase(host=kwargs['host']) + call, headers=headers, data=payload, timeout=5)
+            response = method(_getBase(**kwargs) + call, headers=headers, data=payload, timeout=5)
         except requests.exceptions.RequestException as e:  # pragma: no cover
             raise ConnectionError(str(e)) from None
 

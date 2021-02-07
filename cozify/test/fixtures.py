@@ -4,6 +4,8 @@ import os, pytest, tempfile, datetime
 import hashlib, json
 
 from absl import logging
+from mbtest.server import MountebankServer
+
 from cozify import config, hub
 
 from . import fixtures_devices as dev
@@ -41,6 +43,15 @@ def live_cloud():
     os.remove(configpath)
 
 
+@pytest.fixture(scope="session")
+def mock_server():
+    if 'MBTEST_HOST' in os.environ:
+        host = os.environ['MBTEST_HOST']
+    else:
+        host = 'localhost'
+    return MountebankServer(port=2525, host=host)
+
+
 @pytest.fixture
 def tmp_hub(tmp_cloud):
     with Tmp_hub(tmp_cloud) as hub_obj:
@@ -69,7 +80,7 @@ def offline_device():
             store = d['state']
             break
     if dev is None:
-        logging.fatal('Cannot run device tests, no offline COLOR_HS device to test against.')
+        pytest.xfail('Cannot run certain device tests, no offline COLOR_HS device to test against.')
 
     yield dev
     hub.device_state_replace(dev, store)
@@ -87,12 +98,13 @@ def online_device():
             store = d['state'].copy()
             break
     if dev is None:
-        logging.error(
+        pytest.xfail(
             'Cannot run certain device tests, no COLOR_HS device online where name includes \'test\'.'
         )
     logging.info('online_device state before use ({1}): {0}'.format(store, _h6_dict(store)))
     yield dev
-    logging.info('online_device state after use, before rollback ({1}): {0}'.format(dev['state'], _h6_dict(dev['state'])))
+    logging.info('online_device state after use, before rollback ({1}): {0}'.format(
+        dev['state'], _h6_dict(dev['state'])))
     hub.device_state_replace(dev['id'], store)
 
 
@@ -124,6 +136,7 @@ class Tmp_hub():
 
     def states(self):
         return dev.states
+
 
 def _h6_dict(d):
     j = json.dumps(d)

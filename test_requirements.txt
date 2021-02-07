@@ -3,3 +3,5 @@ codecov
 coverage
 pytest-profiling
 python-gist
+mbtest
+pytest-dotenv

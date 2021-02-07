@@ -18,7 +18,7 @@ class APIError(Exception):
         return 'API error, {code}: {message}'.format(code=self.status_code, message=self.message)
 
 
-class ConnectionError(Exception):
+class ConnectionError(ConnectionError):
     """Error raised for connection level failures,
     such as a lost internet connection.
 

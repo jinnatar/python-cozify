@@ -13,7 +13,7 @@ from .Error import APIError, AuthenticationError, ConnectionError
 cloudBase = 'https://cloud2.cozify.fi/ui/0.2'
 
 
-def get(call, headers=None, base=cloudBase, no_headers=False, json=True, raw=False):
+def get(call, headers=None, base=cloudBase, no_headers=False, json=True, raw=False, **kwargs):
     """GET method for calling hub API.
 
     Args:
@@ -32,7 +32,7 @@ def get(call, headers=None, base=cloudBase, no_headers=False, json=True, raw=Fal
         raw=raw)
 
 
-def post(call, headers=None, payload=None, base=cloudBase, no_headers=False, raw=False):
+def post(call, headers=None, payload=None, base=cloudBase, no_headers=False, raw=False, **kwargs):
     """PUT method for calling hub API. For rest of kwargs parameters see get()
 
     Args:
@@ -51,7 +51,7 @@ def post(call, headers=None, payload=None, base=cloudBase, no_headers=False, raw
         raw=raw)
 
 
-def put(call, headers=None, payload=None, base=cloudBase, no_headers=False, raw=False):
+def put(call, headers=None, payload=None, base=cloudBase, no_headers=False, raw=False, **kwargs):
     """PUT method for calling hub API. For rest of kwargs parameters see get()
 
     Args:
@@ -70,7 +70,7 @@ def put(call, headers=None, payload=None, base=cloudBase, no_headers=False, raw=
         raw=raw)
 
 
-def requestlogin(email):  # pragma: no cover
+def requestlogin(email, **kwargs):  # pragma: no cover
     """Raw Cloud API call, request OTP to be sent to account email address.
 
     Args:
@@ -78,10 +78,10 @@ def requestlogin(email):  # pragma: no cover
     """
 
     payload = {'email': email}
-    post('/user/requestlogin', payload=payload)
+    post('/user/requestlogin', payload=payload, **kwargs)
 
 
-def emaillogin(email, otp):  # pragma: no cover
+def emaillogin(email, otp, **kwargs):  # pragma: no cover
     """Raw Cloud API call, request cloud token with email address & OTP.
 
     Args:
@@ -93,10 +93,10 @@ def emaillogin(email, otp):  # pragma: no cover
     """
 
     payload = {'email': email, 'password': otp}
-    post('/user/emaillogin', payload=payload)
+    post('/user/emaillogin', payload=payload, **kwargs)
 
 
-def lan_ip():  # pragma: no cover
+def lan_ip(**kwargs):  # pragma: no cover
     """1:1 implementation of hub/lan_ip
 
     This call will fail with an APIError if the requesting source address is not the same as that of the hub, i.e. if they're not in the same NAT network.
@@ -105,10 +105,10 @@ def lan_ip():  # pragma: no cover
     Returns:
         list: List of Hub ip addresses.
     """
-    return list(get('/hub/lan_ip', no_headers=True))
+    return list(get('/hub/lan_ip', no_headers=True, **kwargs))
 
 
-def hubkeys(cloud_token):  # pragma: no cover
+def hubkeys(cloud_token, **kwargs):  # pragma: no cover
     """1:1 implementation of user/hubkeys
 
     Args:
@@ -118,10 +118,10 @@ def hubkeys(cloud_token):  # pragma: no cover
         dict: Map of hub_id: hub_token pairs.
     """
     headers = {'Authorization': cloud_token}
-    return get('/user/hubkeys', headers=headers)
+    return get('/user/hubkeys', headers=headers, **kwargs)
 
 
-def refreshsession(cloud_token):  # pragma: no cover
+def refreshsession(cloud_token, **kwargs):  # pragma: no cover
     """1:1 implementation of user/refreshsession
 
     Args:
@@ -131,7 +131,7 @@ def refreshsession(cloud_token):  # pragma: no cover
         str: New cloud remote authentication token. Not automatically stored into state.
     """
     headers = {'Authorization': cloud_token}
-    return get('/user/refreshsession', headers=headers, json=False)
+    return get('/user/refreshsession', headers=headers, json=False, **kwargs)
 
 
 def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):  # pragma: no cover
@@ -150,9 +150,9 @@ def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):  # pragma: 
     headers = {'Authorization': cloud_token, 'X-Hub-Key': hub_token}
 
     if payload:
-        return put('/hub/remote' + apicall, headers=headers, payload=payload, raw=True)
+        return put('/hub/remote' + apicall, headers=headers, payload=payload, raw=True, **kwargs)
     else:
-        return get('/hub/remote' + apicall, headers=headers, raw=True)
+        return get('/hub/remote' + apicall, headers=headers, raw=True, **kwargs)
 
 
 def _call(*,
