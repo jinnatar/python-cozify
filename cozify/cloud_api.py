@@ -183,7 +183,7 @@ def _call(*,
 
     try:
         if payload:
-            response = method(call, headers=headers, payload=payload, timeout=5)
+            response = method(call, headers=headers, data=payload, timeout=5)
         if params:
             response = method(call, headers=headers, params=params, timeout=5)
         else:
