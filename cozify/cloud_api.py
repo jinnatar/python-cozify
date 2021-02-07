@@ -29,7 +29,8 @@ def get(call, headers=None, base=cloudBase, no_headers=False, json=True, raw=Fal
         headers=headers,
         no_headers=no_headers,
         json=json,
-        raw=raw)
+        raw=raw,
+        **kwargs)
 
 
 def post(call, headers=None, payload=None, base=cloudBase, no_headers=False, raw=False, **kwargs):
@@ -48,7 +49,8 @@ def post(call, headers=None, payload=None, base=cloudBase, no_headers=False, raw
         headers=headers,
         params=payload,
         no_headers=no_headers,
-        raw=raw)
+        raw=raw,
+        **kwargs)
 
 
 def put(call, headers=None, payload=None, base=cloudBase, no_headers=False, raw=False, **kwargs):
@@ -67,7 +69,8 @@ def put(call, headers=None, payload=None, base=cloudBase, no_headers=False, raw=
         headers=headers,
         no_headers=no_headers,
         payload=payload,
-        raw=raw)
+        raw=raw,
+        **kwargs)
 
 
 def requestlogin(email, **kwargs):  # pragma: no cover
@@ -81,7 +84,7 @@ def requestlogin(email, **kwargs):  # pragma: no cover
     post('/user/requestlogin', payload=payload, **kwargs)
 
 
-def emaillogin(email, otp, **kwargs):  # pragma: no cover
+def emaillogin(email, otp, **kwargs):
     """Raw Cloud API call, request cloud token with email address & OTP.
 
     Args:
@@ -93,10 +96,10 @@ def emaillogin(email, otp, **kwargs):  # pragma: no cover
     """
 
     payload = {'email': email, 'password': otp}
-    post('/user/emaillogin', payload=payload, **kwargs)
+    return post('/user/emaillogin', payload=payload, json=False, **kwargs)
 
 
-def lan_ip(**kwargs):  # pragma: no cover
+def lan_ip(**kwargs):
     """1:1 implementation of hub/lan_ip
 
     This call will fail with an APIError if the requesting source address is not the same as that of the hub, i.e. if they're not in the same NAT network.
@@ -134,7 +137,7 @@ def refreshsession(cloud_token, **kwargs):  # pragma: no cover
     return get('/user/refreshsession', headers=headers, json=False, **kwargs)
 
 
-def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):  # pragma: no cover
+def remote(cloud_token, hub_token, apicall, payload=None, **kwargs):
     """1:1 implementation of 'hub/remote'
 
     Args:

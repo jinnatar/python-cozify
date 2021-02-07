@@ -24,3 +24,11 @@ def test_cloud_api_timeout(mock_server):
     with pytest.raises(ConnectionError) as e_info:
         with mock_server(imposter):
             cloud_api.lan_ip(base=imposter.url)
+
+
+@pytest.mark.mbtest
+def test_cloud_api_emaillogin(mock_server, tmp_cloud):
+    imposter = Imposter(Stub(Predicate(path="/user/emaillogin"), Response(body=tmp_cloud.token)))
+    with mock_server(imposter):
+        token = cloud_api.emaillogin(email=tmp_cloud.email, otp='42', base=imposter.url)
+        assert isinstance(token, str)
