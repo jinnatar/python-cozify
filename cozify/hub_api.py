@@ -38,12 +38,12 @@ def get(call, hub_token_header=True, base=apiPath, **kwargs):
         **kwargs)
 
 
-def put(call, payload, hub_token_header=True, base=apiPath, **kwargs):
+def put(call, data, hub_token_header=True, base=apiPath, **kwargs):
     """PUT method for calling hub API. For rest of kwargs parameters see get()
 
     Args:
         call(str): API path to call after apiPath, needs to include leading /.
-        payload(str): json string to push out as the payload.
+        data(str): json string to push out as the payload.
         hub_token_header(bool): Set to False to omit hub_token usage in call headers.
         base(str): Base path to call from API instead of global apiPath. Defaults to apiPath.
     """
@@ -51,11 +51,11 @@ def put(call, payload, hub_token_header=True, base=apiPath, **kwargs):
         method=requests.put,
         call='{0}{1}'.format(base, call),
         hub_token_header=hub_token_header,
-        payload=payload,
+        data=data,
         **kwargs)
 
 
-def _call(*, call, method, hub_token_header, payload=None, **kwargs):
+def _call(*, call, method, hub_token_header, data=None, **kwargs):
     """Backend for get & put
 
     Args:
@@ -68,19 +68,19 @@ def _call(*, call, method, hub_token_header, payload=None, **kwargs):
         if 'hub_token' not in kwargs:
             raise AttributeError('Asked to do a call to the hub but no hub_token provided.')
         headers['Authorization'] = kwargs['hub_token']
-    if payload is not None:
+    if data is not None:
         headers['content-type'] = 'application/json'
 
     if 'remote' in kwargs and kwargs['remote']:  # remote call
         if 'cloud_token' not in kwargs:
             raise AttributeError('Asked to do remote call but no cloud_token provided.')
-        response = cloud_api.remote(apicall=call, payload=payload, **kwargs)
+        response = cloud_api.remote(apicall=call, data=data, **kwargs)
     else:  # local call
         if 'host' not in kwargs or not kwargs['host']:
             raise AttributeError(
                 'Local call but no hostname was provided. Either set keyword remote or host.')
         try:
-            response = method(_getBase(**kwargs) + call, headers=headers, data=payload, timeout=5)
+            response = method(_getBase(**kwargs) + call, headers=headers, data=data, timeout=5)
         except requests.exceptions.RequestException as e:  # pragma: no cover
             raise ConnectionError(str(e)) from None
 
