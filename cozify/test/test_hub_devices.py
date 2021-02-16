@@ -78,6 +78,7 @@ def test_hub_device_exists(tmp_hub):
 
 
 @pytest.mark.destructive
+@pytest.mark.vcr
 def test_hub_device_toggle(live_hub, online_device):
     live_hub.device_toggle(online_device['id'])
     time.sleep(delay)

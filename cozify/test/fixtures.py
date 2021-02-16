@@ -10,6 +10,9 @@ from cozify import config, hub
 
 from . import fixtures_devices as dev
 
+@pytest.fixture(scope="module")
+def vcr_config():
+        return {"filter_headers": ["authorizationn"]}
 
 @pytest.fixture
 def tmp_cloud():

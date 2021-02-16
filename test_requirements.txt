@@ -5,3 +5,4 @@ pytest-profiling
 python-gist
 mbtest
 pytest-dotenv
+pytest-recording
