@@ -7,14 +7,19 @@ Attributes:
 
 import json
 import requests
-from absl import logging
 
 from .Error import APIError, AuthenticationError, ConnectionError
 
 cloudBase = 'https://cloud2.cozify.fi/ui/0.2'
 
 
-def get(call, headers=None, base=cloudBase, no_headers=False, json_output=True, raw=False, **kwargs):
+def get(call,
+        headers=None,
+        base=cloudBase,
+        no_headers=False,
+        json_output=True,
+        raw=False,
+        **kwargs):
     """GET method for calling hub API.
 
     Args:
@@ -24,14 +29,13 @@ def get(call, headers=None, base=cloudBase, no_headers=False, json_output=True, 
         no_headers(bool): Allow calling without headers or data.
         json_output(bool): Assume API will return json and decode it.
     """
-    return _call(
-        method=requests.get,
-        call='{0}{1}'.format(base, call),
-        headers=headers,
-        no_headers=no_headers,
-        json_output=json_output,
-        raw=raw,
-        **kwargs)
+    return _call(method=requests.get,
+                 call='{0}{1}'.format(base, call),
+                 headers=headers,
+                 no_headers=no_headers,
+                 json_output=json_output,
+                 raw=raw,
+                 **kwargs)
 
 
 def post(call, headers=None, data=None, base=cloudBase, no_headers=False, raw=False, **kwargs):
@@ -44,14 +48,13 @@ def post(call, headers=None, data=None, base=cloudBase, no_headers=False, raw=Fa
         base(str): Base path to call from API instead of global base. Defaults to cloudBase.
         no_headers(bool): Allow calling without headers or data.
     """
-    return _call(
-        method=requests.post,
-        call='{0}{1}'.format(base, call),
-        headers=headers,
-        data=data,
-        no_headers=no_headers,
-        raw=raw,
-        **kwargs)
+    return _call(method=requests.post,
+                 call='{0}{1}'.format(base, call),
+                 headers=headers,
+                 data=data,
+                 no_headers=no_headers,
+                 raw=raw,
+                 **kwargs)
 
 
 def put(call, headers=None, data=None, base=cloudBase, no_headers=False, raw=False, **kwargs):
@@ -64,14 +67,13 @@ def put(call, headers=None, data=None, base=cloudBase, no_headers=False, raw=Fal
         base(str): Base path to call from API instead of global base. Defaults to cloudBase.
         no_headers(bool): Allow calling without headers or data.
     """
-    return _call(
-        method=requests.put,
-        call='{0}{1}'.format(base, call),
-        headers=headers,
-        no_headers=no_headers,
-        data=data,
-        raw=raw,
-        **kwargs)
+    return _call(method=requests.put,
+                 call='{0}{1}'.format(base, call),
+                 headers=headers,
+                 no_headers=no_headers,
+                 data=data,
+                 raw=raw,
+                 **kwargs)
 
 
 def requestlogin(email, **kwargs):  # pragma: no cover
@@ -138,25 +140,22 @@ def refreshsession(cloud_token, **kwargs):  # pragma: no cover
     return get('/user/refreshsession', headers=headers, json_output=False, **kwargs)
 
 
-def remote(cloud_token, hub_token, apicall, data=None, **kwargs):
+def remote(apicall, headers, data=None):
     """1:1 implementation of 'hub/remote'
 
     Args:
-        cloud_token(str): Cloud remote authentication token.
-        hub_token(str): Hub authentication token.
         apicall(str): Full API call that would normally go directly to hub, e.g. '/cc/1.6/hub/colors'
+        headers(dict): Headers to send with request. Must contain Authorization & X-Hub-Key data.
         data(str): json string to use as payload, changes method to PUT.
 
     Returns:
         requests.response: Requests response object.
     """
 
-    headers = {'Authorization': cloud_token, 'X-Hub-Key': hub_token}
-
     if data:
-        return put('/hub/remote' + apicall, headers=headers, data=data, raw=True, **kwargs)
+        return put('/hub/remote' + apicall, headers=headers, data=data, raw=True)
     else:
-        return get('/hub/remote' + apicall, headers=headers, raw=True, **kwargs)
+        return get('/hub/remote' + apicall, headers=headers, raw=True)
 
 
 def _call(*,
@@ -187,12 +186,12 @@ def _call(*,
         )
 
     try:
-        if data:
-            response = method(call, headers=headers, data=json.dumps(data), timeout=5)
-            logging.info('call method: {}'.format(method))
-            logging.info('call headers: {}'.format(headers))
-            logging.info('call data: {}'.format(data))
-        if params:
+        if method is requests.put:
+            if data:
+                response = method(call, headers=headers, data=data, timeout=5)
+            else:
+                raise AttributeError('PUT call with no data, this would fail!')
+        elif params:
             response = method(call, headers=headers, params=params, timeout=5)
         else:
             response = method(call, headers=headers, timeout=5)
@@ -216,5 +215,6 @@ def _call(*,
                 message=response.text))  # pragma: no cover
     else:
         raise APIError(
-            response.status_code, '{reason} - {url} - {message}'.format(
-                reason=response.reason, url=response.url, message=response.text))
+            response.status_code, '{reason} - {url} - {message}'.format(reason=response.reason,
+                                                                        url=response.url,
+                                                                        message=response.text))

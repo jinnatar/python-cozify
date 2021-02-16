@@ -64,17 +64,22 @@ def _call(*, call, method, hub_token_header, data=None, **kwargs):
     """
     response = None
     headers = {}
+    if 'headers' in kwargs:
+        raise ValueError('Headers already defined: {}'.format(kwargs['headers']))
     if hub_token_header:
         if 'hub_token' not in kwargs:
             raise AttributeError('Asked to do a call to the hub but no hub_token provided.')
         headers['Authorization'] = kwargs['hub_token']
     if data is not None:
+        data = json.dumps(data)
         headers['content-type'] = 'application/json'
 
     if 'remote' in kwargs and kwargs['remote']:  # remote call
         if 'cloud_token' not in kwargs:
             raise AttributeError('Asked to do remote call but no cloud_token provided.')
-        response = cloud_api.remote(apicall=call, data=data, **kwargs)
+        headers['Authorization'] = kwargs['cloud_token']
+        headers['X-Hub-Key'] = kwargs['hub_token']
+        response = cloud_api.remote(apicall=call, data=data, headers=headers)
     else:  # local call
         if 'host' not in kwargs or not kwargs['host']:
             raise AttributeError(
@@ -138,7 +143,6 @@ def devices_command(command, **kwargs):
     Returns:
         str: What ever the API replied or raises an APIEerror on failure.
     """
-    command = json.dumps(command)
     logging.debug('command json to send: {0}'.format(command))
     return put('/devices/command', command, **kwargs)
 
