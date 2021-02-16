@@ -12,7 +12,10 @@ from . import fixtures_devices as dev
 
 @pytest.fixture(scope="module")
 def vcr_config():
-        return {"filter_headers": ["authorizationn"]}
+        return {
+                "filter_headers": ["authorization", "X-Hub-Key"],
+                "record_mode": "rewrite"
+                }
 
 @pytest.fixture
 def tmp_cloud():
