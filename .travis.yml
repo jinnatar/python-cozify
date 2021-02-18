@@ -14,7 +14,7 @@ notifications:
 
 
 env:
-  - SET="-m 'logic or live or destructive or remote'"
+  - SET="-m 'logic or live or destructive or remote or mbtest'"
 
 before_install:
   - sudo apt-get update -qq
