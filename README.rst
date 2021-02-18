@@ -197,8 +197,8 @@ Roadmap, aka. Current Limitations
   :target: http://python-cozify.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
 
-.. |ci| image:: https://travis-ci.org/Artanicus/python-cozify.svg?branch=master
-  :target: https://travis-ci.org/Artanicus/python-cozify
+.. |ci| image:: https://travis-ci.com/Artanicus/python-cozify.svg?branch=master
+  :target: https://travis-ci.com/Artanicus/python-cozify
   :alt: Build Status
 
 .. |coverage| image:: https://codecov.io/gh/Artanicus/python-cozify/branch/master/graph/badge.svg
