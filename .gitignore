@@ -10,3 +10,4 @@ prof/
 .coverage
 .tox
 .env
+coverage.xml
