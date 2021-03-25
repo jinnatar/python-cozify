@@ -58,7 +58,9 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             raise
 
         # save the successful cloud_token
-        _setAttr('last_refresh', config._iso_now(), commit=False)
+        _setAttr('last_refresh',
+                 datetime.datetime.now().isoformat(timespec='seconds'),
+                 commit=False)
         _setAttr('remoteToken', cloud_token, commit=True)
     else:
         # cloud_token already fine, let's just use it
@@ -189,7 +191,9 @@ def refresh(force=False, expiry=datetime.timedelta(days=1)):
             else:
                 raise
         else:
-            _setAttr('last_refresh', config._iso_now(), commit=False)
+            _setAttr('last_refresh',
+                     datetime.datetime.now().isoformat(timespec='seconds'),
+                     commit=False)
             token(cloud_token)
             logging.info('cloud_token has been successfully refreshed.')
 

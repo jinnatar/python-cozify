@@ -81,17 +81,6 @@ def dump_state():
             print('  {!s:<13.13} = {!s:>10.100}'.format(option, state[section][option]))
 
 
-def _iso_now():
-    """Helper to return isoformat datetime stamp that's more compatible than the default.
-    Once Python 3.6 is more widely popular this becomes redundant since isoformat() will support timespec.
-
-    Returns:
-        str: now() in isoformat truncated to full seconds.
-    """
-
-    return datetime.datetime.now().isoformat().split(".")[0]
-
-
 def _initState(state_file):
     """Initialize state on cold start. Any stored state is read in or a new basic state is initialized.
 
