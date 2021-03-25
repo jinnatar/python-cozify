@@ -32,3 +32,13 @@ def test_cloud_api_emaillogin(mock_server, tmp_cloud):
     with mock_server(imposter):
         token = cloud_api.emaillogin(email=tmp_cloud.email, otp='42', base=imposter.url)
         assert isinstance(token, str)
+
+
+@pytest.mark.mbtest
+def test_cloud_api_requestlogin(mock_server, tmp_cloud):
+    imposter = Imposter(
+        Stub(
+            Predicate(method=Predicate.Method.POST) & Predicate(path="/user/requestlogin")
+            & Predicate(query={"email": tmp_cloud.email}), Response(body='null')))
+    with mock_server(imposter):
+        cloud_api.requestlogin(email=tmp_cloud.email, base=imposter.url)

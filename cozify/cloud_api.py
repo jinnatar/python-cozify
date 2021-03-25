@@ -13,12 +13,7 @@ from .Error import APIError, AuthenticationError, ConnectionError
 cloudBase = 'https://cloud2.cozify.fi/ui/0.2'
 
 
-def get(call,
-        headers=None,
-        base=cloudBase,
-        no_headers=False,
-        json_output=True,
-        raw=False,
+def get(call, headers=None, base=cloudBase, no_headers=False, json_output=True, raw=False,
         **kwargs):
     """GET method for calling hub API.
 
@@ -38,13 +33,21 @@ def get(call,
                  **kwargs)
 
 
-def post(call, headers=None, data=None, base=cloudBase, no_headers=False, raw=False, **kwargs):
+def post(call,
+         headers=None,
+         data=None,
+         params=None,
+         base=cloudBase,
+         no_headers=False,
+         raw=False,
+         **kwargs):
     """PUT method for calling hub API. For rest of kwargs parameters see get()
 
     Args:
         call(str): API path to call after apiPath, needs to include leading /.
         headers(dict): Header dictionary to pass along to the request.
         data(dict): Payload dictionary to POST.
+        params(dict): Payload dictionary to include as GET parameters.
         base(str): Base path to call from API instead of global base. Defaults to cloudBase.
         no_headers(bool): Allow calling without headers or data.
     """
@@ -52,6 +55,7 @@ def post(call, headers=None, data=None, base=cloudBase, no_headers=False, raw=Fa
                  call='{0}{1}'.format(base, call),
                  headers=headers,
                  data=data,
+                 params=params,
                  no_headers=no_headers,
                  raw=raw,
                  **kwargs)
@@ -84,7 +88,8 @@ def requestlogin(email, **kwargs):  # pragma: no cover
     """
 
     payload = {'email': email}
-    post('/user/requestlogin', data=payload, **kwargs)
+    # Sending the payload as params is intentional to match the snafu of the upstream API
+    post('/user/requestlogin', params=payload, **kwargs)
 
 
 def emaillogin(email, otp, **kwargs):
@@ -191,6 +196,17 @@ def _call(*,
                 response = method(call, headers=headers, data=data, timeout=5)
             else:
                 raise AttributeError('PUT call with no data, this would fail!')
+        elif method is requests.post:
+            if data and params:
+                response = method(call, headers=headers, data=data, params=params, timeout=5)
+            elif data:
+                response = method(call, headers=headers, data=data, timeout=5)
+            elif params:
+                response = method(call, headers=headers, params=params, timeout=5)
+            else:
+                raise AttributeError(
+                    'POST call with no data or params, this probably makes no sense!')
+
         elif params:
             response = method(call, headers=headers, params=params, timeout=5)
         else:
