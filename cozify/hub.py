@@ -336,27 +336,46 @@ def ping(autorefresh=True, **kwargs):
         else:
             raise
     except ConnectionError as e:
-        # If we're not already remote but are allowed to flip to it
-        if not kwargs['remote'] and kwargs['autoremote']:
-            # Flip to remote to hopefully reach the hub that way
-            logging.warning('Hub connection failed, switching to remote.')
-            remote(kwargs['hub_id'], True)
-            kwargs['remote'] = True
+        logging.warning('Hub connection failed, attempting to rescue it.')
+        from cozify import cloud
 
-            # retry the call and let it burn to the ground on failure
+        # If we're not remote can try to refresh hub ip
+        if not kwargs['remote']:
+            logging.warning('Verifying we have an up to date ip address')
+            from cozify import cloud
+            cloud.update_hubs()  # This can succeed even if we don't have a valid cloud token
+            # retry the call
             try:
                 timezone = tz(**kwargs)
-            except (APIError, ConnectionError) as e:
-                logging.error(f'Cannot connect via Cloud either, your hub is dead: {e}')
-                # undo remote so it doesn't stick around, since the failure was undetermined
-                remote(kwargs['hub_id'], False)
-                return False
+            except ConnectionError as e:
+                logging.error('Refreshing hub ip was not enough to rescue it')
             else:
-                logging.info('Hub connection succeeded remotely, leaving hub configured as remote.')
+                logging.warning('Hub ip had changed, back in business!')
                 return True
-        else:
-            # Failure was to the cloud, we can't salvage that.
-            raise
+
+        # If we're not remote and allowed to try it, try it!
+        if not kwargs['remote'] and kwargs['autoremote']:
+            logging.warning('Perhaps we can reach it remotely.')
+            # Need an operable cloud connection for this
+            if cloud.ping():
+                remote(kwargs['hub_id'], True)
+                kwargs['remote'] = True
+
+                # retry the call and let it burn to the ground on failure
+                try:
+                    timezone = tz(**kwargs)
+                except (APIError, ConnectionError) as e:
+                    logging.error(f'Cannot connect via Cloud either, nothing left to try: {e}')
+                    # undo remote so it doesn't stick around, since the failure was undetermined
+                    remote(kwargs['hub_id'], False)
+                    return False
+                else:
+                    logging.info(
+                        'Hub connection succeeded remotely, leaving hub configured as remote.')
+                    return True
+            else:
+                # Failure was to the cloud, we can't salvage that.
+                raise
     else:
         return True
 

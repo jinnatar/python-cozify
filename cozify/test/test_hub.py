@@ -4,7 +4,7 @@ import pytest
 from cozify import hub, multisensor
 from cozify.test import debug
 from cozify.test.fixtures import *
-from cozify.Error import APIError
+from cozify.Error import APIError, ConnectionError
 
 
 @pytest.mark.logic
@@ -21,7 +21,16 @@ def test_hub_tz(live_hub):
 
 @pytest.mark.live
 def test_hub_remote_naive(live_hub):
-    assert hub.tz()
+    assert live_hub.tz()
+
+
+@pytest.mark.live
+def test_hub_changed_ip(live_hub):
+    live_hub._setAttr(live_hub.default(), 'host', '555.555.555.555')
+    with pytest.raises(ConnectionError):
+        live_hub.tz()
+    live_hub.ping()  # should identify & fix ip issue
+    assert live_hub.tz()
 
 
 @pytest.mark.logic
