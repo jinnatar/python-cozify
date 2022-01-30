@@ -70,9 +70,10 @@ def live_hub():
     config.setStatePath()  # we assume the default config will be "live"
     configfile, configpath = tempfile.mkstemp(suffix='live_hub')
     config.setStatePath(configpath, copy_current=True)
+    from cozify import hub
+    assert hub.ping()
     print('Live hub state for testing:')
     config.dump_state()  # dump state so it's visible in failed test output
-    from cozify import hub
     yield hub
     config.setStatePath()
     os.remove(configpath)
