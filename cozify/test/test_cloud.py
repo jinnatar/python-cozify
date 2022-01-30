@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, pytest, tempfile, datetime
+import os, pytest, tempfile, datetime, time
 
 from cozify import cloud, config, hub
 from cozify.test import debug
@@ -66,11 +66,14 @@ def test_cloud_refresh_expiry_not_over(tmp_cloud):
     assert not cloud._need_refresh(force=False, expiry=datetime.timedelta(days=2))
 
 
-@pytest.mark.live
-def test_cloud_refresh(live_cloud):
+@pytest.mark.destructive
+def test_cloud_refresh_force(live_cloud):
+    config.dump_state()
     timestamp_before = live_cloud._getAttr('last_refresh')
     token_before = live_cloud.token()
+    time.sleep(2)  # ensure timestamp has a diff
     live_cloud.refresh(force=True)
+    config.dump_state()
     assert timestamp_before < live_cloud._getAttr('last_refresh')
     assert token_before != live_cloud.token()
 
