@@ -195,12 +195,11 @@ def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
     """
     _fill_kwargs(kwargs)
     state = {}  # will be populated by device_eligible
-    if device_eligible(
-            device_id, capability.COLOR_TEMP, state=state, **kwargs) and _in_range(
-                temperature,
-                low=state['minTemperature'],
-                high=state['maxTemperature'],
-                description='Temperature'):
+    if device_eligible(device_id, capability.COLOR_TEMP, state=state, **kwargs) and _in_range(
+            temperature,
+            low=state['minTemperature'],
+            high=state['maxTemperature'],
+            description='Temperature'):
 
         state = _clean_state(state)
         state['colorMode'] = 'ct'
@@ -222,10 +221,9 @@ def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
     """
     _fill_kwargs(kwargs)
     state = {}  # will be populated by device_eligible
-    if device_eligible(
-            device_id, capability.COLOR_HS, state=state, **kwargs) and _in_range(
-                hue, low=0.0, high=math.pi * 2, description='Hue') and _in_range(
-                    saturation, low=0.0, high=1.0, description='Saturation'):
+    if device_eligible(device_id, capability.COLOR_HS, state=state, **kwargs) and _in_range(
+            hue, low=0.0, high=math.pi * 2, description='Hue') and _in_range(
+                saturation, low=0.0, high=1.0, description='Saturation'):
 
         state = _clean_state(state)
         state['colorMode'] = 'hs'
@@ -246,9 +244,8 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
     """
     _fill_kwargs(kwargs)
     state = {}  # will be populated by device_eligible
-    if device_eligible(
-            device_id, capability.BRIGHTNESS, state=state, **kwargs) and _in_range(
-                brightness, low=0.0, high=1.0, description='Brightness'):
+    if device_eligible(device_id, capability.BRIGHTNESS, state=state, **kwargs) and _in_range(
+            brightness, low=0.0, high=1.0, description='Brightness'):
 
         state = _clean_state(state)
         state['brightness'] = brightness
@@ -350,7 +347,7 @@ def ping(autorefresh=True, **kwargs):
             try:
                 timezone = tz(**kwargs)
             except (APIError, ConnectionError) as e:
-                logging.error('Cannot connect via Cloud either, your hub is dead.')
+                logging.error(f'Cannot connect via Cloud either, your hub is dead: {e}')
                 # undo remote so it doesn't stick around, since the failure was undetermined
                 remote(kwargs['hub_id'], False)
                 return False
