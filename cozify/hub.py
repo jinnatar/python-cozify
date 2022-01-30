@@ -1,8 +1,4 @@
 """Module for handling highlevel Cozify Hub operations.
-
-Attributes:
-    capability(capability): Enum of known device capabilities. Alphabetically sorted, numeric value not guaranteed to stay constant between versions if new capabilities are added.
-
 """
 
 from absl import logging
@@ -13,6 +9,7 @@ from enum import Enum
 
 from .Error import APIError, ConnectionError
 
+# Enum of known device capabilities. Alphabetically sorted, numeric value not guaranteed to stay constant between versions if new capabilities are added.
 capability = Enum(
     'capability',
     'ALERT BASS BATTERY_U BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT CONTROL_LIGHT CONTROL_POWER DEVICE DIMMER_CONTROL GENERATE_ALERT HUE_SWITCH HUMIDITY IDENTIFY IKEA_RC LOUDNESS LUX MOISTURE MOTION MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS PUSH_NOTIFICATION REMOTE_CONTROL SEEK SMOKE STOP TEMPERATURE TRANSITION TREBLE TWILIGHT UPGRADE USER_PRESENCE VOLUME'

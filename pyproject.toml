@@ -14,13 +14,29 @@ absl-py = "^1.0.0"
 bumpversion = "^0.6.0"
 pytest = "^6.2.5"
 codecov = "^2.1.12"
-coverage = "^6.3"
 pytest-profiling = "^1.7.0"
 python-gist = "^0.10.6"
 mbtest = "^2.10.0"
 pytest-dotenv = "^0.5.2"
 pytest-recording = "^0.12.0"
+pytest-cov = "^3.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = True
+envlist = docs
+
+[testenv:docs]
+changedir = docs
+deps =
+  sphinx
+  recommonmark
+  sphinx_rtd_theme
+commands = sphinx-build -W -b html -d {envtmpdir}/doctrees . {envtmpdir}/html
+"""
+

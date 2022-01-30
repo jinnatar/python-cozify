@@ -13,10 +13,6 @@ notifications:
     on_failure: always  # options: [always|never|change] default: always
     on_start: never     # options: [always|never|change] default: always
 
-
-env:
-  - SET="-m 'logic or live or destructive or remote or mbtest'"
-
 before_install:
   - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
   - curl -sSL https://install.python-poetry.org | python -
@@ -34,7 +30,7 @@ before_script:
   - mb &
 
 script:
-  - coverage run setup.py test --addopts "$SET"
+  - poetry run pytest --cov -m 'logic or live or destructive or remote or mbtest'
 
 after_success:
-  - codecov
+  - poetry run codecov

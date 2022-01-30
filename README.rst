@@ -27,11 +27,12 @@ To benefit from new features you'll need to update the library (pip does not aut
 
        sudo -H pip3 install -U cozify
 
-or clone the master branch of this repo (master stays at current release) and:
+or if developing, clone the master branch of this repo (master stays at current release) and:
 
 .. code:: console
 
-       sudo python3 setup.py install
+       curl -sSL https://install.python-poetry.org | python -
+       poetry install
 
 To develop python-cozify clone the devel branch and submit pull requests against the devel branch.
 New releases are cut from the devel branch as needed.
