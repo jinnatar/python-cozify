@@ -4,6 +4,9 @@ version = "0.2.30"
 description = "Unofficial Python3 API bindings for the (unpublished) Cozify API."
 authors = ["Artanicus <artanicus@nocturnal.fi>"]
 license = "MIT"
+readme = "README.rst"
+homepage = "https://github.com/Artanicus/python-cozify"
+repository = "https://github.com/Artanicus/python-cozify"
 
 [tool.poetry.dependencies]
 python = "^3.8"
