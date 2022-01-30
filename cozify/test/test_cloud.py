@@ -17,6 +17,7 @@ def test_cloud_authenticate(live_cloud):
     with pytest.raises(OSError):
         # Raises an OSError because trying to read email address interactively
         live_cloud.authenticate()
+    assert live_cloud._need_cloud_token()
 
 
 @pytest.mark.live
