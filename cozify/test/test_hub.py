@@ -26,11 +26,14 @@ def test_hub_remote_naive(live_hub):
 
 @pytest.mark.live
 def test_hub_changed_ip(live_hub):
-    live_hub._setAttr(live_hub.default(), 'host', '555.555.555.555')
-    with pytest.raises(ConnectionError):
-        live_hub.tz()
-    live_hub.ping()  # should identify & fix ip issue
-    assert live_hub.tz()
+    if live_hub.remote(live_hub.default()):
+        pytest.xfail("Remote, cannot run this test")
+    else:
+        live_hub._setAttr(live_hub.default(), 'host', '555.555.555.555')
+        with pytest.raises(ConnectionError):
+            live_hub.tz()
+        live_hub.ping()  # should identify & fix ip issue
+        assert live_hub.tz()
 
 
 @pytest.mark.logic
