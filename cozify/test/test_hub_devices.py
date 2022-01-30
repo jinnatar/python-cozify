@@ -21,11 +21,10 @@ def test_hub_devices_filter_single(tmp_hub):
 @pytest.mark.logic
 def test_hub_devices_filter_or(tmp_hub):
     ids, devs = tmp_hub.devices()
-    out = hub.devices(
-        hub_id=tmp_hub.id,
-        and_filter=False,
-        capabilities=[hub.capability.TWILIGHT, hub.capability.COLOR_HS],
-        mock_devices=devs)
+    out = hub.devices(hub_id=tmp_hub.id,
+                      and_filter=False,
+                      capabilities=[hub.capability.TWILIGHT, hub.capability.COLOR_HS],
+                      mock_devices=devs)
     assert all(i in out for i in [ids['lamp_osram'], ids['strip_osram'], ids['twilight_nexa']])
     assert len(out) == 3
 
@@ -33,11 +32,10 @@ def test_hub_devices_filter_or(tmp_hub):
 @pytest.mark.logic
 def test_hub_devices_filter_and(tmp_hub):
     ids, devs = tmp_hub.devices()
-    out = hub.devices(
-        hub_id=tmp_hub.id,
-        and_filter=True,
-        capabilities=[hub.capability.COLOR_HS, hub.capability.COLOR_TEMP],
-        mock_devices=devs)
+    out = hub.devices(hub_id=tmp_hub.id,
+                      and_filter=True,
+                      capabilities=[hub.capability.COLOR_HS, hub.capability.COLOR_TEMP],
+                      mock_devices=devs)
     assert all(i in out for i in [ids['lamp_osram'], ids['strip_osram']])
     assert len(out) == 2
 
@@ -54,8 +52,10 @@ def test_hub_device_eligible(tmp_hub):
 def test_hub_device_implicit_state(tmp_hub):
     ids, devs = tmp_hub.devices()
     state = {}
-    hub.device_eligible(
-        ids['lamp_osram'], hub.capability.COLOR_TEMP, mock_devices=devs, state=state)
+    hub.device_eligible(ids['lamp_osram'],
+                        hub.capability.COLOR_TEMP,
+                        mock_devices=devs,
+                        state=state)
     assert 'temperature' in state
     hub.device_exists(ids['twilight_nexa'], mock_devices=devs, state=state)
     assert 'twilight' in state
@@ -86,12 +86,18 @@ def test_hub_device_toggle(live_hub, online_device):
 
 @pytest.mark.destructive
 def test_hub_device_on_off(live_hub, online_device):
+    with pytest.raises(ValueError):
+        live_hub.device_on('dead-beef')
+    with pytest.raises(ValueError):
+        live_hub.device_off('dead-beef')
     if online_device['state']['isOn']:
         live_hub.device_off(online_device['id'])
         time.sleep(delay)
         live_hub.device_on(online_device['id'])
     else:
         live_hub.device_on(online_device['id'])
+        time.sleep(delay)
+        live_hub.device_off(online_device['id'])
     time.sleep(delay)
 
 
@@ -112,6 +118,8 @@ def test_hub_device_state_replace(live_hub, online_device):
     new_brightness = devs[online_device['id']]['state']['brightness']
     new_isOn = devs[online_device['id']]['state']['isOn']
 
-    assert new_brightness != old_brightness, 'brightness did not change, expected {0}'.format(new_brightness)
-    assert new_brightness == set_brightness, 'brightness changed unexpectedly, expected {0}'.format(set_brightness)
+    assert new_brightness != old_brightness, 'brightness did not change, expected {0}'.format(
+        new_brightness)
+    assert new_brightness == set_brightness, 'brightness changed unexpectedly, expected {0}'.format(
+        set_brightness)
     assert new_isOn == True

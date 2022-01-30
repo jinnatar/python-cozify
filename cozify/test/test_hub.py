@@ -62,6 +62,14 @@ def test_hub_name_to_id(tmp_hub):
     assert hub.hub_id(tmp_hub.name) == tmp_hub.id
 
 
+@pytest.mark.logic
+def test_hub_attr(tmp_hub):
+    with pytest.raises(AttributeError):
+        hub._setAttr('deadbeef', 'nop', 'deadbeef')
+    hub._setAttr(tmp_hub.id, 'testkey', 'deadbeef')
+    assert hub._getAttr(tmp_hub.id, 'testkey') == 'deadbeef'
+
+
 @pytest.mark.live
 def test_multisensor(live_hub):
     assert hub.ping()
