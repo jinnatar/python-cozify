@@ -41,6 +41,7 @@ def tmp_cloud():
 @pytest.fixture
 def live_cloud():
     configfile, configpath = tempfile.mkstemp(suffix='live_cloud')
+    config.setStatePath()  # assume default path will contain live config
     config.setStatePath(configpath, copy_current=True)
     from cozify import cloud
     yield cloud
