@@ -10,12 +10,11 @@ from cozify import config, hub
 
 from . import fixtures_devices as dev
 
+
 @pytest.fixture(scope="module")
 def vcr_config():
-        return {
-                "filter_headers": ["authorization", "X-Hub-Key"],
-                "record_mode": "rewrite"
-                }
+    return {"filter_headers": ["authorization", "X-Hub-Key"], "record_mode": "rewrite"}
+
 
 @pytest.fixture
 def tmp_cloud():
@@ -68,11 +67,14 @@ def tmp_hub(tmp_cloud):
 
 @pytest.fixture()
 def live_hub():
-    config.setStatePath()  # default config assumed to be live
+    configfile, configpath = tempfile.mkstemp(suffix='live_hub')
+    config.setStatePath(configpath, copy_current=True)  # default config assumed to be live
     print('Live hub state for testing:')
     config.dump_state()  # dump state so it's visible in failed test output
     from cozify import hub
     yield hub
+    config.setStatePath()
+    os.remove(configpath)
 
 
 @pytest.fixture()
