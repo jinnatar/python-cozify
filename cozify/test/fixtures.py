@@ -10,12 +10,11 @@ from cozify import config, hub
 
 from . import fixtures_devices as dev
 
+
 @pytest.fixture(scope="module")
 def vcr_config():
-        return {
-                "filter_headers": ["authorization", "X-Hub-Key"],
-                "record_mode": "rewrite"
-                }
+    return {"filter_headers": ["authorization", "X-Hub-Key"], "record_mode": "rewrite"}
+
 
 @pytest.fixture
 def tmp_cloud():
@@ -42,6 +41,7 @@ def tmp_cloud():
 @pytest.fixture
 def live_cloud():
     configfile, configpath = tempfile.mkstemp(suffix='live_cloud')
+    config.setStatePath()  # assume default path will contain live config
     config.setStatePath(configpath, copy_current=True)
     from cozify import cloud
     yield cloud
@@ -68,11 +68,16 @@ def tmp_hub(tmp_cloud):
 
 @pytest.fixture()
 def live_hub():
-    config.setStatePath()  # default config assumed to be live
+    config.setStatePath()  # we assume the default config will be "live"
+    configfile, configpath = tempfile.mkstemp(suffix='live_hub')
+    config.setStatePath(configpath, copy_current=True)
+    from cozify import hub
+    assert hub.ping()
     print('Live hub state for testing:')
     config.dump_state()  # dump state so it's visible in failed test output
-    from cozify import hub
     yield hub
+    config.setStatePath()
+    os.remove(configpath)
 
 
 @pytest.fixture()
@@ -96,6 +101,7 @@ def offline_device():
 def online_device():
     dev = None
     store = None
+    config.dump_state()  # dump state so it's visible in failed test output
     devs = hub.devices(capabilities=hub.capability.BRIGHTNESS)
     for i, d in devs.items():
         if d['state']['reachable'] and 'test' in d['name']:

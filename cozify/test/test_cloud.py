@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, pytest, tempfile, datetime
+import os, pytest, tempfile, datetime, time
 
 from cozify import cloud, config, hub
 from cozify.test import debug
@@ -11,13 +11,18 @@ from cozify.Error import AuthenticationError
 
 
 @pytest.mark.live
-def test_cloud_authenticate():
-    assert cloud.authenticate()
+def test_cloud_authenticate(live_cloud):
+    assert live_cloud.authenticate()
+    live_cloud.resetState()
+    with pytest.raises(OSError):
+        # Raises an OSError because trying to read email address interactively
+        live_cloud.authenticate()
+    assert live_cloud._need_cloud_token()
 
 
 @pytest.mark.live
-def test_cloud_authenticate_hub():
-    assert cloud.authenticate(trustHub=False)
+def test_cloud_authenticate_hub(live_cloud):
+    assert live_cloud.authenticate(trustHub=False)
 
 
 @pytest.mark.logic
@@ -59,6 +64,18 @@ def test_cloud_refresh_expiry_over(tmp_cloud):
 def test_cloud_refresh_expiry_not_over(tmp_cloud):
     config.dump_state()
     assert not cloud._need_refresh(force=False, expiry=datetime.timedelta(days=2))
+
+
+@pytest.mark.destructive
+def test_cloud_refresh_force(live_cloud):
+    config.dump_state()
+    timestamp_before = live_cloud._getAttr('last_refresh')
+    token_before = live_cloud.token()
+    time.sleep(2)  # ensure timestamp has a diff
+    live_cloud.refresh(force=True)
+    config.dump_state()
+    assert timestamp_before < live_cloud._getAttr('last_refresh')
+    assert token_before != live_cloud.token()
 
 
 ## integration tests for remote

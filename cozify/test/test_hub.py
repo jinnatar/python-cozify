@@ -4,7 +4,7 @@ import pytest
 from cozify import hub, multisensor
 from cozify.test import debug
 from cozify.test.fixtures import *
-from cozify.Error import APIError
+from cozify.Error import APIError, ConnectionError
 
 
 @pytest.mark.logic
@@ -21,7 +21,19 @@ def test_hub_tz(live_hub):
 
 @pytest.mark.live
 def test_hub_remote_naive(live_hub):
-    assert hub.tz()
+    assert live_hub.tz()
+
+
+@pytest.mark.live
+def test_hub_changed_ip(live_hub):
+    if live_hub.remote(live_hub.default()):
+        pytest.xfail("Remote, cannot run this test")
+    else:
+        live_hub._setAttr(live_hub.default(), 'host', '555.555.555.555')
+        with pytest.raises(ConnectionError):
+            live_hub.tz()
+        live_hub.ping()  # should identify & fix ip issue
+        assert live_hub.tz()
 
 
 @pytest.mark.logic
@@ -48,6 +60,14 @@ def test_hub_id_to_name(tmp_hub):
 @pytest.mark.logic
 def test_hub_name_to_id(tmp_hub):
     assert hub.hub_id(tmp_hub.name) == tmp_hub.id
+
+
+@pytest.mark.logic
+def test_hub_attr(tmp_hub):
+    with pytest.raises(AttributeError):
+        hub._setAttr('deadbeef', 'nop', 'deadbeef')
+    hub._setAttr(tmp_hub.id, 'testkey', 'deadbeef')
+    assert hub._getAttr(tmp_hub.id, 'testkey') == 'deadbeef'
 
 
 @pytest.mark.live

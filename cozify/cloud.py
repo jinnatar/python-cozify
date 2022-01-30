@@ -141,6 +141,21 @@ def resetState():
     config.stateWrite()
 
 
+def update_hubs():
+    """Fetch fresh hub ip addresses & names and update our local state.
+    """
+
+    from . import hub
+
+    hubs = cloud_api.lan_ip()
+    for hub_ip in hubs:
+        info = hub_api.hub(host=hub_ip)
+        hub_id = info['hubId']
+        hub_name = info['name']
+        hub._setAttr(hub_id, 'host', hub_ip, commit=False)
+        hub._setAttr(hub_id, 'hubName', hub_name)
+
+
 def ping(autorefresh=True, expiry=None):
     """Test cloud token validity. On success will also trigger a refresh if it's needed by the current key expiry.
 

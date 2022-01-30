@@ -1,8 +1,4 @@
 """Module for handling highlevel Cozify Hub operations.
-
-Attributes:
-    capability(capability): Enum of known device capabilities. Alphabetically sorted, numeric value not guaranteed to stay constant between versions if new capabilities are added.
-
 """
 
 from absl import logging
@@ -13,6 +9,7 @@ from enum import Enum
 
 from .Error import APIError, ConnectionError
 
+# Enum of known device capabilities. Alphabetically sorted, numeric value not guaranteed to stay constant between versions if new capabilities are added.
 capability = Enum(
     'capability',
     'ALERT BASS BATTERY_U BRIGHTNESS COLOR_HS COLOR_LOOP COLOR_TEMP CONTACT CONTROL_LIGHT CONTROL_POWER DEVICE DIMMER_CONTROL GENERATE_ALERT HUE_SWITCH HUMIDITY IDENTIFY IKEA_RC LOUDNESS LUX MOISTURE MOTION MUTE NEXT ON_OFF PAUSE PLAY PREVIOUS PUSH_NOTIFICATION REMOTE_CONTROL SEEK SMOKE STOP TEMPERATURE TRANSITION TREBLE TWILIGHT UPGRADE USER_PRESENCE VOLUME'
@@ -195,12 +192,11 @@ def light_temperature(device_id, temperature=2700, transition=0, **kwargs):
     """
     _fill_kwargs(kwargs)
     state = {}  # will be populated by device_eligible
-    if device_eligible(
-            device_id, capability.COLOR_TEMP, state=state, **kwargs) and _in_range(
-                temperature,
-                low=state['minTemperature'],
-                high=state['maxTemperature'],
-                description='Temperature'):
+    if device_eligible(device_id, capability.COLOR_TEMP, state=state, **kwargs) and _in_range(
+            temperature,
+            low=state['minTemperature'],
+            high=state['maxTemperature'],
+            description='Temperature'):
 
         state = _clean_state(state)
         state['colorMode'] = 'ct'
@@ -222,10 +218,9 @@ def light_color(device_id, hue, saturation=1.0, transition=0, **kwargs):
     """
     _fill_kwargs(kwargs)
     state = {}  # will be populated by device_eligible
-    if device_eligible(
-            device_id, capability.COLOR_HS, state=state, **kwargs) and _in_range(
-                hue, low=0.0, high=math.pi * 2, description='Hue') and _in_range(
-                    saturation, low=0.0, high=1.0, description='Saturation'):
+    if device_eligible(device_id, capability.COLOR_HS, state=state, **kwargs) and _in_range(
+            hue, low=0.0, high=math.pi * 2, description='Hue') and _in_range(
+                saturation, low=0.0, high=1.0, description='Saturation'):
 
         state = _clean_state(state)
         state['colorMode'] = 'hs'
@@ -246,9 +241,8 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
     """
     _fill_kwargs(kwargs)
     state = {}  # will be populated by device_eligible
-    if device_eligible(
-            device_id, capability.BRIGHTNESS, state=state, **kwargs) and _in_range(
-                brightness, low=0.0, high=1.0, description='Brightness'):
+    if device_eligible(device_id, capability.BRIGHTNESS, state=state, **kwargs) and _in_range(
+            brightness, low=0.0, high=1.0, description='Brightness'):
 
         state = _clean_state(state)
         state['brightness'] = brightness
@@ -339,27 +333,46 @@ def ping(autorefresh=True, **kwargs):
         else:
             raise
     except ConnectionError as e:
-        # If we're not already remote but are allowed to flip to it
-        if not kwargs['remote'] and kwargs['autoremote']:
-            # Flip to remote to hopefully reach the hub that way
-            logging.warning('Hub connection failed, switching to remote.')
-            remote(kwargs['hub_id'], True)
-            kwargs['remote'] = True
+        logging.warning('Hub connection failed, attempting to rescue it.')
+        from cozify import cloud
 
-            # retry the call and let it burn to the ground on failure
+        # If we're not remote can try to refresh hub ip
+        if not kwargs['remote']:
+            logging.warning('Verifying we have an up to date ip address')
+            from cozify import cloud
+            cloud.update_hubs()  # This can succeed even if we don't have a valid cloud token
+            # retry the call
             try:
                 timezone = tz(**kwargs)
-            except (APIError, ConnectionError) as e:
-                logging.error('Cannot connect via Cloud either, your hub is dead.')
-                # undo remote so it doesn't stick around, since the failure was undetermined
-                remote(kwargs['hub_id'], False)
-                return False
+            except ConnectionError as e:
+                logging.error('Refreshing hub ip was not enough to rescue it')
             else:
-                logging.info('Hub connection succeeded remotely, leaving hub configured as remote.')
+                logging.warning('Hub ip had changed, back in business!')
                 return True
-        else:
-            # Failure was to the cloud, we can't salvage that.
-            raise
+
+        # If we're not remote and allowed to try it, try it!
+        if not kwargs['remote'] and kwargs['autoremote']:
+            logging.warning('Perhaps we can reach it remotely.')
+            # Need an operable cloud connection for this
+            if cloud.ping():
+                remote(kwargs['hub_id'], True)
+                kwargs['remote'] = True
+
+                # retry the call and let it burn to the ground on failure
+                try:
+                    timezone = tz(**kwargs)
+                except (APIError, ConnectionError) as e:
+                    logging.error(f'Cannot connect via Cloud either, nothing left to try: {e}')
+                    # undo remote so it doesn't stick around, since the failure was undetermined
+                    remote(kwargs['hub_id'], False)
+                    return False
+                else:
+                    logging.info(
+                        'Hub connection succeeded remotely, leaving hub configured as remote.')
+                    return True
+            else:
+                # Failure was to the cloud, we can't salvage that.
+                raise
     else:
         return True
 
