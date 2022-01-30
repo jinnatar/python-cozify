@@ -11,13 +11,17 @@ from cozify.Error import AuthenticationError
 
 
 @pytest.mark.live
-def test_cloud_authenticate():
-    assert cloud.authenticate()
+def test_cloud_authenticate(live_cloud):
+    assert live_cloud.authenticate()
+    live_cloud.resetState()
+    with pytest.raises(OSError):
+        # Raises an OSError because trying to read email address interactively
+        live_cloud.authenticate()
 
 
 @pytest.mark.live
-def test_cloud_authenticate_hub():
-    assert cloud.authenticate(trustHub=False)
+def test_cloud_authenticate_hub(live_cloud):
+    assert live_cloud.authenticate(trustHub=False)
 
 
 @pytest.mark.logic
