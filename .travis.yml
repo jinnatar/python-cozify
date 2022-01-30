@@ -20,9 +20,9 @@ env:
 before_install:
   - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
   - curl -sSL https://install.python-poetry.org | python -
-  - source /root/.nvm/nvm.sh
-  - nvm install 18
-  - nvm use 18
+  - source $HOME/.nvm/nvm.sh
+  - nvm install 16
+  - nvm use 16
 
 install:
   - poetry install
