@@ -99,6 +99,7 @@ def offline_device():
 def online_device():
     dev = None
     store = None
+    config.dump_state()  # dump state so it's visible in failed test output
     devs = hub.devices(capabilities=hub.capability.BRIGHTNESS)
     for i, d in devs.items():
         if d['state']['reachable'] and 'test' in d['name']:
