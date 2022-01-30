@@ -65,6 +65,15 @@ def test_cloud_refresh_expiry_not_over(tmp_cloud):
     assert not cloud._need_refresh(force=False, expiry=datetime.timedelta(days=2))
 
 
+@pytest.mark.live
+def test_cloud_refresh(live_cloud):
+    timestamp_before = live_cloud._getAttr('last_refresh')
+    token_before = live_cloud.token()
+    live_cloud.refresh(force=True)
+    assert timestamp_before < live_cloud._getAttr('last_refresh')
+    assert token_before != live_cloud.token()
+
+
 ## integration tests for remote
 
 
