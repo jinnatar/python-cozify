@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cozify"
-version = "0.2.31"
+version = "0.2.32"
 description = "Unofficial Python3 API bindings for the (unpublished) Cozify API."
 authors = ["Artanicus <artanicus@nocturnal.fi>"]
 license = "MIT"
