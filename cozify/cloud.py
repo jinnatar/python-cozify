@@ -319,8 +319,9 @@ def _getAttr(attr):
     if section in config.state and attr in config.state[section]:
         return config.state[section][attr]
     else:
-        logging.warning('Cloud attribute {0} not found in state.'.format(attr))
-        raise AttributeError
+        error = f'Cloud attribute {attr} not found in state.'
+        logging.error(error)
+        raise AttributeError(error)
 
 
 def _setAttr(attr, value, commit=True):
@@ -341,8 +342,9 @@ def _setAttr(attr, value, commit=True):
         if commit:
             config.stateWrite()
     else:  # pragma: no cover
-        logging.warning('Section {0} not found in state.'.format(section))
-        raise AttributeError
+        error = f'Section {section} not found in state.'
+        logging.error(error)
+        raise AttributeError(error)
 
 
 def _isAttr(attr):
@@ -362,7 +364,17 @@ def token(new_token=None):
     """
     if new_token:
         _setAttr('remotetoken', new_token)
-    return _getAttr('remotetoken')
+    existing_token = None
+    try:
+        existing_token = _getAttr('remotetoken')
+    except AttributeError as e:
+        error = "Authentication hasn't been run at all, triggering it now."
+        logging.warning(error)
+        if authenticate():
+            # if it still fails, let it burn
+            existing_token = _getAttr('remotetoken')
+
+    return existing_token
 
 
 def email(new_email=None):  # pragma: no cover

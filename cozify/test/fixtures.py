@@ -49,6 +49,16 @@ def live_cloud():
     os.remove(configpath)
 
 
+@pytest.fixture
+def blank_cloud():
+    configfile, configpath = tempfile.mkstemp(suffix='blank_cloud')
+    config.setStatePath(configpath)
+    from cozify import cloud
+    yield cloud
+    config.setStatePath()
+    os.remove(configpath)
+
+
 @pytest.fixture(scope="session")
 def mock_server():
     if 'MBTEST_HOST' in os.environ:

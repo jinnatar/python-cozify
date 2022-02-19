@@ -20,6 +20,13 @@ def test_cloud_authenticate(live_cloud):
     assert live_cloud._need_cloud_token()
 
 
+@pytest.mark.logic
+def test_cloud_ping_cold(blank_cloud):
+    with pytest.raises(OSError):
+        # Raises an OSError because trying to read email address interactively
+        blank_cloud.ping()
+
+
 @pytest.mark.live
 def test_cloud_authenticate_hub(live_cloud):
     assert live_cloud.authenticate(trustHub=False)
