@@ -38,6 +38,18 @@ def test_cloud_noninteractive_otp():
         cloud._getotp()
 
 
+## Misc feature logic tests
+
+
+@pytest.mark.logic
+def test_cloud_token_set_reset(blank_cloud):
+    blank_cloud.token('foobar')
+    assert blank_cloud.token() == 'foobar'
+    blank_cloud.resetState()
+    with pytest.raises(AttributeError) as e_info:
+        blank_cloud._getAttr('remotetoken')
+
+
 ## cloud.refresh() logic tests
 
 
