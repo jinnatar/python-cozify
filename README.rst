@@ -27,7 +27,7 @@ To benefit from new features you'll need to update the library (pip does not aut
 
        sudo -H pip3 install -U cozify
 
-or if developing, clone the master branch of this repo (master stays at current release) and:
+or if developing, clone the main branch of this repo (main stays at current release) and:
 
 .. code:: console
 
@@ -198,11 +198,11 @@ Roadmap, aka. Current Limitations
   :target: http://python-cozify.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
 
-.. |ci| image:: https://travis-ci.com/Artanicus/python-cozify.svg?branch=master
+.. |ci| image:: https://travis-ci.com/Artanicus/python-cozify.svg?branch=main
   :target: https://travis-ci.com/Artanicus/python-cozify
   :alt: Build Status
 
-.. |coverage| image:: https://codecov.io/gh/Artanicus/python-cozify/branch/master/graph/badge.svg
+.. |coverage| image:: https://codecov.io/gh/Artanicus/python-cozify/branch/main/graph/badge.svg
   :target: https://codecov.io/gh/Artanicus/python-cozify
   :alt: Coverage Status
 
