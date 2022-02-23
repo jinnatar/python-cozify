@@ -196,7 +196,7 @@ def refresh(force=False, expiry=datetime.timedelta(days=1)):
     Returns:
         bool: Success of refresh attempt, True also when expiry wasn't over yet even though no refresh was performed.
     """
-    if _need_refresh(force, expiry):
+    if force or _need_refresh(force, expiry):
         try:
             cloud_token = cloud_api.refreshsession(token())
         except APIError as e:  # pragma: no cover
@@ -370,7 +370,8 @@ def token(new_token=None):
     except AttributeError as e:
         error = "Authentication hasn't been run at all, triggering it now."
         logging.warning(error)
-        if authenticate():
+        # Trigger a full auth from scratch. Will fail if not running interactively
+        if authenticate():  # pragma: no cover
             # if it still fails, let it burn
             existing_token = _getAttr('remotetoken')
 
