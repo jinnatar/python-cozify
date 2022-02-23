@@ -163,17 +163,17 @@ Tests
 ~~~~~
 pytest is used for unit tests.
 
--  Certain tests are marked as "live" tests and require an active authentication state and a real hub to query against. Live tests are non-destructive.
--  Some tests are marked as "destructive" and will cause changes such as a light being turned on or tokens getting invalidated on purpose.
+-  Certain tests are marked as "live" tests and require an active authentication state and a real hub to query against. Live tests are non-destructive, i.e. they will not change device state.
+-  Some tests are marked as "destructive" and will cause changes such as a light being turned on or tokens getting invalidated on purpose. Every effort is made to return devices to their original state and to perform saved state manipulation on copies of the live state.
 -  A few tests are marked as "remote" and are only expected to succeed when testing remotely, i.e. outside the LAN of the hub.
--  A few tests are marked as "mbtest" and will only work if a MonteBank server is available. If a non-local instance is desired, provide a .env file with MBTEST_HOST set.
+-  A few tests are marked as "mbtest" and will only work if a MonteBank server is available. If a non-local instance is desired, provide a .env file with MBTEST_HOST set. The easiest way to get a local instance is to use Docker: `docker run --rm --network host bbyars/mountebank:latest mb start`
 -  Most tests are marked as "logic" and do not require anything external. If no set is defined, only logic tests are run.
 
 During development you can run the test suite right from the source directory:
 
 .. code:: console
 
-    pytest
+    pytest # or: poetry run pytest
     # or run only live tests:
     pytest -m live
     # run everything except destructive * MonteBank tests:
@@ -190,8 +190,8 @@ Roadmap, aka. Current Limitations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  Authentication flow has been improved quite a bit but it would benefit a lot from real-world feedback.
--  For now there are only read calls. Next up is implementing ~all hub calls at the raw level and then wrapping them for ease of use. If there's something you want to use sooner than later file an issue so it can get prioritized!
--  Device model is non-existant and the old implementations are bad and deprecated. Active work ongoing to filter by capability at a low level first, then perhaps a more object oriented model on top of that.
+-  Read call coverage is decent and support for most light interaction is done. If there's something specific you want to use sooner than later file an issue so it can get prioritized!
+-  Device model is not object oriented yet and instead relies on capability filtering and device id's.
 
 
 .. |docs| image:: https://readthedocs.org/projects/python-cozify/badge/?version=latest
