@@ -31,11 +31,10 @@ def get(call, hub_token_header=True, base=apiPath, **kwargs):
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
-    return _call(
-        method=requests.get,
-        call='{0}{1}'.format(base, call),
-        hub_token_header=hub_token_header,
-        **kwargs)
+    return _call(method=requests.get,
+                 call='{0}{1}'.format(base, call),
+                 hub_token_header=hub_token_header,
+                 **kwargs)
 
 
 def put(call, data, hub_token_header=True, base=apiPath, **kwargs):
@@ -47,12 +46,11 @@ def put(call, data, hub_token_header=True, base=apiPath, **kwargs):
         hub_token_header(bool): Set to False to omit hub_token usage in call headers.
         base(str): Base path to call from API instead of global apiPath. Defaults to apiPath.
     """
-    return _call(
-        method=requests.put,
-        call='{0}{1}'.format(base, call),
-        hub_token_header=hub_token_header,
-        data=data,
-        **kwargs)
+    return _call(method=requests.put,
+                 call='{0}{1}'.format(base, call),
+                 hub_token_header=hub_token_header,
+                 data=data,
+                 **kwargs)
 
 
 def _call(*, call, method, hub_token_header, data=None, **kwargs):
@@ -64,7 +62,7 @@ def _call(*, call, method, hub_token_header, data=None, **kwargs):
     """
     response = None
     headers = {}
-    if 'headers' in kwargs:
+    if 'headers' in kwargs:  # pragma: no cover
         raise ValueError('Headers already defined: {}'.format(kwargs['headers']))
     if hub_token_header:
         if 'hub_token' not in kwargs:
@@ -92,11 +90,11 @@ def _call(*, call, method, hub_token_header, data=None, **kwargs):
     # evaluate response, wether it was remote or local
     if response.status_code == 200:
         return response.json()
-    elif response.status_code == 410:
-        raise APIError(response.status_code,
-                       'API version outdated. Update python-cozify. %s - %s - %s' %
-                       (response.reason, response.url, response.text))  # pragma: no cover
-    else:
+    elif response.status_code == 410:  # pragma: no cover
+        raise APIError(
+            response.status_code, 'API version outdated. Update python-cozify. %s - %s - %s' %
+            (response.reason, response.url, response.text))
+    else:  # pragma: no cover
         raise APIError(response.status_code,
                        '%s - %s - %s' % (response.reason, response.url, response.text))
 

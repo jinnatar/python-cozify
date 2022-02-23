@@ -13,7 +13,12 @@ from .Error import APIError, AuthenticationError, ConnectionError
 cloudBase = 'https://cloud2.cozify.fi/ui/0.2'
 
 
-def get(call, headers=None, base=cloudBase, no_headers=False, json_output=True, raw=False,
+def get(call,
+        headers=None,
+        base=cloudBase,
+        no_headers=False,
+        json_output=True,
+        raw=False,
         **kwargs):
     """GET method for calling hub API.
 
@@ -61,7 +66,14 @@ def post(call,
                  **kwargs)
 
 
-def put(call, headers=None, data=None, base=cloudBase, no_headers=False, raw=False, **kwargs):
+# Not actually used yet by any cloud module method
+def put(call,
+        headers=None,
+        data=None,
+        base=cloudBase,
+        no_headers=False,
+        raw=False,
+        **kwargs):  # pragma: no cover
     """PUT method for calling hub API. For rest of kwargs parameters see get()
 
     Args:
@@ -223,13 +235,12 @@ def _call(*,
         else:
             return response.text
 
-    elif response.status_code == 410:
+    elif response.status_code == 410:  # pragma: no cover
         raise APIError(
             response.status_code,
             'API version outdated. Update python-cozify. {reason} - {url} - {message}'.format(
-                reason=response.reason, url=response.url,
-                message=response.text))  # pragma: no cover
-    else:
+                reason=response.reason, url=response.url, message=response.text))
+    else:  # pragma: no cover
         raise APIError(
             response.status_code, '{reason} - {url} - {message}'.format(reason=response.reason,
                                                                         url=response.url,
