@@ -130,6 +130,25 @@ def online_device():
     hub.device_state_replace(dev['id'], store)
 
 
+@pytest.fixture()
+def real_test_devices():
+    test_devs = {}
+    states = {}
+    caps = [cap.name for cap in hub.capability]
+    devs = hub.devices()
+    for i, d in devs.items():
+        if d['state']['reachable'] and 'test' in d['name']:
+            for cap in d['capabilities']['values']:
+                if cap not in test_devs:
+                    test_devs[cap] = i
+                    states[i] = d['state']
+
+    yield test_devs
+
+    for i, state in states.items():
+        hub.device_state_replace(i, state)
+
+
 class Tmp_hub():
     """Creates a temporary hub section (with test data) in a tmp_cloud
     """
