@@ -1,6 +1,8 @@
 """Module for handling highlevel Cozify Hub operations.
 """
 
+import time
+
 from absl import logging
 import math
 from . import config
@@ -60,7 +62,76 @@ def devices(*, capabilities=None, and_filter=False, **kwargs):
         return devs
 
 
+def device(device_id, **kwargs):
+    """Get up to date device data set as a dict.
+
+    Args:
+        device_id(str): ID of the device to retrieve.
+        **hub_name(str): optional name of hub to query. Will get converted to hub_id for use.
+        **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
+        **remote(bool): Remote or local query.
+
+    Returns:
+        dict: full live device data as returned by the API
+
+    """
+    _fill_kwargs(kwargs)
+    devs = devices(**kwargs)
+    return devs[device_id]
+
+
+def await_state(device_id, state, timeout=10, **kwargs):
+    """Wait for a device to reach a desired state
+
+    Args:
+        device_id(str): ID of the device to check.
+        state(dict): Full state dictionary to expect. Timestamp fields are ignored.
+        timeout(int): Timeout of wait time.
+
+    Returns:
+        bool: True when state matches or False on timeout.
+
+    """
+    _fill_kwargs(kwargs)
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if has_state(device_id, state, **kwargs):
+            return True
+        time.sleep(0.1)
+    return False
+
+
+def has_state(device_id, state, **kwargs):
+    """Check if device state matches the provided state keys. Keys not provided are ignored.
+
+    Args:
+        device_id(str): ID of the device to check.
+        state(dict): State dictionary to expect. Only provide keys you care about.
+
+    Returns:
+        bool: If given state values match.
+
+    """
+    _fill_kwargs(kwargs)
+
+    dev = device(device_id, **kwargs)
+    current_state = dev['state']
+    for key, value in state.items():
+        if current_state[key] != value:
+            logging.debug(f'has_state failed on key {key}:{value}')
+            return False
+    return True
+
+
 def device_reachable(device_id, **kwargs):
+    """Check if device is reachable.
+
+    Args:
+        device_id(str): ID of the device to check.
+    Returns:
+        bool: Reachability as defined by the API.
+    """
     _fill_kwargs(kwargs)
     state = {}
     if device_exists(device_id, state=state, **kwargs):
