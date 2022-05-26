@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, pytest, tempfile, datetime
+import os, pytest, tempfile, datetime, time
 import hashlib, json
 
 from absl import logging
@@ -145,8 +145,11 @@ def real_test_devices():
 
     yield test_devs
 
+    time.sleep(3)
+
     for i, state in states.items():
         hub.device_state_replace(i, state)
+        assert hub.await_state(i, state)
 
 
 class Tmp_hub():

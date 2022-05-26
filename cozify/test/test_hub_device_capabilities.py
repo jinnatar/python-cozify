@@ -2,6 +2,7 @@
 import pytest, time
 
 from absl import logging
+from math import isclose
 
 from cozify import hub
 from cozify.test import debug
@@ -32,4 +33,5 @@ def test_hub_device_capability_color_temp(live_hub, real_test_devices):
     dev = live_hub.devices(capabilities=hub.capability[cap])[i]
     new_value = dev['state']['temperature']
     logging.info(f'Expecting {old_value} -> {set_value}, got: {new_value}')
-    assert new_value == set_value
+    # Allow 1% deviation to account for device snafus
+    assert isclose(new_value, set_value, rel_tol=0.01)

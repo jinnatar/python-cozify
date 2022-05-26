@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import pytest, time
 
+from math import isclose
+
 from cozify import hub
 from cozify.test import debug
-from cozify.test.fixtures import live_hub, tmp_hub, tmp_cloud, online_device
+from cozify.test.fixtures import live_hub, tmp_hub, tmp_cloud, online_device, real_test_devices
 from cozify.Error import APIError
 
 # global timer delay for tests that change device state
@@ -102,24 +104,30 @@ def test_hub_device_on_off(live_hub, online_device):
 
 
 @pytest.mark.destructive
-def test_hub_device_state_replace(live_hub, online_device):
-    live_hub.device_on(online_device['id'])
+def test_hub_device_state_replace(live_hub, real_test_devices):
+    if 'BRIGHTNESS' not in real_test_devices:
+        pytest.xfail('No test device available with brightness control')
+    dev_id = real_test_devices['BRIGHTNESS']
+    dev = live_hub.device(dev_id)
 
-    old_brightness = online_device['state']['brightness']
+    live_hub.device_on(dev_id)
+    old_brightness = dev['state']['brightness']
     if old_brightness > 0.1:
         set_brightness = old_brightness - 0.1
     else:
         set_brightness = 0.5
-    online_device['state']['brightness'] = set_brightness
-    online_device['state']['isOn'] = True
-    live_hub.device_state_replace(online_device['id'], online_device['state'])
-    time.sleep(delay)
-    devs = live_hub.devices()
-    new_brightness = devs[online_device['id']]['state']['brightness']
-    new_isOn = devs[online_device['id']]['state']['isOn']
+    dev['state']['brightness'] = set_brightness
+    dev['state']['isOn'] = True
+    live_hub.device_state_replace(dev_id, dev['state'])
 
-    assert new_brightness != old_brightness, 'brightness did not change, expected {0}'.format(
-        new_brightness)
-    assert new_brightness == set_brightness, 'brightness changed unexpectedly, expected {0}'.format(
-        set_brightness)
+    time.sleep(delay)
+
+    dev = live_hub.device(dev_id)
+    new_brightness = dev['state']['brightness']
+    new_isOn = dev['state']['isOn']
+
+    # We allow 1% deviance due to device specific snafus
+    assert isclose(
+        new_brightness, set_brightness,
+        rel_tol=0.01), f'brightness is wrong, expected {set_brightness} but got {new_brightness}'
     assert new_isOn == True
