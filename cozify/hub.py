@@ -322,6 +322,91 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
         raise ValueError('Device not found or not eligible for action.')
 
 
+### Scene data
+
+
+def scenes(*, is_on=None, **kwargs):
+    """Get full scene data set as a dict. Optionally filters scenes by on/off status.
+
+    Args:
+        is_on(bool): Filter scenes by on/off status. Defaults to all scenes.
+        **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
+        **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
+        **remote(bool): Remote or local query.
+        **hubId(str): Deprecated. Compatibility keyword for hub_id, to be removed in v0.3
+        **hubName(str): Deprecated. Compatibility keyword for hub_name, to be removed in v0.3
+
+    Returns:
+        dict: scene data as returned by the API
+    """
+    _fill_kwargs(kwargs)
+    scns = hub_api.scenes(**kwargs)
+    if is_on is not None:
+        return {
+            key: value
+            for key, value in scns.items()
+                if is_on == value['isOn']
+        }
+    return scns
+
+
+def scene(scene_id, **kwargs):
+    """Get scene data set as a dict.
+
+    Args:
+        scene_id(str): ID of the scene to retrieve.
+        **hub_name(str): optional name of hub to query. Will get converted to hub_id for use.
+        **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
+        **remote(bool): Remote or local query.
+
+    Returns:
+        dict: scene data as returned by the API
+
+    """
+    _fill_kwargs(kwargs)
+    return scenes(**kwargs)[scene_id]
+
+
+### Scene control
+
+
+def scene_toggle(scene_id, **kwargs):
+    """Toggle on/off state of given scene.
+
+    Args:
+        scene_id(str): ID of the scene to toggle.
+        **hub_id(str): optional id of hub to operate on. A specified hub_id takes presedence over a hub_name or default Hub.
+        **hub_name(str): optional name of hub to operate on.
+        **remote(bool): Remote or local query.
+    """
+    _fill_kwargs(kwargs)
+    scene_active = scene(scene_id, **kwargs)['isOn']
+    if scene_active:
+        scene_off(scene_id, **kwargs)
+    else:
+        scene_on(scene_id, **kwargs)
+
+
+def scene_on(scene_id, **kwargs):
+    """Turn on a scene.
+
+    Args:
+        scene_id(str): ID of the scene to operate on.
+    """
+    _fill_kwargs(kwargs)
+    hub_api.scenes_command_on(scene_id, **kwargs)
+
+
+def scene_off(scene_id, **kwargs):
+    """Turn off a scene.
+
+    Args:
+        scene_id(str): ID of the scene to operate on.
+    """
+    _fill_kwargs(kwargs)
+    hub_api.scenes_command_off(scene_id, **kwargs)
+
+
 ### Hub modifiers ###
 
 

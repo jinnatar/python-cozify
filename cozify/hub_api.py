@@ -195,3 +195,48 @@ def devices_command_off(device_id, **kwargs):
         str: What ever the API replied or raises an APIException on failure.
     """
     return devices_command_generic(device_id=device_id, request_type='CMD_DEVICE_OFF', **kwargs)
+
+
+def scenes(**kwargs):
+    """Implementation of /scenes API call. For kwargs see cozify.hub_api.get()
+
+    Returns:
+        dict: Full scene state as returned by the API
+    """
+    return get('/scenes', **kwargs)
+
+
+def scenes_command_state(*, scene_id, request_type, **kwargs):
+    """Commands changing a scene's state. For kwargs see cozify.hub_api.put()
+
+    Args:
+        scene_id(str): ID of the scene to operate on.
+        request_type(str): the request type, i.e. CMD_SCENE_ON or CMD_SCENE_OFF.
+    Returns:
+        str: Whatever the API replied or raises an APIError on failure.
+    """
+    command = [{"id": scene_id, "type": request_type}]
+    logging.debug('command json to send: {0}'.format(command))
+    return put('/scenes/command', command, **kwargs)
+
+
+def scenes_command_off(scene_id, **kwargs):
+    """Command helper for CMD_SCENE_OFF.
+
+    Args:
+        scene_id(str): ID of the scene to operate on.
+    Returns:
+        str: What ever the API replied or raises an APIException on failure.
+    """
+    return scenes_command_state(scene_id=scene_id, request_type='CMD_SCENE_OFF', **kwargs)
+
+
+def scenes_command_on(scene_id, **kwargs):
+    """Command helper for CMD_SCENE_ON.
+
+    Args:
+        scene_id(str): ID of the scene to operate on.
+    Returns:
+        str: What ever the API replied or raises an APIException on failure.
+    """
+    return scenes_command_state(scene_id=scene_id, request_type='CMD_SCENE_ON', **kwargs)
