@@ -36,7 +36,7 @@ extensions = ['autoapi.extension', 'sphinx.ext.viewcode', 'sphinx.ext.napoleon']
 
 autoapi_type = 'python'
 autoapi_dirs = ['../cozify']
-autoapi_ignore = ['*test*']
+autoapi_ignore = ["*/test_*.py"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -98,11 +98,6 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # documentation.
 #
 # html_theme_options = {}
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
 
 # -- Options for HTMLHelp output ------------------------------------------
 
