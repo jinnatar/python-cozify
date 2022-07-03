@@ -152,6 +152,29 @@ def real_test_devices():
         assert hub.await_state(i, state)
 
 
+@pytest.fixture()
+def real_test_scenes():
+    states = {}
+    scenes = hub.scenes(filters={'name': 'test'})
+    if not scenes:
+        pytest.xfail(
+            'Cannot run certain scene tests, no scene available with a name exactly matching \'test\'.'
+        )
+
+    for i, s in scenes.items():
+        states[i] = s['isOn']
+
+    yield scenes
+
+    time.sleep(3)
+
+    for i, state in states.items():
+        if state:
+            hub.scene_on(i)
+        else:
+            hub.scene_off(i)
+
+
 class Tmp_hub():
     """Creates a temporary hub section (with test data) in a tmp_cloud
     """
