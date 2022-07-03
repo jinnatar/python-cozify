@@ -325,11 +325,11 @@ def light_brightness(device_id, brightness, transition=0, **kwargs):
 ### Scene data
 
 
-def scenes(*, is_on=None, **kwargs):
+def scenes(*, filters=None, **kwargs):
     """Get full scene data set as a dict. Optionally filters scenes by on/off status.
 
     Args:
-        is_on(bool): Filter scenes by on/off status. Defaults to all scenes.
+        filters(dict): Filter scenes by their values by defining key value pairs as a dict. Defaults to all scenes.
         **hub_name(str): optional name of hub to query. Will get converted to hubId for use.
         **hub_id(str): optional id of hub to query. A specified hub_id takes presedence over a hub_name or default Hub. Providing incorrect hub_id's will create cruft in your state but it won't hurt anything beyond failing the current operation.
         **remote(bool): Remote or local query.
@@ -341,12 +341,9 @@ def scenes(*, is_on=None, **kwargs):
     """
     _fill_kwargs(kwargs)
     scns = hub_api.scenes(**kwargs)
-    if is_on is not None:
-        return {
-            key: value
-            for key, value in scns.items()
-                if is_on == value['isOn']
-        }
+    if filters is not None:
+        for key, val in filters.items():
+            scns = dict(filter(lambda e: e[1][key] == val, scns.items()))
     return scns
 
 
