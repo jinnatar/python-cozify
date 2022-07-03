@@ -19,10 +19,9 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('..'))
 import cozify
-
-from recommonmark.parser import CommonMarkParser
 
 # -- General configuration ------------------------------------------------
 
@@ -33,8 +32,7 @@ from recommonmark.parser import CommonMarkParser
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.viewcode', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.napoleon']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -42,8 +40,7 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_suffix = ['.rst', '.md']
-#source_suffix = '.rst'
+source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
@@ -67,7 +64,7 @@ release = 'v{0}'.format(version)
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -80,7 +77,6 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -89,6 +85,7 @@ todo_include_todos = False
 #html_theme = 'alabaster'
 
 import sphinx_rtd_theme
+
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
@@ -103,12 +100,10 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'python-cozifydoc'
-
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -134,20 +129,15 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'python-cozify.tex', 'python-cozify Documentation',
-     'Juho-Pekka Kuitunen', 'manual'),
+    (master_doc, 'python-cozify.tex', 'python-cozify Documentation', 'Juho-Pekka Kuitunen',
+     'manual'),
 ]
-
 
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'python-cozify', 'python-cozify Documentation',
-     [author], 1)
-]
-
+man_pages = [(master_doc, 'python-cozify', 'python-cozify Documentation', [author], 1)]
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -155,12 +145,6 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'python-cozify', 'python-cozify Documentation',
-     author, 'python-cozify', 'One line description of project.',
-     'Miscellaneous'),
+    (master_doc, 'python-cozify', 'python-cozify Documentation', author, 'python-cozify',
+     'One line description of project.', 'Miscellaneous'),
 ]
-
-
-source_parsers = {
-            '.md': CommonMarkParser,
-            }
