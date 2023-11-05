@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+import pprint
+import sys
+
 from cozify import hub, hub_api
-import pprint, sys
 
 
 def main(path):

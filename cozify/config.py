@@ -6,8 +6,9 @@ Attributes:
 """
 
 import configparser
-import os
 import datetime
+import os
+
 from absl import logging
 
 
@@ -19,26 +20,28 @@ def _initXDG():
     """
 
     # per the XDG basedir-spec we adhere to $XDG_CONFIG_HOME if it's set, otherwise assume $HOME/.config
-    xdg_config_home = ''
-    if 'XDG_CONFIG_HOME' in os.environ:
-        xdg_config_home = os.environ['XDG_CONFIG_HOME']
-        logging.debug('XDG basedir overriden: {0}'.format(xdg_config_home))
+    xdg_config_home = ""
+    if "XDG_CONFIG_HOME" in os.environ:
+        xdg_config_home = os.environ["XDG_CONFIG_HOME"]
+        logging.debug("XDG basedir overriden: {0}".format(xdg_config_home))
     else:
-        xdg_config_home = "%s/.config" % os.path.expanduser('~')
+        xdg_config_home = "%s/.config" % os.path.expanduser("~")
 
     # XDG base-dir: "If, when attempting to write a file, the destination directory is non-existant an attempt should be made to create it with permission 0700. If the destination directory exists already the permissions should not be changed."
     if not os.path.isdir(xdg_config_home):
-        logging.debug('XDG basedir does not exist, creating: {0}'.format(xdg_config_home))
+        logging.debug(
+            "XDG basedir does not exist, creating: {0}".format(xdg_config_home)
+        )
         os.mkdir(xdg_config_home, 0o0700)
 
     # finally create our own config dir
-    config_dir = "%s/%s" % (xdg_config_home, 'python-cozify')
+    config_dir = "%s/%s" % (xdg_config_home, "python-cozify")
     if not os.path.isdir(config_dir):
-        logging.debug('XDG local dir does not exist, creating: {0}'.format(config_dir))
+        logging.debug("XDG local dir does not exist, creating: {0}".format(config_dir))
         os.mkdir(config_dir, 0o0700)
 
     state_file = "%s/python-cozify.cfg" % config_dir
-    logging.debug('state_file determined to be: {0}'.format(state_file))
+    logging.debug("state_file determined to be: {0}".format(state_file))
     return state_file
 
 
@@ -52,7 +55,7 @@ def stateWrite(tmpstate=None):
     if tmpstate is None:
         global state
         tmpstate = state
-    with open(state_file, 'w') as cf:
+    with open(state_file, "w") as cf:
         tmpstate.write(cf)
 
 
@@ -73,12 +76,11 @@ def setStatePath(filepath=_initXDG(), copy_current=False):
 
 
 def dump_state():
-    """Print out current state file to stdout. Long values are truncated since this is only for visualization.
-    """
+    """Print out current state file to stdout. Long values are truncated since this is only for visualization."""
     for section in state.sections():
-        print('[{!s:.10}]'.format(section))
+        print("[{!s:.10}]".format(section))
         for option in state.options(section):
-            print('  {!s:<13.13} = {!s:>10.100}'.format(option, state[section][option]))
+            print("  {!s:<13.13} = {!s:>10.100}".format(option, state[section][option]))
 
 
 def _initState(state_file):
@@ -92,15 +94,15 @@ def _initState(state_file):
     # if we can read it, read it in, otherwise create empty file
     state = configparser.ConfigParser(allow_no_value=True)
     try:
-        cf = open(state_file, 'r')
+        cf = open(state_file, "r")
     except IOError:
-        cf = open(state_file, 'w+')
+        cf = open(state_file, "w+")
         os.chmod(state_file, 0o600)  # set to user readwrite only to protect tokens
     else:
         state.read_file(cf)
 
     # make sure config is in roughly a valid state
-    for key in ['Cloud', 'Hubs']:
+    for key in ["Cloud", "Hubs"]:
         if key not in state:
             state[key] = {}
     stateWrite(state)

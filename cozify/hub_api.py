@@ -4,19 +4,20 @@ Attributes:
     apiPath(str): Hub API endpoint path including version. Things may suddenly stop working if a software update increases the API version on the Hub. Incrementing this value until things work will get you by until a new version is published.
 """
 
-import requests
 import json
+
+import requests
 from absl import logging
 
 from cozify import cloud_api
 
 from .Error import APIError, ConnectionError
 
-apiPath = '/cc/1.14'
+apiPath = "/cc/1.14"
 
 
 def _getBase(host, port=8893, **kwargs):
-    return 'http://{0}:{1}'.format(host, port)
+    return "http://{0}:{1}".format(host, port)
 
 
 def get(call, hub_token_header=True, base=apiPath, **kwargs):
@@ -31,10 +32,12 @@ def get(call, hub_token_header=True, base=apiPath, **kwargs):
         **remote(bool): If call is to be local or remote (bounced via cloud).
         **cloud_token(str): Cloud authentication token. Only needed if remote = True.
     """
-    return _call(method=requests.get,
-                 call='{0}{1}'.format(base, call),
-                 hub_token_header=hub_token_header,
-                 **kwargs)
+    return _call(
+        method=requests.get,
+        call="{0}{1}".format(base, call),
+        hub_token_header=hub_token_header,
+        **kwargs
+    )
 
 
 def put(call, data, hub_token_header=True, base=apiPath, **kwargs):
@@ -46,11 +49,13 @@ def put(call, data, hub_token_header=True, base=apiPath, **kwargs):
         hub_token_header(bool): Set to False to omit hub_token usage in call headers.
         base(str): Base path to call from API instead of global apiPath. Defaults to apiPath.
     """
-    return _call(method=requests.put,
-                 call='{0}{1}'.format(base, call),
-                 hub_token_header=hub_token_header,
-                 data=data,
-                 **kwargs)
+    return _call(
+        method=requests.put,
+        call="{0}{1}".format(base, call),
+        hub_token_header=hub_token_header,
+        data=data,
+        **kwargs
+    )
 
 
 def _call(*, call, method, hub_token_header, data=None, **kwargs):
@@ -62,28 +67,33 @@ def _call(*, call, method, hub_token_header, data=None, **kwargs):
     """
     response = None
     headers = {}
-    if 'headers' in kwargs:  # pragma: no cover
-        raise ValueError('Headers already defined: {}'.format(kwargs['headers']))
+    if "headers" in kwargs:  # pragma: no cover
+        raise ValueError("Headers already defined: {}".format(kwargs["headers"]))
     if hub_token_header:
-        if 'hub_token' not in kwargs:
-            raise AttributeError('Asked to do a call to the hub but no hub_token provided.')
-        headers['Authorization'] = kwargs['hub_token']
+        if "hub_token" not in kwargs:
+            raise AttributeError(
+                "Asked to do a call to the hub but no hub_token provided."
+            )
+        headers["Authorization"] = kwargs["hub_token"]
     if data is not None:
         data = json.dumps(data)
-        headers['content-type'] = 'application/json'
+        headers["content-type"] = "application/json"
 
-    if 'remote' in kwargs and kwargs['remote']:  # remote call
-        if 'cloud_token' not in kwargs:
-            raise AttributeError('Asked to do remote call but no cloud_token provided.')
-        headers['Authorization'] = kwargs['cloud_token']
-        headers['X-Hub-Key'] = kwargs['hub_token']
+    if "remote" in kwargs and kwargs["remote"]:  # remote call
+        if "cloud_token" not in kwargs:
+            raise AttributeError("Asked to do remote call but no cloud_token provided.")
+        headers["Authorization"] = kwargs["cloud_token"]
+        headers["X-Hub-Key"] = kwargs["hub_token"]
         response = cloud_api.remote(apicall=call, data=data, headers=headers)
     else:  # local call
-        if 'host' not in kwargs or not kwargs['host']:
+        if "host" not in kwargs or not kwargs["host"]:
             raise AttributeError(
-                'Local call but no hostname was provided. Either set keyword remote or host.')
+                "Local call but no hostname was provided. Either set keyword remote or host."
+            )
         try:
-            response = method(_getBase(**kwargs) + call, headers=headers, data=data, timeout=5)
+            response = method(
+                _getBase(**kwargs) + call, headers=headers, data=data, timeout=5
+            )
         except requests.exceptions.RequestException as e:  # pragma: no cover
             raise ConnectionError(str(e)) from None
 
@@ -92,11 +102,15 @@ def _call(*, call, method, hub_token_header, data=None, **kwargs):
         return response.json()
     elif response.status_code == 410:  # pragma: no cover
         raise APIError(
-            response.status_code, 'API version outdated. Update python-cozify. %s - %s - %s' %
-            (response.reason, response.url, response.text))
+            response.status_code,
+            "API version outdated. Update python-cozify. %s - %s - %s"
+            % (response.reason, response.url, response.text),
+        )
     else:  # pragma: no cover
-        raise APIError(response.status_code,
-                       '%s - %s - %s' % (response.reason, response.url, response.text))
+        raise APIError(
+            response.status_code,
+            "%s - %s - %s" % (response.reason, response.url, response.text),
+        )
 
 
 def hub(**kwargs):
@@ -105,7 +119,7 @@ def hub(**kwargs):
     Returns:
         dict: Hub state dict.
     """
-    return get('hub', base='/', hub_token_header=False, **kwargs)
+    return get("hub", base="/", hub_token_header=False, **kwargs)
 
 
 def tz(**kwargs):
@@ -114,7 +128,7 @@ def tz(**kwargs):
     Returns:
         str: Timezone of the hub, for example: 'Europe/Helsinki'
     """
-    return get('/hub/tz', **kwargs)
+    return get("/hub/tz", **kwargs)
 
 
 def devices(**kwargs):
@@ -126,10 +140,10 @@ def devices(**kwargs):
     Returns:
         dict: Full live device state as returned by the API
     """
-    if 'mock_devices' in kwargs:
-        return kwargs['mock_devices']
+    if "mock_devices" in kwargs:
+        return kwargs["mock_devices"]
 
-    return get('/devices', **kwargs)
+    return get("/devices", **kwargs)
 
 
 def devices_command(command, **kwargs):
@@ -141,8 +155,8 @@ def devices_command(command, **kwargs):
     Returns:
         str: What ever the API replied or raises an APIEerror on failure.
     """
-    logging.debug('command json to send: {0}'.format(command))
-    return put('/devices/command', command, **kwargs)
+    logging.debug("command json to send: {0}".format(command))
+    return put("/devices/command", command, **kwargs)
 
 
 def devices_command_generic(*, device_id, command=None, request_type, **kwargs):
@@ -171,7 +185,7 @@ def devices_command_state(*, device_id, state, **kwargs):
     Returns:
         str: What ever the API replied or raises an APIError on failure.
     """
-    command = [{"id": device_id, "type": 'CMD_DEVICE', "state": state}]
+    command = [{"id": device_id, "type": "CMD_DEVICE", "state": state}]
     return devices_command(command, **kwargs)
 
 
@@ -183,7 +197,9 @@ def devices_command_on(device_id, **kwargs):
     Returns:
         str: What ever the API replied or raises an APIError on failure.
     """
-    return devices_command_generic(device_id=device_id, request_type='CMD_DEVICE_ON', **kwargs)
+    return devices_command_generic(
+        device_id=device_id, request_type="CMD_DEVICE_ON", **kwargs
+    )
 
 
 def devices_command_off(device_id, **kwargs):
@@ -194,7 +210,9 @@ def devices_command_off(device_id, **kwargs):
     Returns:
         str: What ever the API replied or raises an APIException on failure.
     """
-    return devices_command_generic(device_id=device_id, request_type='CMD_DEVICE_OFF', **kwargs)
+    return devices_command_generic(
+        device_id=device_id, request_type="CMD_DEVICE_OFF", **kwargs
+    )
 
 
 def scenes(**kwargs):
@@ -203,7 +221,7 @@ def scenes(**kwargs):
     Returns:
         dict: Full scene state as returned by the API
     """
-    return get('/scenes', **kwargs)
+    return get("/scenes", **kwargs)
 
 
 def scenes_command_state(*, scene_id, request_type, **kwargs):
@@ -216,8 +234,8 @@ def scenes_command_state(*, scene_id, request_type, **kwargs):
         str: Whatever the API replied or raises an APIError on failure.
     """
     command = [{"id": scene_id, "type": request_type}]
-    logging.debug('command json to send: {0}'.format(command))
-    return put('/scenes/command', command, **kwargs)
+    logging.debug("command json to send: {0}".format(command))
+    return put("/scenes/command", command, **kwargs)
 
 
 def scenes_command_off(scene_id, **kwargs):
@@ -228,7 +246,9 @@ def scenes_command_off(scene_id, **kwargs):
     Returns:
         str: What ever the API replied or raises an APIException on failure.
     """
-    return scenes_command_state(scene_id=scene_id, request_type='CMD_SCENE_OFF', **kwargs)
+    return scenes_command_state(
+        scene_id=scene_id, request_type="CMD_SCENE_OFF", **kwargs
+    )
 
 
 def scenes_command_on(scene_id, **kwargs):
@@ -239,4 +259,6 @@ def scenes_command_on(scene_id, **kwargs):
     Returns:
         str: What ever the API replied or raises an APIException on failure.
     """
-    return scenes_command_state(scene_id=scene_id, request_type='CMD_SCENE_ON', **kwargs)
+    return scenes_command_state(
+        scene_id=scene_id, request_type="CMD_SCENE_ON", **kwargs
+    )

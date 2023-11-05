@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-from cozify import hub
-import pprint, sys
-from absl import flags, app
+from absl import app, flags
 
+from cozify import hub
 from cozify.test import debug
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('device', None, 'Device to operate on.')
+flags.DEFINE_string("device", None, "Device to operate on.")
 
 
 def main(argv):
@@ -16,5 +15,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    flags.mark_flag_as_required('device')
+    flags.mark_flag_as_required("device")
     app.run(main)

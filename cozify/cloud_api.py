@@ -6,20 +6,23 @@ Attributes:
 """
 
 import json
+
 import requests
 
 from .Error import APIError, AuthenticationError, ConnectionError
 
-cloudBase = 'https://cloud2.cozify.fi/ui/0.2'
+cloudBase = "https://cloud2.cozify.fi/ui/0.2"
 
 
-def get(call,
-        headers=None,
-        base=cloudBase,
-        no_headers=False,
-        json_output=True,
-        raw=False,
-        **kwargs):
+def get(
+    call,
+    headers=None,
+    base=cloudBase,
+    no_headers=False,
+    json_output=True,
+    raw=False,
+    **kwargs
+):
     """GET method for calling hub API.
 
     Args:
@@ -29,23 +32,27 @@ def get(call,
         no_headers(bool): Allow calling without headers or data.
         json_output(bool): Assume API will return json and decode it.
     """
-    return _call(method=requests.get,
-                 call='{0}{1}'.format(base, call),
-                 headers=headers,
-                 no_headers=no_headers,
-                 json_output=json_output,
-                 raw=raw,
-                 **kwargs)
+    return _call(
+        method=requests.get,
+        call="{0}{1}".format(base, call),
+        headers=headers,
+        no_headers=no_headers,
+        json_output=json_output,
+        raw=raw,
+        **kwargs
+    )
 
 
-def post(call,
-         headers=None,
-         data=None,
-         params=None,
-         base=cloudBase,
-         no_headers=False,
-         raw=False,
-         **kwargs):
+def post(
+    call,
+    headers=None,
+    data=None,
+    params=None,
+    base=cloudBase,
+    no_headers=False,
+    raw=False,
+    **kwargs
+):
     """PUT method for calling hub API. For rest of kwargs parameters see get()
 
     Args:
@@ -56,24 +63,22 @@ def post(call,
         base(str): Base path to call from API instead of global base. Defaults to cloudBase.
         no_headers(bool): Allow calling without headers or data.
     """
-    return _call(method=requests.post,
-                 call='{0}{1}'.format(base, call),
-                 headers=headers,
-                 data=data,
-                 params=params,
-                 no_headers=no_headers,
-                 raw=raw,
-                 **kwargs)
+    return _call(
+        method=requests.post,
+        call="{0}{1}".format(base, call),
+        headers=headers,
+        data=data,
+        params=params,
+        no_headers=no_headers,
+        raw=raw,
+        **kwargs
+    )
 
 
 # Not actually used yet by any cloud module method
-def put(call,
-        headers=None,
-        data=None,
-        base=cloudBase,
-        no_headers=False,
-        raw=False,
-        **kwargs):  # pragma: no cover
+def put(
+    call, headers=None, data=None, base=cloudBase, no_headers=False, raw=False, **kwargs
+):  # pragma: no cover
     """PUT method for calling hub API. For rest of kwargs parameters see get()
 
     Args:
@@ -83,13 +88,15 @@ def put(call,
         base(str): Base path to call from API instead of global base. Defaults to cloudBase.
         no_headers(bool): Allow calling without headers or data.
     """
-    return _call(method=requests.put,
-                 call='{0}{1}'.format(base, call),
-                 headers=headers,
-                 no_headers=no_headers,
-                 data=data,
-                 raw=raw,
-                 **kwargs)
+    return _call(
+        method=requests.put,
+        call="{0}{1}".format(base, call),
+        headers=headers,
+        no_headers=no_headers,
+        data=data,
+        raw=raw,
+        **kwargs
+    )
 
 
 def requestlogin(email, **kwargs):  # pragma: no cover
@@ -99,9 +106,9 @@ def requestlogin(email, **kwargs):  # pragma: no cover
         email(str): Email address connected to Cozify account.
     """
 
-    payload = {'email': email}
+    payload = {"email": email}
     # Sending the payload as params is intentional to match the snafu of the upstream API
-    post('/user/requestlogin', params=payload, **kwargs)
+    post("/user/requestlogin", params=payload, **kwargs)
 
 
 def emaillogin(email, otp, **kwargs):
@@ -115,8 +122,8 @@ def emaillogin(email, otp, **kwargs):
         str: cloud token
     """
 
-    payload = {'email': email, 'password': otp}
-    return post('/user/emaillogin', data=payload, json_output=False, **kwargs)
+    payload = {"email": email, "password": otp}
+    return post("/user/emaillogin", data=payload, json_output=False, **kwargs)
 
 
 def lan_ip(**kwargs):
@@ -128,7 +135,7 @@ def lan_ip(**kwargs):
     Returns:
         list: List of Hub ip addresses.
     """
-    return list(get('/hub/lan_ip', no_headers=True, **kwargs))
+    return list(get("/hub/lan_ip", no_headers=True, **kwargs))
 
 
 def hubkeys(cloud_token, **kwargs):  # pragma: no cover
@@ -140,8 +147,8 @@ def hubkeys(cloud_token, **kwargs):  # pragma: no cover
     Returns:
         dict: Map of hub_id: hub_token pairs.
     """
-    headers = {'Authorization': cloud_token}
-    return get('/user/hubkeys', headers=headers, **kwargs)
+    headers = {"Authorization": cloud_token}
+    return get("/user/hubkeys", headers=headers, **kwargs)
 
 
 def refreshsession(cloud_token, **kwargs):  # pragma: no cover
@@ -153,8 +160,8 @@ def refreshsession(cloud_token, **kwargs):  # pragma: no cover
     Returns:
         str: New cloud remote authentication token. Not automatically stored into state.
     """
-    headers = {'Authorization': cloud_token}
-    return get('/user/refreshsession', headers=headers, json_output=False, **kwargs)
+    headers = {"Authorization": cloud_token}
+    return get("/user/refreshsession", headers=headers, json_output=False, **kwargs)
 
 
 def remote(apicall, headers, data=None):
@@ -170,21 +177,23 @@ def remote(apicall, headers, data=None):
     """
 
     if data:
-        return put('/hub/remote' + apicall, headers=headers, data=data, raw=True)
+        return put("/hub/remote" + apicall, headers=headers, data=data, raw=True)
     else:
-        return get('/hub/remote' + apicall, headers=headers, raw=True)
+        return get("/hub/remote" + apicall, headers=headers, raw=True)
 
 
-def _call(*,
-          call,
-          method,
-          headers,
-          params=None,
-          data=None,
-          no_headers=False,
-          json_output=True,
-          raw=False,
-          **kwargs):
+def _call(
+    *,
+    call,
+    method,
+    headers,
+    params=None,
+    data=None,
+    no_headers=False,
+    json_output=True,
+    raw=False,
+    **kwargs
+):
     """Backend for get & post
 
     Args:
@@ -199,7 +208,7 @@ def _call(*,
     """
     if not headers and not data and not params and not no_headers:
         raise AttributeError(
-            'Asked to do a call to the cloud without valid headers, data or params. This would never work.'
+            "Asked to do a call to the cloud without valid headers, data or params. This would never work."
         )
 
     try:
@@ -207,17 +216,20 @@ def _call(*,
             if data:
                 response = method(call, headers=headers, data=data, timeout=5)
             else:
-                raise AttributeError('PUT call with no data, this would fail!')
+                raise AttributeError("PUT call with no data, this would fail!")
         elif method is requests.post:
             if data and params:
-                response = method(call, headers=headers, data=data, params=params, timeout=5)
+                response = method(
+                    call, headers=headers, data=data, params=params, timeout=5
+                )
             elif data:
                 response = method(call, headers=headers, data=data, timeout=5)
             elif params:
                 response = method(call, headers=headers, params=params, timeout=5)
             else:
                 raise AttributeError(
-                    'POST call with no data or params, this probably makes no sense!')
+                    "POST call with no data or params, this probably makes no sense!"
+                )
 
         elif params:
             response = method(call, headers=headers, params=params, timeout=5)
@@ -238,10 +250,14 @@ def _call(*,
     elif response.status_code == 410:  # pragma: no cover
         raise APIError(
             response.status_code,
-            'API version outdated. Update python-cozify. {reason} - {url} - {message}'.format(
-                reason=response.reason, url=response.url, message=response.text))
+            "API version outdated. Update python-cozify. {reason} - {url} - {message}".format(
+                reason=response.reason, url=response.url, message=response.text
+            ),
+        )
     else:  # pragma: no cover
         raise APIError(
-            response.status_code, '{reason} - {url} - {message}'.format(reason=response.reason,
-                                                                        url=response.url,
-                                                                        message=response.text))
+            response.status_code,
+            "{reason} - {url} - {message}".format(
+                reason=response.reason, url=response.url, message=response.text
+            ),
+        )

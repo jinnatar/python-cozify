@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-from cozify import hub
 import sys
+
+from cozify import hub
 
 
 def main(capability=None):
@@ -11,7 +12,7 @@ def main(capability=None):
         devs = hub.devices()
 
     for key, dev in devs.items():
-        print('{0}: {1}'.format(key, dev['name']))
+        print("{0}: {1}".format(key, dev["name"]))
 
 
 if __name__ == "__main__":

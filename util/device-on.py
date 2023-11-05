@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-from cozify import hub
-import pprint, sys
+import pprint
+import sys
 
+from cozify import hub
 from cozify.test import debug
 
 

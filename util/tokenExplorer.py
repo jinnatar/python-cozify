@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-import sys, pprint
+import pprint
+import sys
+
 import jwt
 
-from cozify import hub, cloud, config
+from cozify import cloud, config, hub
 
 
 def main(statepath):

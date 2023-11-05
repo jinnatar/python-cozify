@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+import pprint
+import sys
+
 from cozify import hub
-import pprint, sys
 
 
 def main(device):

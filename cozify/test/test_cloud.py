@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 
-import os, pytest, tempfile, datetime, time
+import datetime
+import os
+import tempfile
+import time
+
+import pytest
 
 from cozify import cloud, config, hub
+from cozify.Error import AuthenticationError
 from cozify.test import debug
 from cozify.test.fixtures import *
-from cozify.Error import AuthenticationError
 
 ## basic cloud.authenticate() tests
 
@@ -43,11 +48,11 @@ def test_cloud_noninteractive_otp():
 
 @pytest.mark.logic
 def test_cloud_token_set_reset(blank_cloud):
-    blank_cloud.token('foobar')
-    assert blank_cloud.token() == 'foobar'
+    blank_cloud.token("foobar")
+    assert blank_cloud.token() == "foobar"
     blank_cloud.resetState()
     with pytest.raises(AttributeError) as e_info:
-        blank_cloud._getAttr('remotetoken')
+        blank_cloud._getAttr("remotetoken")
 
 
 ## cloud.refresh() logic tests
@@ -55,7 +60,7 @@ def test_cloud_token_set_reset(blank_cloud):
 
 @pytest.mark.logic
 def test_cloud_refresh_cold(tmp_cloud):
-    config.state.remove_option('Cloud', 'last_refresh')
+    config.state.remove_option("Cloud", "last_refresh")
     config.dump_state()
     assert cloud._need_refresh(force=False, expiry=tmp_cloud.expiry)
 
@@ -68,7 +73,7 @@ def test_cloud_refresh_force(tmp_cloud):
 
 @pytest.mark.logic
 def test_cloud_refresh_invalid(tmp_cloud):
-    config.state['Cloud']['last_refresh'] = 'intentionally bad'
+    config.state["Cloud"]["last_refresh"] = "intentionally bad"
     config.dump_state()
     assert cloud._need_refresh(force=False, expiry=datetime.timedelta(days=365))
 
@@ -88,12 +93,12 @@ def test_cloud_refresh_expiry_not_over(tmp_cloud):
 @pytest.mark.destructive
 def test_cloud_refresh_force(live_cloud):
     config.dump_state()
-    timestamp_before = live_cloud._getAttr('last_refresh')
+    timestamp_before = live_cloud._getAttr("last_refresh")
     token_before = live_cloud.token()
     time.sleep(2)  # ensure timestamp has a diff
     live_cloud.refresh(force=True)
     config.dump_state()
-    assert timestamp_before < live_cloud._getAttr('last_refresh')
+    assert timestamp_before < live_cloud._getAttr("last_refresh")
     assert token_before != live_cloud.token()
 
 

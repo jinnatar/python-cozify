@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-import tempfile, os
-from cozify import config, cloud, hub
+import os
+import tempfile
+
+from cozify import cloud, config, hub
 
 
 def main():

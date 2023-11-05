@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-import pytest
+import os
+import tempfile
 
-import os, tempfile
+import pytest
 
 from cozify import config
 from cozify.test import debug
-from cozify.test.fixtures import tmp_hub, tmp_cloud
+from cozify.test.fixtures import tmp_cloud, tmp_hub
 
 
 @pytest.mark.logic
@@ -29,4 +30,4 @@ def test_config_XDG_basedir(tmp_hub):
     os.environ["XDG_CONFIG_HOME"] = td
     assert config._initXDG()
     assert os.path.isdir(td)
-    os.removedirs(td + '/python-cozify')
+    os.removedirs(td + "/python-cozify")

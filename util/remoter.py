@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-from cozify import hub, cloud, hub_api
-
+from cozify import cloud, hub, hub_api
 from cozify.test import debug
 
 
@@ -12,7 +11,9 @@ def main():
             host=hub.host(hub_id),
             cloud_token=cloud.token(),
             hub_token=hub.token(hub_id),
-            remote=True))
+            remote=True,
+        )
+    )
 
 
 if __name__ == "__main__":
