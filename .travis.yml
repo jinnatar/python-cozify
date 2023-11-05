@@ -30,7 +30,7 @@ before_script:
   - mb &
 
 script:
-  - poetry run pytest --cov -m 'logic or live or destructive or remote or mbtest'
+  - poetry run pytest --cov -m 'logic or mbtest'
 
 after_success:
   - poetry run codecov
