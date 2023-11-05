@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cozify"
-version = "0.2.35"
+version = "0.2.36"
 description = "Unofficial Python3 API bindings for the (unpublished) Cozify API."
 authors = ["Artanicus <artanicus@nocturnal.fi>"]
 license = "MIT"
@@ -13,7 +13,12 @@ python = "^3.8.1"
 requests = "^2.27.1"
 absl-py = "^1.0.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
+black = "^23.10.1"
+mypy = "^1.6.1"
+flake8 = "^6.1.0"
+isort = "^5.12.0"
+flake8-bugbear = "^23.9.16"
 pytest = "^6.2.5"
 codecov = "^2.1.12"
 pytest-profiling = "^1.7.0"
@@ -25,13 +30,7 @@ pytest-cov = "^3.0.0"
 Sphinx = "^5.0.2"
 sphinx-rtd-theme = "^1.0.0"
 sphinx-autoapi = "^1.8.4"
-
-[tool.poetry.group.dev.dependencies]
-black = "^23.10.1"
-mypy = "^1.6.1"
-flake8 = "^6.1.0"
-isort = "^5.12.0"
-flake8-bugbear = "^23.9.16"
+vcrpy = "^5.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
