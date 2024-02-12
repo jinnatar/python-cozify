@@ -9,6 +9,26 @@ from . import cloud_api, config, hub_api
 from .Error import APIError, AuthenticationError, ConnectionError
 
 
+def resolve_local_ip(hub_keys, local_hubs):
+    """Try to figure out which hub is behind local ip.
+
+    Connect to every IP address returned by cloud.lan_ip API call with every hub keys available in account.
+    If can connect to IP with hub_token, verify that hubId matches and store hubId<->ip pair into dict
+    """
+    hub_id_ip_pairs = dict()
+    for local_ip in local_hubs:
+        print(f'Trying to resolve which hub is {local_ip}')
+        for hub_id, hub_token in hub_keys.items():
+            print(f'Trying to connect {local_ip} with hub_id {hub_id}')
+            try:
+                hub_info = hub_api.hub(host=local_ip, hub_token=hub_token, remote=False)
+                if 'hubId' in hub_info and hub_info['hubId'] == hub_id:
+                    print(f'Assign {local_ip} to {hub_id}')
+                    hub_id_ip_pairs[hub_id] = local_ip
+            except Exception as e:
+                pass
+    return hub_id_ip_pairs
+
 def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
     """Authenticate with the Cozify Cloud and Hub.
 
@@ -70,7 +90,6 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
         localHubs = (
             cloud_api.lan_ip()
         )  # will only work if we're local to the Hub, otherwise None
-        # TODO(artanicus): unknown what will happen if there is a local hub but another one remote. Needs testing by someone with multiple hubs. Issue #7
         hubkeys = cloud_api.hubkeys(
             cloud_token
         )  # get all registered hubs and their keys from the cloud.
@@ -78,19 +97,26 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
             logging.fatal(
                 "You have not registered any hubs to the Cozify Cloud, hence a hub cannot be used yet."
             )
-
+        # Get dict which contains local hubs that has ip address.
+        hub_id_ip_pairs = resolve_local_ip(hub_keys=hubkeys, local_hubs=localHubs)
         # evaluate all returned Hubs and store them
         for hub_id, hub_token in hubkeys.items():
             logging.debug("hub: {0} token: {1}".format(hub_id, hub_token))
+            local = False
             hub_info = None
             hub_ip = None
+
+            if hub_id in hub_id_ip_pairs:
+                print(f'hub_id: {hub_id} is local')
+                local = True
 
             if not hub.exists(hub_id):
                 autoremote = True
             else:
                 autoremote = hub.autoremote(hub_id=hub_id)
             # if we're remote, we didn't get a valid ip
-            if not localHubs:
+            if not local:
+                print(f'Hub {hub_id} is remote')
                 logging.info("No local Hubs detected, changing to remote mode.")
                 hub_info = hub_api.hub(
                     remote=True, cloud_token=cloud_token, hub_token=hub_token
@@ -104,10 +130,8 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                     )
                     remote = True
             else:
-                # localHubs is valid so a hub is in the lan. A mixed environment cannot yet be detected.
-                # cloud_api.lan_ip cannot provide a map as to which ip is which hub. Thus we actually need to determine the right one.
-                # TODO(artanicus): Need to truly test how multihub works before implementing ip to hub resolution. See issue #7
-                hub_ip = localHubs[0]
+                print(f'Hub {hub_id} is local')
+                hub_ip = hub_id_ip_pairs[hub_id]
                 hub_info = hub_api.hub(host=hub_ip, remote=False)
                 # if the hub wants autoremote we flip the state. If this is the first time the hub is seen, act as if autoremote=True, remote=False
                 if not hub.exists(hub_id) or (
@@ -136,10 +160,12 @@ def authenticate(trustCloud=True, trustHub=True, remote=False, autoremote=True):
                 config.state.add_section(hubSection)
             # if default hub not set, set this hub as the first as the default
             if "default" not in config.state["Hubs"]:
-                config.state["Hubs"]["default"] = hub_id
+                if local:
+                    config.state["Hubs"]["default"] = hub_id
 
             # store Hub data under it's named section
-            hub._setAttr(hub_id, "host", hub_ip, commit=False)
+            if hub_ip:
+                hub._setAttr(hub_id, "host", hub_ip, commit=False)
             hub._setAttr(hub_id, "hubName", hub_name, commit=False)
             hub.token(hub_id, hub_token)
             hub.remote(hub_id, remote)
